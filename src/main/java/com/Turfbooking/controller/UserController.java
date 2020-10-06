@@ -1,8 +1,10 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.CommonResponse;
+import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.service.Impl.CreateUserLoginResponse;
@@ -14,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.mail.MessagingException;
 import javax.validation.Valid;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/user")
@@ -39,6 +43,12 @@ public class UserController {
         CreateUserLoginResponse userResponse = userService.userLogin(userLoginRequest);
         CommonResponse response = new CommonResponse(userResponse);
         return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @PostMapping("/generateOtp")
+    public CommonResponse<CreateResponse> generateOTP(@RequestBody GenerateOtpRequest request) throws IOException, MessagingException {
+        CommonResponse commonResponse = new CommonResponse<>(userService.generateOtp(request));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
 }
