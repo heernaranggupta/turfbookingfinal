@@ -1,12 +1,9 @@
 package com.Turfbooking.service;
 
 import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.CreateResponse;
+import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.UserResponse;
-import com.Turfbooking.service.Impl.CreateUserLoginResponse;
 
 public interface UserService {
 
@@ -14,5 +11,5 @@ public interface UserService {
 
     CreateUserLoginResponse userLogin(UserLoginRequest userLoginRequest);
 
-    CreateResponse generateOtp(GenerateOtpRequest otpRequest);
+
 }
