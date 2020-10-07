@@ -7,7 +7,7 @@ import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
-import com.Turfbooking.service.Impl.CreateUserLoginResponse;
+import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,10 +45,5 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @PostMapping("/generateOtp")
-    public CommonResponse<CreateResponse> generateOTP(@RequestBody GenerateOtpRequest request) throws IOException, MessagingException {
-        CommonResponse commonResponse = new CommonResponse<>(userService.generateOtp(request));
-        return ResponseUtilities.createSuccessResponse(commonResponse);
-    }
 
 }

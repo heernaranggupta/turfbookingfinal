@@ -1,4 +1,4 @@
-package com.Turfbooking.service.Impl;
+package com.Turfbooking.models.response;
 
 import com.Turfbooking.models.response.UserResponse;
 import lombok.AllArgsConstructor;
