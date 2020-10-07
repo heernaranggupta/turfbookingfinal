@@ -7,18 +7,20 @@ import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -26,9 +28,9 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil,UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
+        this.userRepository = userRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -48,7 +50,7 @@ public class UserServiceImpl implements UserService {
 
         User isExist = userRepository.findByPhoneNumber(createUserRequest.getPhoneNumber());
         String responseStatus = null;
-        if(isExist!=null){
+        if (isExist != null) {
             throw new GeneralException("User exist with this phone number.", HttpStatus.BAD_REQUEST);
         }
 
@@ -69,14 +71,14 @@ public class UserServiceImpl implements UserService {
         }
         addUser.setLocation(userLocation);
 
-        User newCreatedUser =userRepository.insert(addUser);
+        User newCreatedUser = userRepository.insert(addUser);
         UserResponse userResponse = new UserResponse(newCreatedUser);
         responseStatus = UserStatus.NEWUSERCREATED.name();
 
         String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), accessSecret, accessTokenValidity);
         String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), refreshSecret, refreshTokenValidity);
 
-        CreateUserResponse response=new CreateUserResponse(userResponse,responseStatus,token,refreshToken);
+        CreateUserResponse response = new CreateUserResponse(userResponse, responseStatus, token, refreshToken);
         return response;
     }
 
@@ -87,22 +89,24 @@ public class UserServiceImpl implements UserService {
         String password = CommonUtilities.getEncryptedPassword(userLoginRequest.getPassword());
         String userLoginType = CommonUtilities.findEmailIdOrPasswordValidator(userLoginRequest.getUsername());
         User isExist = null;
-        if(StringUtils.equals(userLoginType,"email")){
-            isExist = userRepository.findByEmailIdAndPassword(username,password);
-        }else {
-            isExist = userRepository.findByPhoneNumberAndPassword(username,password);
+        if (StringUtils.equals(userLoginType, "email")) {
+            isExist = userRepository.findByEmailIdAndPassword(username, password);
+        } else {
+            isExist = userRepository.findByPhoneNumberAndPassword(username, password);
         }
 
-        if(null != isExist){
-                String token = jwtTokenUtil.generateToken(username, accessSecret, accessTokenValidity);
-                String refreshToken = jwtTokenUtil.generateToken(username, refreshSecret, refreshTokenValidity);
+        if (null != isExist) {
+            String token = jwtTokenUtil.generateToken(username, accessSecret, accessTokenValidity);
+            String refreshToken = jwtTokenUtil.generateToken(username, refreshSecret, refreshTokenValidity);
 
-                UserResponse userResponse = new UserResponse(isExist);
-                CreateUserLoginResponse loginResponse = new CreateUserLoginResponse(userResponse,token,refreshToken);
-                return loginResponse;
+            UserResponse userResponse = new UserResponse(isExist);
+            CreateUserLoginResponse loginResponse = new CreateUserLoginResponse(userResponse, token, refreshToken);
+            return loginResponse;
 
-        }else{
+        } else {
             throw new UserNotFoundException("Username and password does not matched.");
         }
     }
+
+
 }
