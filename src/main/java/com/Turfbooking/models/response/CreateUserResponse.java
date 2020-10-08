@@ -9,7 +9,7 @@ import lombok.Getter;
 @Builder
 public class CreateUserResponse {
 
-    private String status;
+    private String status; // no need of status.
     private UserResponse user;
     private String token;
     private String refreshToken;

@@ -1,5 +1,7 @@
 package com.Turfbooking;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @SpringBootApplication
 @EnableMongoRepositories
+@OpenAPIDefinition(info = @Info(title = "Turf Booking",version = "0.1",description = "API documentation of turf booking project."))
 public class TurfbookingApplication {
 
 	@Bean
