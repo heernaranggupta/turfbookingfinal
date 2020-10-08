@@ -15,3 +15,11 @@ public interface BusinessRepository extends MongoRepository<Business, String> {
     Business findByPhoneNumber(String phoneNumber);
 
 }
+//package com.Turfbooking.repository;
+//
+//import org.springframework.data.mongodb.repository.MongoRepository;
+//import org.springframework.stereotype.Repository;
+//
+//@Repository
+//public class BusinessRepository extends MongoRepository<String,String> {
+//}

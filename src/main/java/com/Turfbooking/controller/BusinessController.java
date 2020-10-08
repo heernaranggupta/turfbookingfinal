@@ -1,8 +1,11 @@
 package com.Turfbooking.controller;
 
+import com.Turfbooking.documents.Business;
+import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
-import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.repository.BusinessRepository;
@@ -15,8 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-@RequestMapping("/business")
+
 @RestController
+@RequestMapping("/business")
 public class BusinessController {
 
     private BusinessService businessService;
@@ -25,7 +29,20 @@ public class BusinessController {
     @Autowired
     public BusinessController(BusinessService businessService, BusinessRepository businessRepository) {
         this.businessService = businessService;
-        this.businessRepository = businessRepository;
+        this.businessRepository=businessRepository;
+    }
+
+    @PostMapping("/book-slot")
+    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
+        CommonResponse response = new CommonResponse<>(businessService.bookSlot(bookTimeSlotRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    //all booked slot by date
+    @PostMapping("/getSlotList")
+    public CommonResponse getSlotList(){
+        CommonResponse commonResponse = new CommonResponse(null);
+        return commonResponse;
     }
 
     @PostMapping("/login")
