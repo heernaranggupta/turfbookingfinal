@@ -11,6 +11,7 @@ import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CreateResponse;
+import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.repository.OtpRepository;

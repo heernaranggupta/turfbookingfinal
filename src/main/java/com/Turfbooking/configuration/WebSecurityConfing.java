@@ -28,6 +28,9 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/common/generateOtp").permitAll()
                 .antMatchers("/common/validateOtp").permitAll()
 
+                .antMatchers("/business/login").permitAll()
+                .antMatchers("/business/resetPassword").permitAll()
+
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling()
