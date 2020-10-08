@@ -49,7 +49,6 @@ public class UserServiceImpl implements UserService {
     public CreateUserResponse createNewUser(CreateUserRequest createUserRequest) throws GeneralException {
 
         User isExist = userRepository.findByPhoneNumber(createUserRequest.getPhoneNumber());
-        String responseStatus = null;
         if (isExist != null) {
             throw new GeneralException("User exist with this phone number.", HttpStatus.BAD_REQUEST);
         }
@@ -73,12 +72,11 @@ public class UserServiceImpl implements UserService {
 
         User newCreatedUser = userRepository.insert(addUser);
         UserResponse userResponse = new UserResponse(newCreatedUser);
-        responseStatus = UserStatus.NEWUSERCREATED.name();
 
         String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), accessSecret, accessTokenValidity);
         String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), refreshSecret, refreshTokenValidity);
 
-        CreateUserResponse response = new CreateUserResponse(userResponse, responseStatus, token, refreshToken);
+        CreateUserResponse response = new CreateUserResponse(userResponse, token, refreshToken);
         return response;
     }
 

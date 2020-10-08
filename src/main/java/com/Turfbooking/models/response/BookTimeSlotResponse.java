@@ -1,6 +1,6 @@
 package com.Turfbooking.models.response;
 
-import com.Turfbooking.documents.TimeSlot;
+import com.Turfbooking.documents.BookedTimeSlot;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -18,13 +18,13 @@ public class BookTimeSlotResponse {
     private LocalDateTime endTime;
     private LocalDateTime timestamp;
 
-    public BookTimeSlotResponse(TimeSlot timeSlot){
-        this.userId = timeSlot.getUserId();
-        this.companyId = timeSlot.getCompanyId();
-        this.slotNumber = timeSlot.getSlotNumber();
-        this.date = timeSlot.getDate();
-        this.startTime = timeSlot.getStartTime();
-        this.endTime = timeSlot.getEndTime();
+    public BookTimeSlotResponse(BookedTimeSlot bookedTimeSlot){
+        this.userId = bookedTimeSlot.getUserId();
+        this.companyId = bookedTimeSlot.getCompanyId();
+        this.slotNumber = bookedTimeSlot.getSlotNumber();
+        this.date = bookedTimeSlot.getDate();
+        this.startTime = bookedTimeSlot.getStartTime();
+        this.endTime = bookedTimeSlot.getEndTime();
         this.timestamp = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
     }
 

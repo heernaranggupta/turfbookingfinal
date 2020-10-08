@@ -1,6 +1,6 @@
 package com.Turfbooking.service.Impl;
 
-import com.Turfbooking.documents.TimeSlot;
+import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
@@ -28,10 +28,10 @@ public class BusinessServiceImpl implements BusinessService {
     public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
 
         //GET SLOT BY DATE AND SLOT NUMBER
-        TimeSlot slot = timeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(),bookTimeSlotRequest.getDate());
+        BookedTimeSlot slot = timeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(),bookTimeSlotRequest.getDate());
 
         if(slot == null){
-            TimeSlot addNewTimeSlot = TimeSlot.builder()
+            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
                     .userId(bookTimeSlotRequest.getUserId())
                     .date(bookTimeSlotRequest.getDate())
                     .slotNumber(bookTimeSlotRequest.getSlotNumber())
@@ -40,7 +40,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .endTime(bookTimeSlotRequest.getEndTime())
                     .build();
 
-            TimeSlot bookedTimeSlot = timeSlotRepository.insert(addNewTimeSlot);
+            BookedTimeSlot bookedTimeSlot = timeSlotRepository.insert(addNewBookedTimeSlot);
 
             BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
 
@@ -51,6 +51,5 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
     }
-
 
 }

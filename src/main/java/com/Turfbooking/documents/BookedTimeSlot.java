@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @Document
-public class TimeSlot {
+public class BookedTimeSlot {
 
     @Id
     private String _id;
@@ -21,5 +21,5 @@ public class TimeSlot {
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-
+    //add timestamp
 }
