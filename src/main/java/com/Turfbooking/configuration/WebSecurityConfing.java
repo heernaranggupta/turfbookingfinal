@@ -29,7 +29,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/common/validateOtp").permitAll()
 
                 .antMatchers("/business/book-slot").permitAll()
-
+                .antMatchers("/business/getAllSlots").permitAll()
 
                 .antMatchers("/swagger-ui/**").permitAll()
                 .antMatchers("/v3/api-docs","/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()

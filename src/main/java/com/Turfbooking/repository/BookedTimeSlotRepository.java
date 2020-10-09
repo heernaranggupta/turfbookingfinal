@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface TimeSlotRepository  extends MongoRepository<BookedTimeSlot,String> {
+public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot,String> {
 
     @Query("{'slotNumber':?0 ,'date':{ $gte: ?1}}")
     BookedTimeSlot findByDateAndSlotNumber(Integer slotNumber, LocalDate date);
