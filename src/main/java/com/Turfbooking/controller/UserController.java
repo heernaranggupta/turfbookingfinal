@@ -1,10 +1,8 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.CommonResponse;
-import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;

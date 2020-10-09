@@ -1,9 +1,14 @@
 package com.Turfbooking.controller;
 
+import com.Turfbooking.documents.Business;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
+import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.response.CreateBusinessLoginResponse;
+import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +43,16 @@ public class BusinessController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
+    @PostMapping("/login")
+    public CommonResponse<CreateBusinessLoginResponse> businessLogin(@RequestBody @Valid CreateBusinessLoginRequest request) {
+        CommonResponse commonResponse = new CommonResponse(businessService.businessLogin(request));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
 
 
+    @PostMapping("/resetPassword")
+    public CommonResponse<CreatePasswordResponse> resetPassword(@RequestBody @Valid CreateUpdatePasswordRequest createUpdatePasswordRequest) {
+        CommonResponse commonResponse = new CommonResponse(businessService.resetPassword(createUpdatePasswordRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
 }

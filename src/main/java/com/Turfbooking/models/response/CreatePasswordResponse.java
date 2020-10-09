@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class CreateResponse {
-    private  String message;
+public class CreatePasswordResponse {
+
+    private String message;
 }
