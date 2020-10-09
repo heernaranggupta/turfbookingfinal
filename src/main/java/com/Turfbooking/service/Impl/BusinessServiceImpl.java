@@ -4,8 +4,10 @@ import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
+import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.service.BusinessService;
@@ -88,9 +90,9 @@ public class BusinessServiceImpl  implements BusinessService {
     public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
 
         //GET SLOT BY DATE AND SLOT NUMBER
-        BookedTimeSlot slot = timeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(),bookTimeSlotRequest.getDate());
+        BookedTimeSlot slot = timeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
 
-        if(slot == null){
+        if (slot == null) {
             BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
                     .userId(bookTimeSlotRequest.getUserId())
                     .date(bookTimeSlotRequest.getDate())
@@ -106,10 +108,25 @@ public class BusinessServiceImpl  implements BusinessService {
 
             return bookTimeSlotResponse;
 
-        }else{
+        } else {
             throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
         }
-
     }
 
+    @Override
+    public CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest)throws GeneralException {
+        Business business = businessRepository.findByPhoneNumber(updateBusinessRequest.getPhoneNumber());
+        if (business != null) {
+            business.setUsername(updateBusinessRequest.getUsername());
+            business.setCompanyName(updateBusinessRequest.getCompanyName());
+            Business businessInserted = businessRepository.save(business);
+
+            CreateBusinessUpdateResponse createBusinessUpdateResponse = CreateBusinessUpdateResponse.builder()
+                    .message("Data updated Successfully")
+                    .build();
+            return createBusinessUpdateResponse;
+        } else {
+            throw new GeneralException("Please Provide phone number for update", HttpStatus.OK);
+        }
+    }
 }

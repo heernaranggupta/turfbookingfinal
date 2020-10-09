@@ -30,6 +30,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
 
                 .antMatchers("/business/login").permitAll()
                 .antMatchers("/business/resetPassword").permitAll()
+                .antMatchers("/business/update").permitAll()
 
                 .antMatchers("/business/book-slot").permitAll()
 
