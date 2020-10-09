@@ -14,14 +14,14 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ValidateOtpResponse {
-    private String refreshToken;
+
     private String otpStatus;
     private String userStatus;
     private String nameOfTheUser;
     private UserResponse user;
-//    private FullBusinessResponse companyUser;
     private String token;
-    private Boolean isUpdate;
-    private Boolean isUpdateAllowed;
+    private String refreshToken;
+    private Boolean isUpdate;//what is the use of this field
+    private Boolean isUpdateAllowed;//what is the use of this field
 
 }

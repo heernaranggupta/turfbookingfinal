@@ -25,7 +25,24 @@ public class BookTimeSlotResponse {
         this.date = bookedTimeSlot.getDate();
         this.startTime = bookedTimeSlot.getStartTime();
         this.endTime = bookedTimeSlot.getEndTime();
-        this.timestamp = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+        this.timestamp = bookedTimeSlot.getTimeStamp(); //LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
     }
 
+    public BookTimeSlotResponse(String userId, String companyId, Integer slotNumber, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
+        this.userId = userId;
+        this.companyId = companyId;
+        this.slotNumber = slotNumber;
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.timestamp = timestamp;
+    }
+
+    public BookTimeSlotResponse(String companyId, Integer slotNumber, LocalDate date, LocalDateTime startTime, LocalDateTime endTime) {
+        this.companyId = companyId;
+        this.slotNumber = slotNumber;
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
 }

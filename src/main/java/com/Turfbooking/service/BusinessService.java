@@ -7,9 +7,11 @@ import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateResponse;
 import com.mongodb.internal.bulk.UpdateRequest;
+import com.Turfbooking.models.response.GetAllSlotsResponse;
 
 
 public interface BusinessService {
@@ -22,5 +24,7 @@ public interface BusinessService {
 
     CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest);
 
+
+    GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest);
 
 }

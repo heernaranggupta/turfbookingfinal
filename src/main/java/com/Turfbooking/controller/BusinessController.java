@@ -3,6 +3,7 @@ package com.Turfbooking.controller;
 import com.Turfbooking.documents.Business;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
 import com.Turfbooking.models.response.CommonResponse;
@@ -40,10 +41,10 @@ public class BusinessController {
     }
 
     //all booked slot by date
-    @PostMapping("/getSlotList")
-    public CommonResponse getSlotList(){
-        CommonResponse commonResponse = new CommonResponse(null);
-        return commonResponse;
+    @PostMapping("/getAllSlots")
+    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest){
+        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
     @PostMapping("/login")

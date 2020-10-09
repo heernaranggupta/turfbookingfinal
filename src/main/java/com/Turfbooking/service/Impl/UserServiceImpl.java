@@ -1,15 +1,20 @@
 package com.Turfbooking.service.Impl;
 
+import com.Turfbooking.documents.Otp;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Location;
+import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
+import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.repository.OtpRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
@@ -20,17 +25,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
+    private OtpRepository otpRepository;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,OtpRepository otpRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
+        this.otpRepository = otpRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -105,6 +115,55 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("Username and password does not matched.");
         }
     }
+
+    @Override
+    public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
+
+        String phoneNumber = validateOtpRequest.getPhoneNumber();
+        String countryCode = validateOtpRequest.getCountryCode();
+
+        String phoneNumberWithCountryCode = null;
+
+        if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
+            phoneNumberWithCountryCode = phoneNumber;
+        else {
+            throw new GeneralException("Phone number or county code is invalid.",HttpStatus.OK);
+        }
+
+        Integer userOtp = validateOtpRequest.getOtp();
+        ValidateOtpResponse validateOtpResponse = new ValidateOtpResponse();
+        Otp otp = otpRepository.findByPhoneNumberAndOtp(phoneNumberWithCountryCode, validateOtpRequest.getOtp());
+
+        if (null != otp && validateOtpRequest.getOtp().intValue() == userOtp.intValue() && LocalDateTime.now().isBefore(otp.getTimeTillActive())) {
+            //delete otp entry from database
+            long otpdeltedCount = otpRepository.deleteByPhoneNumber(otp.getPhoneNumber());
+            validateOtpResponse.setOtpStatus(OtpStatus.VALID.name());
+        } else {
+            validateOtpResponse.setOtpStatus(OtpStatus.INVALID.name());
+        }
+
+        //logic for is this user exist or not.
+        User isUserOrNot = userRepository.findByPhoneNumber(phoneNumber);
+        String token;
+        String refreshToken;
+
+        if(null != isUserOrNot){
+            token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
+            refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
+            validateOtpResponse.setToken(token);
+            validateOtpResponse.setRefreshToken(refreshToken);
+            validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
+            validateOtpResponse.setNameOfTheUser(isUserOrNot.getFirstName());
+            UserResponse userResponse = new UserResponse(isUserOrNot);
+            validateOtpResponse.setUser(userResponse);
+        }else {
+            validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
+
+        }
+        return validateOtpResponse;
+
+    }
+
 
 
 }

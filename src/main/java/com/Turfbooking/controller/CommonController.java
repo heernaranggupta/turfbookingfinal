@@ -2,10 +2,9 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
-import com.Turfbooking.models.response.CreateResponse;
-import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.models.response.CommonResponse;
+import com.Turfbooking.models.response.CreateResponse;
+import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +27,17 @@ public class CommonController {
         this.commonService = commonService;
     }
 
-    @PostMapping("/generateOtp")
+    @PostMapping("/generateOTP")
     public CommonResponse<CreateResponse> generateOTP(@RequestBody GenerateOtpRequest request) throws IOException, MessagingException {
         CommonResponse commonResponse = new CommonResponse<>(commonService.generateOtp(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @PostMapping("/validateOtp")
+    @PostMapping("/validateOTP")
     public CommonResponse<ValidateOtpResponse> validateOTP(@RequestBody ValidateOtpRequest request) {
         CommonResponse commonResponse = new CommonResponse<>(commonService.validateOTP(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);
 
     }
+
 }
