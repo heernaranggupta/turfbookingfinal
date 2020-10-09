@@ -1,17 +1,18 @@
 package com.Turfbooking.service.Impl;
 
+import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
-import com.Turfbooking.models.response.GetAllSlotsResponse;
-import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
+import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.CommonUtilities;
@@ -26,28 +27,21 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import com.Turfbooking.documents.BookedTimeSlot;
-import com.Turfbooking.models.request.BookTimeSlotRequest;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
-import com.Turfbooking.repository.TimeSlotRepository;
 
 @Service
-public class BusinessServiceImpl  implements BusinessService {
+public class BusinessServiceImpl implements BusinessService {
 
-    private BookedTimeSlotRepository bookedTimeSlotRepository;
     private BusinessRepository businessRepository;
     private JwtTokenUtil jwtTokenUtil;
-    private TimeSlotRepository timeSlotRepository;
+    private BookedTimeSlotRepository bookedTimeSlotRepository;
 
     @Autowired
-    public BusinessServiceImpl(BookedTimeSlotRepository bookedTimeSlotRepository) {
-        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
-    public BusinessServiceImpl(BusinessRepository businessRepository,JwtTokenUtil jwtTokenUtil,TimeSlotRepository timeSlotRepository) {
+    public BusinessServiceImpl(BusinessRepository businessRepository, JwtTokenUtil jwtTokenUtil, BookedTimeSlotRepository bookedTimeSlotRepository) {
         this.businessRepository = businessRepository;
         this.jwtTokenUtil = jwtTokenUtil;
-        this.timeSlotRepository = timeSlotRepository;
+        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
     }
+
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
 
@@ -66,19 +60,19 @@ public class BusinessServiceImpl  implements BusinessService {
         String password = CommonUtilities.getEncryptedPassword(createBusinessLoginRequest.getPassword());
         Business business = businessRepository.findByUsernameAndPassword(username, password);
         if (business != null) {
-                String token = jwtTokenUtil.generateToken(business.getPhoneNumber(), accessSecret, (accessTokenValidity));
-                String refreshToken = jwtTokenUtil.generateToken(business.getPhoneNumber(), refreshSecret, (refreshTokenValidity));
-                BusinessResponse businessResponse = new BusinessResponse(business);
-                CreateBusinessLoginResponse response = CreateBusinessLoginResponse.builder()
-                        .businessResponse(businessResponse)
-                        .token(token)
-                        .refreshToken(refreshToken)
-                        .build();
-                return response;
-            } else {
-                throw new GeneralException("Invalid Username  and Password", HttpStatus.UNAUTHORIZED);
-            }
+            String token = jwtTokenUtil.generateToken(business.getPhoneNumber(), accessSecret, (accessTokenValidity));
+            String refreshToken = jwtTokenUtil.generateToken(business.getPhoneNumber(), refreshSecret, (refreshTokenValidity));
+            BusinessResponse businessResponse = new BusinessResponse(business);
+            CreateBusinessLoginResponse response = CreateBusinessLoginResponse.builder()
+                    .businessResponse(businessResponse)
+                    .token(token)
+                    .refreshToken(refreshToken)
+                    .build();
+            return response;
+        } else {
+            throw new GeneralException("Invalid Username  and Password", HttpStatus.UNAUTHORIZED);
         }
+    }
 
     @Override
     public CreatePasswordResponse resetPassword(CreateUpdatePasswordRequest createUpdatePasswordRequest) {
@@ -99,6 +93,7 @@ public class BusinessServiceImpl  implements BusinessService {
             throw new GeneralException("Incorrect UserName", HttpStatus.UNAUTHORIZED);
         }
     }
+
     @Override
     public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
 
@@ -138,19 +133,15 @@ public class BusinessServiceImpl  implements BusinessService {
             List<Integer> integerList = new ArrayList();
             List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getCompanyId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
-//            for(BookedTimeSlot slot: slotFromDB){
-//                integerList.add(slot.getSlotNumber());
-//            }
-
-                for (int i = 0; i < slotFromDB.size(); i++) {
-                    integerList.add(slotFromDB.get(i).getSlotNumber());
-                }
+            for (BookedTimeSlot slot : slotFromDB) {
+                integerList.add(slot.getSlotNumber());
+            }
 
 
             for (BookTimeSlotResponse slotResponse : allSlotList) {
                 if (integerList.contains(slotResponse.getSlotNumber())) {
-                    for(BookedTimeSlot bookedTimeSlot: slotFromDB){
-                        if(slotResponse.getSlotNumber() == bookedTimeSlot.getSlotNumber()){
+                    for (BookedTimeSlot bookedTimeSlot : slotFromDB) {
+                        if (slotResponse.getSlotNumber() == bookedTimeSlot.getSlotNumber()) {
 
                             BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedTimeSlot);
 
@@ -179,10 +170,6 @@ public class BusinessServiceImpl  implements BusinessService {
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
             timeSlotsList.add(new BookTimeSlotResponse(companyId, count, date, slotStartTime, slotEndTime));
-
-//            timeSlotsList.add(new BookTimeSlotResponse(LocalDate.now(ZoneId.of("Asia/Kolkata")), LocalDateTime.of(LocalDate.now(ZoneId.of("Asia/Kolkata")), slotStartTime), LocalDateTime.of(LocalDate.now(ZoneId.of("Asia/Kolkata")), slotEndTime)));
-//            timeSlotsList.add(new BookTimeSlotResponse(LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(1), LocalDateTime.of(LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(1), slotStartTime), LocalDateTime.of(LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(1), slotEndTime)));
-//            timeSlotsList.add(new BookTimeSlotResponse(LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(2), LocalDateTime.of(LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(2), slotStartTime), LocalDateTime.of(LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(2), slotEndTime)));
             slotStartTime = slotEndTime;
             count++;
         }
