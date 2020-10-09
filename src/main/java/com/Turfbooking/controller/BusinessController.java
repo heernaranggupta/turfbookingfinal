@@ -8,7 +8,6 @@ import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
-import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +23,10 @@ import javax.validation.Valid;
 public class BusinessController {
 
     private BusinessService businessService;
-    private BusinessRepository businessRepository;
 
     @Autowired
-    public BusinessController(BusinessService businessService, BusinessRepository businessRepository) {
+    public BusinessController(BusinessService businessService) {
         this.businessService = businessService;
-        this.businessRepository=businessRepository;
     }
 
     @PostMapping("/book-slot")

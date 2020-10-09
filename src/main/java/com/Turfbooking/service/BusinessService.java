@@ -14,8 +14,6 @@ public interface BusinessService {
 
     CreatePasswordResponse resetPassword(CreateUpdatePasswordRequest createUpdatePasswordRequest);
 
-
-
     BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest);
 
 }

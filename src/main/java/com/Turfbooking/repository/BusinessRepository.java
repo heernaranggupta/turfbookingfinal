@@ -11,15 +11,5 @@ public interface BusinessRepository extends MongoRepository<Business, String> {
     @Query("{'username' : ?0 , 'password' : ?1}")
     Business findByUsernameAndPassword(String username, String password);
 
-    //@Query("{'phoneNumber' : ?0 ,'password': ?1'}")
     Business findByPhoneNumber(String phoneNumber);
-
 }
-//package com.Turfbooking.repository;
-//
-//import org.springframework.data.mongodb.repository.MongoRepository;
-//import org.springframework.stereotype.Repository;
-//
-//@Repository
-//public class BusinessRepository extends MongoRepository<String,String> {
-//}
