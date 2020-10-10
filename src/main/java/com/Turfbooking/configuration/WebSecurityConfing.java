@@ -25,15 +25,17 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/signup").permitAll()
                 .antMatchers("/user/login").permitAll()
                 .antMatchers("/user/getAllSlots").permitAll()
+                .antMatchers("/user/validateOTP").permitAll()
 
-                .antMatchers("/common/generateOtp").permitAll()
-                .antMatchers("/common/validateOtp").permitAll()
+                .antMatchers("/common/generateOTP").permitAll()
+                .antMatchers("/common/validateOTP").permitAll()
 
                 .antMatchers("/business/login").permitAll()
                 .antMatchers("/business/resetPassword").permitAll()
+                .antMatchers("/business/update").permitAll()
 
                 .antMatchers("/business/book-slot").permitAll()
-
+                .antMatchers("/business/getAllSlots").permitAll()
 
                 .antMatchers("/swagger-ui/**").permitAll()
                 .antMatchers("/v3/api-docs","/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()

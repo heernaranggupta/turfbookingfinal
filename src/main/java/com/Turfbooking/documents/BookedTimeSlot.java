@@ -17,9 +17,11 @@ public class BookedTimeSlot {
     private String _id;
     private String userId;//phoneNumber or unique id
     private Integer slotNumber;
-    private String companyId;
+    private String companyId; //turfId
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    //add timestamp
+    private LocalDateTime timeStamp;//add timestamp
+
+
 }

@@ -3,11 +3,16 @@ package com.Turfbooking.controller;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
+import com.Turfbooking.models.request.ValidateOtpRequest;
+import com.Turfbooking.models.request.ValidateOtpRequest;
+import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
-import com.Turfbooking.repository.TimeSlotRepository;
+import com.Turfbooking.models.response.CreateUserLoginResponse;
+import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,11 +43,18 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public CommonResponse<UserResponse> userLogin(@Valid @RequestBody UserLoginRequest userLoginRequest){
+    public CommonResponse<UserResponse> userLogin(@Valid @RequestBody UserLoginRequest userLoginRequest) {
         CreateUserLoginResponse userResponse = userService.userLogin(userLoginRequest);
         CommonResponse response = new CommonResponse(userResponse);
         return ResponseUtilities.createSuccessResponse(response);
     }
+
+    @PostMapping("/validateOTP")
+    public CommonResponse<ValidateOtpResponse> validateOTP(@RequestBody ValidateOtpRequest request) {
+        CommonResponse commonResponse = new CommonResponse<>(userService.validateOTP(request));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
+
 
     @PostMapping("/getAllSlots")
     public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId){
