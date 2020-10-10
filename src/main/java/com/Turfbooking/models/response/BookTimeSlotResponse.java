@@ -10,8 +10,9 @@ import java.time.ZoneId;
 @Data
 public class BookTimeSlotResponse {
 
+    private String bookingId;
     private String userId;
-    private String companyId;
+    private String turfId;
     private Integer slotNumber;
     private String status;
     private LocalDate date;
@@ -21,7 +22,7 @@ public class BookTimeSlotResponse {
 
     public BookTimeSlotResponse(BookedTimeSlot bookedTimeSlot){
         this.userId = bookedTimeSlot.getUserId();
-        this.companyId = bookedTimeSlot.getCompanyId();
+        this.turfId = bookedTimeSlot.getTurfId();
         this.slotNumber = bookedTimeSlot.getSlotNumber();
         this.status = bookedTimeSlot.getStatus();
         this.date = bookedTimeSlot.getDate();
@@ -30,9 +31,9 @@ public class BookTimeSlotResponse {
         this.timestamp = bookedTimeSlot.getTimeStamp(); //LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
     }
 
-    public BookTimeSlotResponse(String userId, String companyId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
+    public BookTimeSlotResponse(String userId, String turfId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
         this.userId = userId;
-        this.companyId = companyId;
+        this.turfId = turfId;
         this.slotNumber = slotNumber;
         this.status = status;
         this.date = date;
@@ -41,8 +42,8 @@ public class BookTimeSlotResponse {
         this.timestamp = timestamp;
     }
 
-    public BookTimeSlotResponse(String companyId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime) {
-        this.companyId = companyId;
+    public BookTimeSlotResponse(String turfId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime) {
+        this.turfId = turfId;
         this.slotNumber = slotNumber;
         this.status = status;
         this.date = date;

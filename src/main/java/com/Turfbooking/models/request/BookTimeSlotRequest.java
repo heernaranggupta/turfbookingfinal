@@ -13,7 +13,7 @@ public class BookTimeSlotRequest {
 
     @NotEmpty
     private Integer slotNumber;
-    private String companyId;
+    private String turfId;
     @NotEmpty
     private String userId; // to know who booked this slot
     //not in past

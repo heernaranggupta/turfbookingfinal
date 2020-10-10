@@ -108,7 +108,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .userId(bookTimeSlotRequest.getUserId())
                     .date(bookTimeSlotRequest.getDate())
                     .slotNumber(bookTimeSlotRequest.getSlotNumber())
-                    .companyId(bookTimeSlotRequest.getCompanyId())
+                    .turfId(bookTimeSlotRequest.getTurfId())
                     .status(BookingStatus.BOOKED_BY_BUSINESS.name())
                     .startTime(bookTimeSlotRequest.getStartTime())
                     .endTime(bookTimeSlotRequest.getEndTime())
@@ -127,7 +127,7 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest)throws GeneralException {
+    public CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest) throws GeneralException {
         Business business = businessRepository.findByPhoneNumber(updateBusinessRequest.getPhoneNumber());
         if (business != null) {
             business.setUsername(updateBusinessRequest.getUsername());
@@ -142,6 +142,7 @@ public class BusinessServiceImpl implements BusinessService {
             throw new GeneralException("Please Provide phone number for update", HttpStatus.OK);
         }
     }
+
     @Override
     public GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
@@ -150,12 +151,11 @@ public class BusinessServiceImpl implements BusinessService {
         if (days >= 0) { //means today or in future
             List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDate(getAllSlotsRequest.getDate());
             List<Integer> integerList = new ArrayList();
-            List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getCompanyId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
+            List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
             for (BookedTimeSlot slot : slotFromDB) {
                 integerList.add(slot.getSlotNumber());
             }
-
 
             for (BookTimeSlotResponse slotResponse : allSlotList) {
                 if (integerList.contains(slotResponse.getSlotNumber())) {
@@ -175,11 +175,9 @@ public class BusinessServiceImpl implements BusinessService {
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
         }
-
     }
 
-
-    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String companyId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
         List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
@@ -188,7 +186,7 @@ public class BusinessServiceImpl implements BusinessService {
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new BookTimeSlotResponse(companyId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
             count++;
         }
