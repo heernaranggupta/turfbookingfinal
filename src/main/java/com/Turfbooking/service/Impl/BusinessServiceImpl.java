@@ -6,10 +6,12 @@ import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
+import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
@@ -120,9 +122,24 @@ public class BusinessServiceImpl implements BusinessService {
         } else {
             throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
         }
-
     }
 
+    @Override
+    public CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest)throws GeneralException {
+        Business business = businessRepository.findByPhoneNumber(updateBusinessRequest.getPhoneNumber());
+        if (business != null) {
+            business.setUsername(updateBusinessRequest.getUsername());
+            business.setCompanyName(updateBusinessRequest.getCompanyName());
+            Business businessInserted = businessRepository.save(business);
+
+            CreateBusinessUpdateResponse createBusinessUpdateResponse = CreateBusinessUpdateResponse.builder()
+                    .message("Data updated Successfully")
+                    .build();
+            return createBusinessUpdateResponse;
+        } else {
+            throw new GeneralException("Please Provide phone number for update", HttpStatus.OK);
+        }
+    }
     @Override
     public GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
