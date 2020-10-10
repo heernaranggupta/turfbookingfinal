@@ -15,7 +15,7 @@ public class BookTimeSlotRequest {
     private Integer slotNumber;
     private String companyId;
     @NotEmpty
-    private String userId; // to know who booked this slot
+    private String userId; // phone number (unique id) to know who booked this slot
     //not in past
     private LocalDate date;
     private LocalDateTime startTime;

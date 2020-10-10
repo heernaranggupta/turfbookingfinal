@@ -24,6 +24,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
         http.csrf().disable().authorizeRequests()
                 .antMatchers("/user/signup").permitAll()
                 .antMatchers("/user/login").permitAll()
+                .antMatchers("/user/getAllSlots").permitAll()
 
                 .antMatchers("/common/generateOtp").permitAll()
                 .antMatchers("/common/validateOtp").permitAll()

@@ -1,15 +1,18 @@
 package com.Turfbooking.service.Impl;
 
+import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Location;
-import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
+import com.Turfbooking.repository.TimeSlotRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
@@ -20,17 +23,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
+    private TimeSlotRepository timeSlotRepository;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,TimeSlotRepository timeSlotRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
+        this.timeSlotRepository = timeSlotRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -104,6 +112,22 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new UserNotFoundException("Username and password does not matched.");
         }
+    }
+
+    @Override
+    public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException{
+
+        User isExist = userRepository.findByPhoneNumber(userId);
+
+        if(null != isExist){
+            List<BookedTimeSlot> bookedTimeSlots = timeSlotRepository.findByUserId(userId);
+            AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(bookedTimeSlots);
+            return response;
+
+        }else {
+            throw new GeneralException("No user found with user id: "+userId,HttpStatus.OK);
+        }
+
     }
 
 
