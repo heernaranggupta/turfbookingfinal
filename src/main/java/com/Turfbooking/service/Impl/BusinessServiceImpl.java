@@ -3,6 +3,7 @@ package com.Turfbooking.service.Impl;
 import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
+import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
@@ -108,6 +109,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .date(bookTimeSlotRequest.getDate())
                     .slotNumber(bookTimeSlotRequest.getSlotNumber())
                     .companyId(bookTimeSlotRequest.getCompanyId())
+                    .status(BookingStatus.BOOKED_BY_BUSINESS.name())
                     .startTime(bookTimeSlotRequest.getStartTime())
                     .endTime(bookTimeSlotRequest.getEndTime())
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
@@ -186,7 +188,7 @@ public class BusinessServiceImpl implements BusinessService {
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new BookTimeSlotResponse(companyId, count, date, slotStartTime, slotEndTime));
+            timeSlotsList.add(new BookTimeSlotResponse(companyId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
             count++;
         }
