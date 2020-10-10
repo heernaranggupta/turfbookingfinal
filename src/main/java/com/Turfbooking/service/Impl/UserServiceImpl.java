@@ -1,8 +1,7 @@
 package com.Turfbooking.service.Impl;
 
+import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Otp;
-import com.Turfbooking.documents.BookedTimeSlot;
-import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
@@ -13,17 +12,12 @@ import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
-import com.Turfbooking.models.request.ValidateOtpRequest;
-import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.OtpRepository;
-import com.Turfbooking.models.response.ValidateOtpResponse;
-import com.Turfbooking.repository.OtpRepository;
-import com.Turfbooking.repository.TimeSlotRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
@@ -35,9 +29,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 
@@ -48,11 +41,10 @@ public class UserServiceImpl implements UserService {
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
     private OtpRepository otpRepository;
-    private TimeSlotRepository timeSlotRepository;
+    private BookedTimeSlotRepository timeSlotRepository;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,OtpRepository otpRepository) {
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,TimeSlotRepository timeSlotRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,BookedTimeSlotRepository timeSlotRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
