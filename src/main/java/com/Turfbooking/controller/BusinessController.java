@@ -2,6 +2,7 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.documents.Business;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CreateEditBookingRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
@@ -63,6 +64,12 @@ public class BusinessController {
     @PutMapping("/update")
     public CommonResponse<CreateBusinessUpdateResponse> update(@RequestBody UpdateBusinessRequest updateBusinessRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.updateBusiness(updateBusinessRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
+
+    @PostMapping("/editBooking")
+    public CommonResponse editBooking (@RequestBody CreateEditBookingRequest createEditBookingRequest) {
+        CommonResponse commonResponse = new CommonResponse(businessService.editBooking(createEditBookingRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 

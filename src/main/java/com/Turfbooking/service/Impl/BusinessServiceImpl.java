@@ -5,11 +5,13 @@ import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateEditBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
@@ -140,6 +142,12 @@ public class BusinessServiceImpl implements BusinessService {
             throw new GeneralException("Please Provide phone number for update", HttpStatus.OK);
         }
     }
+
+    @Override
+    public CommonResponse editBooking(CreateEditBookingRequest createEditBookingRequest) {
+        return null;
+    }
+
     @Override
     public GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
@@ -175,7 +183,6 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
     }
-
 
     private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String companyId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
         List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
