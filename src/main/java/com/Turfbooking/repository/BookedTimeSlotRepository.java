@@ -20,4 +20,7 @@ public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot
     @Query("{'bookingId':?0}")
     BookedTimeSlot findByBookingId(String bookingId);
 
+    @Query("{'userId': ?0}")
+    List<BookedTimeSlot> findByUserId(String userId);
+
 }

@@ -13,6 +13,7 @@ import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
+import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
@@ -121,6 +122,22 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new UserNotFoundException("Username and password does not matched.");
         }
+    }
+
+    @Override
+    public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException{
+
+        User isExist = userRepository.findByPhoneNumber(userId);
+
+        if(null != isExist){
+            List<BookedTimeSlot> bookedTimeSlots = timeSlotRepository.findByUserId(userId);
+            AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(bookedTimeSlots);
+            return response;
+
+        }else {
+            throw new GeneralException("No user found with user id: "+userId,HttpStatus.OK);
+        }
+
     }
 
     @Override
