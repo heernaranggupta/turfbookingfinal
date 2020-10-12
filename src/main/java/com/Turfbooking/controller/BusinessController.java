@@ -34,7 +34,7 @@ public class BusinessController {
         this.businessService = businessService;
     }
 
-    @PostMapping("/book-slot")
+    @PostMapping("/bookSlot")
     public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
         CommonResponse response = new CommonResponse<>(businessService.bookSlot(bookTimeSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
