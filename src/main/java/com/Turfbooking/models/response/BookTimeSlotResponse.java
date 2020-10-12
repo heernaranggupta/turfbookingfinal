@@ -5,7 +5,6 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Data
 public class BookTimeSlotResponse {
@@ -20,7 +19,7 @@ public class BookTimeSlotResponse {
     private LocalDateTime endTime;
     private LocalDateTime timestamp;
 
-    public BookTimeSlotResponse(BookedTimeSlot bookedTimeSlot){
+    public BookTimeSlotResponse(BookedTimeSlot bookedTimeSlot) {
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
         this.slotNumber = bookedTimeSlot.getSlotNumber();

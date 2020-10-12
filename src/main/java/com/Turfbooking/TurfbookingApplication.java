@@ -17,23 +17,23 @@ import java.util.List;
 
 @SpringBootApplication
 @EnableMongoRepositories
-@OpenAPIDefinition(info = @Info(title = "Turf Booking",version = "0.1",description = "API documentation of turf booking project."))
+@OpenAPIDefinition(info = @Info(title = "Turf Booking", version = "0.1", description = "API documentation of turf booking project."))
 public class TurfbookingApplication {
 
-	@Bean
-	public RestTemplate getRestTemplate(){
-		RestTemplate restTemplate = new RestTemplate();
-		List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
-		MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-		converter.setSupportedMediaTypes(Collections.singletonList(MediaType.ALL));
-		messageConverters.add(converter);
-		restTemplate.setMessageConverters(messageConverters);
-		return restTemplate;
-	}
+    @Bean
+    public RestTemplate getRestTemplate() {
+        RestTemplate restTemplate = new RestTemplate();
+        List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.ALL));
+        messageConverters.add(converter);
+        restTemplate.setMessageConverters(messageConverters);
+        return restTemplate;
+    }
 
 
-	public static void main(String[] args) {
-		SpringApplication.run(TurfbookingApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(TurfbookingApplication.class, args);
+    }
 
 }
