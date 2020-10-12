@@ -35,7 +35,9 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/signup")
+    /*TODO:: make a booking*/
+
+    @PostMapping("/sign-up")
     public CommonResponse<CreateUserResponse> createUser(@RequestBody @Valid CreateUserRequest createUserRequest) {
         CreateUserResponse userResponse = userService.createNewUser(createUserRequest);
         CommonResponse response = new CommonResponse<>(userResponse);
@@ -49,23 +51,23 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @PostMapping("/validateOTP")
+    @PostMapping("/validate-otp")
     public CommonResponse<ValidateOtpResponse> validateOTP(@RequestBody ValidateOtpRequest request) {
         CommonResponse commonResponse = new CommonResponse<>(userService.validateOTP(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
+
+    @GetMapping("slot/cancel")
+    public CommonResponse cancelBookedSlot(@RequestParam String bookingId) {
+        BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
+        CommonResponse response = new CommonResponse(timeSlotResponse);
+        return response;
     }
 
     @PostMapping("/book-slot")
     public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
         CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
-    }
-
-    @GetMapping("cancel-slot")
-    public CommonResponse cancelBookedSlot(@RequestParam String bookingId){
-        BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
-        CommonResponse response = new CommonResponse(timeSlotResponse);
-        return response;
     }
 
     @PostMapping("update-slot")
@@ -75,10 +77,10 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @PostMapping("/getAllSlots")
-    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId){
+    //view user booking history
+    @PostMapping("/booking-history")
+    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId) {
         CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userId));
         return ResponseUtilities.createSuccessResponse(response);
     }
-
 }

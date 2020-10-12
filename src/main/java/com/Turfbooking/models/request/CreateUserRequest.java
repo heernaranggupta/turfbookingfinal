@@ -18,7 +18,6 @@ public class CreateUserRequest {
     private String countryCode;
     @NotEmpty(message = "Please provide contact number")
     private String phoneNumber;
-
     private String emailId;
     private Double latitude;
     private Double longitude;

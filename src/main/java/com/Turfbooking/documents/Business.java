@@ -12,7 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 public class Business {
     @Id
-    private  String _id;
+    private String _id;
     private String username;
     private String password;
     private String phoneNumber;
