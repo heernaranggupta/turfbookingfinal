@@ -6,11 +6,13 @@ import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Location;
+import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
@@ -30,9 +32,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
-
+import java.time.ZoneId;
 
 @Slf4j
 @Service
@@ -41,14 +41,14 @@ public class UserServiceImpl implements UserService {
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
     private OtpRepository otpRepository;
-    private BookedTimeSlotRepository timeSlotRepository;
+    private BookedTimeSlotRepository bookedTimeSlotRepository;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,BookedTimeSlotRepository timeSlotRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
-        this.timeSlotRepository = timeSlotRepository;
+        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -151,7 +151,7 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
             phoneNumberWithCountryCode = phoneNumber;
         else {
-            throw new GeneralException("Phone number or county code is invalid.",HttpStatus.OK);
+            throw new GeneralException("Phone number or county code is invalid.", HttpStatus.OK);
         }
 
         Integer userOtp = validateOtpRequest.getOtp();
@@ -171,7 +171,7 @@ public class UserServiceImpl implements UserService {
         String token;
         String refreshToken;
 
-        if(null != isUserOrNot){
+        if (null != isUserOrNot) {
             token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
             refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
             validateOtpResponse.setToken(token);
@@ -180,7 +180,7 @@ public class UserServiceImpl implements UserService {
             validateOtpResponse.setNameOfTheUser(isUserOrNot.getFirstName());
             UserResponse userResponse = new UserResponse(isUserOrNot);
             validateOtpResponse.setUser(userResponse);
-        }else {
+        } else {
             validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
 
         }
@@ -188,6 +188,39 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public BookTimeSlotResponse cancelBookedSlot(String bookingId) {
+
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByBookingId(bookingId);
+
+        if (null != timeSlot) {
+            timeSlot = BookedTimeSlot.builder()
+                    ._id(timeSlot.get_id())
+                    .BookingId(timeSlot.getBookingId())
+                    .userId(timeSlot.getUserId())
+                    .slotNumber(null)
+                    .turfId(timeSlot.getTurfId())
+                    .status(BookingStatus.CANCELLED_BY_USER.name())
+                    .date(timeSlot.getDate())
+                    .startTime(timeSlot.getStartTime())
+                    .endTime(timeSlot.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot cancelled = bookedTimeSlotRepository.save(timeSlot);
+
+            if (null != cancelled) {
+
+                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                return response;
+
+            } else {
+                throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+        }
+    }
 
 
 }

@@ -17,6 +17,9 @@ public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot
     @Query("{'date': { $gte: ?0}}")
     List<BookedTimeSlot> findByDate(LocalDate date);
 
+    @Query("{'bookingId':?0}")
+    BookedTimeSlot findByBookingId(String bookingId);
+
     @Query("{'userId': ?0}")
     List<BookedTimeSlot> findByUserId(String userId);
 

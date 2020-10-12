@@ -4,6 +4,7 @@ import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
@@ -21,4 +22,7 @@ public interface UserService {
     AllBookedSlotByUserResponse getAllBookedSlots(String userId);
 
     ValidateOtpResponse validateOTP(ValidateOtpRequest request);
+
+    BookTimeSlotResponse cancelBookedSlot(String bookingId);
+
 }
