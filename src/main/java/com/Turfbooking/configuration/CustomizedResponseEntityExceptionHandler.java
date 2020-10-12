@@ -30,9 +30,9 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
 
         String message = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
 
-        CommonResponse<T> response =new CommonResponse("Validation Failed",HttpStatus.BAD_REQUEST.value(),message,false,LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+        CommonResponse<T> response = new CommonResponse("Validation Failed", HttpStatus.BAD_REQUEST.value(), message, false, LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
-        return new ResponseEntity(response,HttpStatus.BAD_REQUEST);
+        return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
     }
 
     //Exception
@@ -59,7 +59,7 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         log.error(ex.getMessage());
         ExceptionResponse exceptionResponse = new ExceptionResponse(new Date(), ex.getMessage(),
                 request.getDescription(false));
-        CommonResponse commonResponse= new CommonResponse(exceptionResponse, ex.getStatus().value(), ex.getMessage(), false, LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+        CommonResponse commonResponse = new CommonResponse(exceptionResponse, ex.getStatus().value(), ex.getMessage(), false, LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
         return new ResponseEntity(commonResponse, ex.getStatus());
     }
 

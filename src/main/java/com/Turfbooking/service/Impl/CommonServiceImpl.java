@@ -11,7 +11,6 @@ import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CreateResponse;
-import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.repository.OtpRepository;
@@ -47,12 +46,13 @@ public class CommonServiceImpl implements CommonService {
 
 
     @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil,OtpRepository otpRepository, RestTemplate restTemplate,UserRepository userRepository) {
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.otpRepository = otpRepository;
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;
     }
+
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
 
@@ -124,7 +124,7 @@ public class CommonServiceImpl implements CommonService {
     }
 
     //    convert it to lambda expression
-    private int     sendMail(String mailId, Integer otp) {
+    private int sendMail(String mailId, Integer otp) {
 
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(mailId);

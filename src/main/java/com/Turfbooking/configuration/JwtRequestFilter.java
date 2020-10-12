@@ -45,27 +45,27 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // JWT Token is in the form "Bearer token".
         // Remove Bearer word and get only token
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
-            try{
-                username = jwtTokenUtil.getUsernameFromToken(jwt,accessToken);
-            }catch (IllegalArgumentException iae){
-                logger.error(iae +" Unable to get jwt token.");
-            }catch (ExpiredJwtException eje){
+            try {
+                username = jwtTokenUtil.getUsernameFromToken(jwt, accessToken);
+            } catch (IllegalArgumentException iae) {
+                logger.error(iae + " Unable to get jwt token.");
+            } catch (ExpiredJwtException eje) {
                 logger.error(eje + " Jwt token expired.");
             }
         } else {
             logger.warn("Jwt token doesnot begin with Bearer string.");
         }
 
-        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             User user = userRepository.findByPhoneNumber(username);
 //            Seller seller = null;
             String phoneNumber = null;
 
-            if(user != null) {
+            if (user != null) {
                 phoneNumber = user.getPhoneNumber();
-            }else{
+            } else {
 //                seller = sellerRepository.findByPrimaryPhoneNumber(username);
 //                if(seller != null){
 //                    phoneNumber = seller.getPrimaryPhoneNumber();
@@ -76,9 +76,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             }
 
-            if(jwtTokenUtil.validateToken(jwt,phoneNumber,accessToken)){
+            if (jwtTokenUtil.validateToken(jwt, phoneNumber, accessToken)) {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                        new UsernamePasswordAuthenticationToken(user,null,null);
+                        new UsernamePasswordAuthenticationToken(user, null, null);
                 usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 /*
                  * After setting the Authentication in the context,

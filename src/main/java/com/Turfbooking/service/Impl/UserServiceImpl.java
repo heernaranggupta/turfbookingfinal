@@ -12,8 +12,8 @@ import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
@@ -126,17 +126,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException{
+    public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException {
 
         User isExist = userRepository.findByPhoneNumber(userId);
 
-        if(null != isExist){
+        if (null != isExist) {
             List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByUserId(userId);
             AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(bookedTimeSlots);
             return response;
 
-        }else {
-            throw new GeneralException("No user found with user id: "+userId,HttpStatus.OK);
+        } else {
+            throw new GeneralException("No user found with user id: " + userId, HttpStatus.OK);
         }
 
     }

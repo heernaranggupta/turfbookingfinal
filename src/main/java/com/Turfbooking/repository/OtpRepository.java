@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface OtpRepository extends MongoRepository<Otp,String> {
+public interface OtpRepository extends MongoRepository<Otp, String> {
 
     @Query("{'phoneNumber' : ?0 , 'otp' : ?1}")
     Otp findByPhoneNumberAndOtp(String phoneNumber, Integer otp);
