@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -130,7 +131,7 @@ public class UserServiceImpl implements UserService {
         User isExist = userRepository.findByPhoneNumber(userId);
 
         if(null != isExist){
-            List<BookedTimeSlot> bookedTimeSlots = timeSlotRepository.findByUserId(userId);
+            List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByUserId(userId);
             AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(bookedTimeSlots);
             return response;
 
