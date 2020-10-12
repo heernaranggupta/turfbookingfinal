@@ -30,7 +30,7 @@ public class User {
     private String countryCode;
     @Indexed(name = "user_phone_number", direction = IndexDirection.DESCENDING, background = true, unique = true)
     private String phoneNumber;
-    private Address address; //or google maps coordinates-coordinates // need to figure out
+    private Address address;
     private Location location;
     private Location latestLocation;
     @Indexed(name = "user_email_id", direction = IndexDirection.DESCENDING, background = true)

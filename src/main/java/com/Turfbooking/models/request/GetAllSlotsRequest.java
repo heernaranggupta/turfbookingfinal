@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 public class GetAllSlotsRequest {
 
-    private String companyId;
+    private String turfId;
     private LocalDate date;
     private LocalDateTime openTime;
     private LocalDateTime closeTime;

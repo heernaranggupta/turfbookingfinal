@@ -24,7 +24,10 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
         http.csrf().disable().authorizeRequests()
                 .antMatchers("/user/signup").permitAll()
                 .antMatchers("/user/login").permitAll()
+                .antMatchers("/user/getAllSlots").permitAll()
                 .antMatchers("/user/validateOTP").permitAll()
+                .antMatchers("/user/slot/cancel").permitAll()
+               .antMatchers("/user/user/updateProfile").permitAll()
 
                 .antMatchers("/common/generateOTP").permitAll()
                 .antMatchers("/common/validateOTP").permitAll()
@@ -37,7 +40,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/business/getAllSlots").permitAll()
 
                 .antMatchers("/swagger-ui/**").permitAll()
-                .antMatchers("/v3/api-docs","/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
+                .antMatchers("/v3/api-docs","/v3/api-docs.yaml","/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
 
                 .anyRequest().authenticated()
                 .and()
