@@ -1,6 +1,8 @@
 package com.Turfbooking.controller;
 
+import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
@@ -53,18 +55,30 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @GetMapping("slot/cancel")
+    @PostMapping("/book-slot")
+    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
+        CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @GetMapping("cancel-slot")
     public CommonResponse cancelBookedSlot(@RequestParam String bookingId){
         BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }
 
-
+    @PostMapping("update-slot")
+    public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest){
+        BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
+        CommonResponse response = new CommonResponse(timeSlotResponse);
+        return ResponseUtilities.createSuccessResponse(response);
+    }
 
     @PostMapping("/getAllSlots")
     public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId){
         CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userId));
         return ResponseUtilities.createSuccessResponse(response);
     }
+
 }

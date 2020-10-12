@@ -105,6 +105,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         if (slot == null) {
             BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
+                    .bookingId(CommonUtilities.getAlphaNumericString(5))
                     .userId(bookTimeSlotRequest.getUserId())
                     .date(bookTimeSlotRequest.getDate())
                     .slotNumber(bookTimeSlotRequest.getSlotNumber())

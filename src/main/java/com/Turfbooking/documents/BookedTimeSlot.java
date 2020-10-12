@@ -15,7 +15,7 @@ public class BookedTimeSlot {
 
     @Id
     private String _id;
-    private String BookingId;
+    private String bookingId;
     private String userId;//phoneNumber or unique id
     private Integer slotNumber;
     private String turfId; //turfId

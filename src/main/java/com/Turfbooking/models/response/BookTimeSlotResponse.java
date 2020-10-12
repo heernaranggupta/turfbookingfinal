@@ -21,6 +21,7 @@ public class BookTimeSlotResponse {
     private LocalDateTime timestamp;
 
     public BookTimeSlotResponse(BookedTimeSlot bookedTimeSlot){
+        this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
         this.slotNumber = bookedTimeSlot.getSlotNumber();
