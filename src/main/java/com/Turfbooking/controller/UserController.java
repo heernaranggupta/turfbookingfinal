@@ -1,6 +1,8 @@
 package com.Turfbooking.controller;
 
+import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
@@ -60,6 +62,19 @@ public class UserController {
         BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
+    }
+
+    @PostMapping("/book-slot")
+    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
+        CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @PostMapping("update-slot")
+    public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest){
+        BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
+        CommonResponse response = new CommonResponse(timeSlotResponse);
+        return ResponseUtilities.createSuccessResponse(response);
     }
 
     //view user booking history
