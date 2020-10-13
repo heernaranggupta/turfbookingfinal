@@ -12,7 +12,9 @@ import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+@Slf4j
 @RestController
 @RequestMapping("/business")
 public class BusinessController {
@@ -49,8 +52,13 @@ public class BusinessController {
 
     //cache - change on booking
     //all slots - available and unavailable by date
+    @Cacheable(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date)",
+            condition = "#getAllSlotsRequest.turfId != null")
     @PostMapping("/all-slots")
     public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
+        log.info("Get all slots method executed. : "+ getAllSlotsRequest.getTurfId()+"--"+getAllSlotsRequest.getDate());
         CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
