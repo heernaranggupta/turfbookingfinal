@@ -10,8 +10,10 @@ import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
+import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
+import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
@@ -132,6 +134,36 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
+
+        //GET SLOT BY DATE AND SLOT NUMBER
+        BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
+
+        if (slot == null) {
+            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
+                    .bookingId(CommonUtilities.getAlphaNumericString(5))
+                    .userId(bookTimeSlotRequest.getUserId())
+                    .date(bookTimeSlotRequest.getDate())
+                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
+                    .turfId(bookTimeSlotRequest.getTurfId())
+                    .status(BookingStatus.BOOKED_BY_USER.name())
+                    .startTime(bookTimeSlotRequest.getStartTime())
+                    .endTime(bookTimeSlotRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
+
+            BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
+
+            return bookTimeSlotResponse;
+
+        } else {
+            throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
+        }
+    }
+
+    @Override
     public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException {
 
         User isExist = userRepository.findByPhoneNumber(userId);
@@ -225,7 +257,7 @@ public class UserServiceImpl implements UserService {
         if (null != timeSlot) {
             timeSlot = BookedTimeSlot.builder()
                     ._id(timeSlot.get_id())
-                    .BookingId(timeSlot.getBookingId())
+                    .bookingId(timeSlot.getBookingId())
                     .userId(timeSlot.getUserId())
                     .slotNumber(null)
                     .turfId(timeSlot.getTurfId())
@@ -248,6 +280,33 @@ public class UserServiceImpl implements UserService {
             }
         } else {
             throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
+
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
+
+        if (null != bookedTimeSlot) {
+            bookedTimeSlot = BookedTimeSlot.builder()
+                    ._id(bookedTimeSlot.get_id())
+                    .bookingId(CommonUtilities.getAlphaNumericString(6))
+                    .userId(updateRequest.getUserId())
+                    .slotNumber(updateRequest.getSlotNumber())
+                    .turfId(updateRequest.getTurfId())
+                    .date(updateRequest.getDate())
+                    .status(BookingStatus.RESCHEDULED_BY_USER.name())
+                    .startTime(updateRequest.getStartTime())
+                    .endTime(updateRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(updatedBookedSlot);
+            return response;
+        } else {
+            throw new GeneralException("Invalid booking id.", HttpStatus.OK);
         }
     }
 
