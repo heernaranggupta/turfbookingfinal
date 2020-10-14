@@ -14,6 +14,7 @@ import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,6 +45,10 @@ public class BusinessController {
 
 
     //create api like this to make slot unavailable
+    @CacheEvict(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
+            condition = "#bookTimeSlotRequest.turfId != null")
     @PostMapping("/book-slot")
     public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest) {
         CommonResponse response = new CommonResponse<>(businessService.bookSlot(bookTimeSlotRequest));
@@ -54,7 +59,7 @@ public class BusinessController {
     //all slots - available and unavailable by date
     @Cacheable(
             value = "listOfSlotsByTurfIdAndDate",
-            key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date)",
+            key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date.toString())",
             condition = "#getAllSlotsRequest.turfId != null")
     @PostMapping("/all-slots")
     public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
