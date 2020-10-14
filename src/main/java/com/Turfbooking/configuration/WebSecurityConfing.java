@@ -22,17 +22,14 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests()
-                .antMatchers("/user/signup").permitAll()
+                .antMatchers("/user/sign-up").permitAll()
                 .antMatchers("/user/login").permitAll()
                 .antMatchers("/user/getAllSlots").permitAll()
-                .antMatchers("/user/validateOTP").permitAll()
+                .antMatchers("/user/validate-otp").permitAll()
                 .antMatchers("/user/slot/cancel").permitAll()
                 .antMatchers("/user/book-slot").permitAll()
                 .antMatchers("/user/update-slot").permitAll()
                 .antMatchers("/user/cancel-slot").permitAll()
-
-
-
 
                 .antMatchers("/common/generateOTP").permitAll()
                 .antMatchers("/common/validateOTP").permitAll()
@@ -40,9 +37,9 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/business/login").permitAll()
                 .antMatchers("/business/resetPassword").permitAll()
                 .antMatchers("/business/update").permitAll()
-
                 .antMatchers("/business/book-slot").permitAll()
                 .antMatchers("/business/getAllSlots").permitAll()
+                .antMatchers("/business/cancel-booking").permitAll()
 
                 .antMatchers("/swagger-ui/**").permitAll()
                 .antMatchers("/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()

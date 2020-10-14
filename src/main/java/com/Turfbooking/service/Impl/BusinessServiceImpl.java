@@ -178,6 +178,39 @@ public class BusinessServiceImpl implements BusinessService {
         }
     }
 
+    @Override
+    public BookTimeSlotResponse cancelBooking(String bookingId) {
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByBookingId(bookingId);
+
+        if (null != timeSlot) {
+            timeSlot = BookedTimeSlot.builder()
+                    ._id(timeSlot.get_id())
+                    .bookingId(timeSlot.getBookingId())
+                    .userId(timeSlot.getUserId())
+                    .slotNumber(null)
+                    .turfId(timeSlot.getTurfId())
+                    .status(BookingStatus.CANCELLED_BY_BUSINESS.name())
+                    .date(timeSlot.getDate())
+                    .startTime(timeSlot.getStartTime())
+                    .endTime(timeSlot.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot cancelled = bookedTimeSlotRepository.save(timeSlot);
+
+            if (null != cancelled) {
+
+                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                return response;
+
+            } else {
+                throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+        }
+    }
+
     private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
         List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;

@@ -22,7 +22,7 @@ public interface BusinessService {
 
     CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest);
 
-
     GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest);
 
+    BookTimeSlotResponse cancelBooking(String bookingId);
 }
