@@ -57,7 +57,7 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @GetMapping("slot/cancel")
+    @GetMapping("cancel-booking")
     public CommonResponse cancelBookedSlot(@RequestParam String bookingId) {
         BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
         CommonResponse response = new CommonResponse(timeSlotResponse);
@@ -70,7 +70,7 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @PostMapping("update-slot")
+    @PostMapping("update-booking")
     public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest){
         BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
