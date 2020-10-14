@@ -24,5 +24,6 @@ public class CreateUserRequest {
     private String emailId;
     private Double latitude;
     private Double longitude;
+    private String displayImageUrl;
 
 }

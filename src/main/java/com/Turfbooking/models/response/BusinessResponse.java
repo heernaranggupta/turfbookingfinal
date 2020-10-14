@@ -13,11 +13,10 @@ public class BusinessResponse {
     private String phoneNumber;
     private String companyName;
 
-    public BusinessResponse(Business business)
-    {
-        this.username=business.getUsername();
-        this.phoneNumber=business.getPhoneNumber();
-        this.companyName=business.getCompanyName();
+    public BusinessResponse(Business business) {
+        this.username = business.getUsername();
+        this.phoneNumber = business.getPhoneNumber();
+        this.companyName = business.getCompanyName();
     }
 
 }

@@ -1,6 +1,5 @@
 package com.Turfbooking.models.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,7 +7,7 @@ import lombok.Getter;
 @Builder
 public class CreateUserResponse {
 
-//    private String status; // no need of status.
+    //    private String status; // no need of status.
     private UserResponse user;
     private String token;
     private String refreshToken;
@@ -18,7 +17,6 @@ public class CreateUserResponse {
         this.token = token;
         this.refreshToken = refreshToken;
     }
-
 
 
 }

@@ -35,4 +35,5 @@ public class User {
     private Location latestLocation;
     @Indexed(name = "user_email_id", direction = IndexDirection.DESCENDING, background = true)
     private String emailId;
+    private String displayImageUrl;
 }

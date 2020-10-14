@@ -1,9 +1,7 @@
 package com.Turfbooking.models.response;
 
-import com.Turfbooking.models.response.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

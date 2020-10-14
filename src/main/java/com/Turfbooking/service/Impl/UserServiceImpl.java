@@ -14,9 +14,8 @@ import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.CommonResponse;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
@@ -84,6 +83,7 @@ public class UserServiceImpl implements UserService {
                 .password(CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()))
                 .phoneNumber(createUserRequest.getPhoneNumber())
                 .emailId(createUserRequest.getEmailId())
+                .displayImageUrl(createUserRequest.getDisplayImageUrl())
                 .build();
         Location userLocation = new Location();
         if (null != createUserRequest && null != createUserRequest.getLatitude() && null != createUserRequest.getLongitude()) {
@@ -208,7 +208,7 @@ public class UserServiceImpl implements UserService {
             userDocument.setEmailId(customerProfileUpdateRequest.getEmailId());
             User newCreatedUser = userRepository.save(userDocument);
             UserResponse userResponse = new UserResponse(newCreatedUser);
-            CustomerProfileUpdateResponse customerProfileUpdateResponse= CustomerProfileUpdateResponse.builder()
+            CustomerProfileUpdateResponse customerProfileUpdateResponse = CustomerProfileUpdateResponse.builder()
                     .user(userResponse)
                     .build();
             return customerProfileUpdateResponse;
@@ -216,6 +216,7 @@ public class UserServiceImpl implements UserService {
             throw new GeneralException("User does not exist with this PhoneNumber ", HttpStatus.OK);
         }
     }
+
     @Override
     public BookTimeSlotResponse cancelBookedSlot(String bookingId) {
 

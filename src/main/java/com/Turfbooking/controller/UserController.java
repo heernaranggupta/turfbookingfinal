@@ -1,10 +1,10 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.request.ValidateOtpRequest;
+import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
@@ -36,7 +36,9 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/signup")
+    /*TODO:: make a booking*/
+
+    @PostMapping("/sign-up")
     public CommonResponse<CreateUserResponse> createUser(@RequestBody @Valid CreateUserRequest createUserRequest) {
         CreateUserResponse userResponse = userService.createNewUser(createUserRequest);
         CommonResponse response = new CommonResponse<>(userResponse);
@@ -55,21 +57,24 @@ public class UserController {
         CommonResponse commonResponse = new CommonResponse<>(userService.validateOTP(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
-@PutMapping("/updateProfile")
-    public CommonResponse<CustomerProfileUpdateResponse>updateProfile(@Valid @RequestBody CustomerProfileUpdateRequest customerProfileUpdateRequest){
+
+    @PutMapping("/update-profile")
+    public CommonResponse<CustomerProfileUpdateResponse> updateProfile(@Valid @RequestBody CustomerProfileUpdateRequest customerProfileUpdateRequest) {
         CustomerProfileUpdateResponse customerProfileUpdateResponse = userService.updateProfile(customerProfileUpdateRequest);
-    CommonResponse commonResponse = new CommonResponse<>(customerProfileUpdateRequest);
-    return ResponseUtilities.createSuccessResponse(commonResponse);
+        CommonResponse commonResponse = new CommonResponse<>(customerProfileUpdateRequest);
+        return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
     @GetMapping("slot/cancel")
-    public CommonResponse cancelBookedSlot(@RequestParam String bookingId){
+    public CommonResponse cancelBookedSlot(@RequestParam String bookingId) {
         BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }
-    @PostMapping("/getAllSlots")
-    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId){
+
+    //view user booking history
+    @PostMapping("/booking-history")
+    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId) {
         CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userId));
         return ResponseUtilities.createSuccessResponse(response);
     }

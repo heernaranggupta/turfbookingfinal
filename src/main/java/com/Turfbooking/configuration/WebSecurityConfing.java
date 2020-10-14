@@ -22,7 +22,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests()
-                .antMatchers("/user/signup").permitAll()
+                .antMatchers("/user/sign-up").permitAll()
                 .antMatchers("/user/login").permitAll()
                 .antMatchers("/user/getAllSlots").permitAll()
                 .antMatchers("/user/validateOTP").permitAll()
@@ -39,8 +39,11 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/business/book-slot").permitAll()
                 .antMatchers("/business/getAllSlots").permitAll()
 
+                .antMatchers("/images/uploadFile").permitAll()
+                .antMatchers("/images/downloadFile/**").permitAll()
+
                 .antMatchers("/swagger-ui/**").permitAll()
-                .antMatchers("/v3/api-docs","/v3/api-docs.yaml","/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
+                .antMatchers("/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
 
                 .anyRequest().authenticated()
                 .and()
