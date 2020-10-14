@@ -2,6 +2,7 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
@@ -82,5 +83,11 @@ public class UserController {
     public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId) {
         CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userId));
         return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @PostMapping("/get-all-slots-by-date")
+    public CommonResponse getAllSlotsByDate(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
+        CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 }
