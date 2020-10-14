@@ -151,15 +151,13 @@ public class BusinessServiceImpl implements BusinessService {
         int days = getAllSlotsRequest.getDate().compareTo(today);
 
         if (days >= 0) { //means today or in future
-            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDate(getAllSlotsRequest.getDate());
+            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),getAllSlotsRequest.getTurfId());
 //            List<Integer> integerList = new ArrayList();
             List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
-
 
             List<Integer> integerList = slotFromDB.stream()
                     .map(x -> x.getSlotNumber())
                     .collect(Collectors.toList());
-
 
             allSlotList.stream().
                     forEach((response) -> {
@@ -173,24 +171,6 @@ public class BusinessServiceImpl implements BusinessService {
                         }
                     });
 
-
-//            for (BookedTimeSlot slot : slotFromDB) {
-//                integerList.add(slot.getSlotNumber());
-//            }
-//
-//            for (BookTimeSlotResponse slotResponse : allSlotList) {
-//                if (integerList.contains(slotResponse.getSlotNumber())) {
-//                    for (BookedTimeSlot bookedTimeSlot : slotFromDB) {
-//                        if (slotResponse.getSlotNumber() == bookedTimeSlot.getSlotNumber()) {
-//
-//                            BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedTimeSlot);
-//
-//                            allSlotList.set(slotResponse.getSlotNumber() - 1, bookedResponse);
-//
-//                        }
-//                    }// replace slots - for loop end
-//                }
-//            }// all slots - for loop end
             GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
             return response;
         } else {
