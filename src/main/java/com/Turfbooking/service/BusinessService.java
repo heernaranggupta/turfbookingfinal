@@ -11,8 +11,6 @@ import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
-import org.springframework.web.bind.annotation.RequestBody;
-
 
 public interface BusinessService {
 
@@ -23,7 +21,6 @@ public interface BusinessService {
     BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest);
 
     CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest);
-
 
     GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest);
 

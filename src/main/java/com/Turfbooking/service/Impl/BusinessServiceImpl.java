@@ -219,9 +219,12 @@ public class BusinessServiceImpl implements BusinessService {
         }else{
             slotExist = BookedTimeSlot.builder()
                     .slotNumber(makeUnavailableSlotRequest.getSlotNumber())
+                    .turfId(makeUnavailableSlotRequest.getTurfId())
                     .date(makeUnavailableSlotRequest.getDate())
                     .status(BookingStatus.NOT_AVAILABLE.name())
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .startTime(makeUnavailableSlotRequest.getStartTime())
+                    .endTime(makeUnavailableSlotRequest.getEndTime())
                     .build();
 
             BookedTimeSlot unavailableSlot = bookedTimeSlotRepository.insert(slotExist);

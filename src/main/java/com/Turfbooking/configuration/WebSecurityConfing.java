@@ -22,27 +22,28 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests()
-                .antMatchers("/user/signup").permitAll()
+                .antMatchers("/user/sign-up").permitAll()
                 .antMatchers("/user/login").permitAll()
                 .antMatchers("/user/getAllSlots").permitAll()
-                .antMatchers("/user/validateOTP").permitAll()
+                .antMatchers("/user/validate-otp").permitAll()
                 .antMatchers("/user/slot/cancel").permitAll()
                 .antMatchers("/user/book-slot").permitAll()
                 .antMatchers("/user/update-slot").permitAll()
                 .antMatchers("/user/cancel-slot").permitAll()
+                .antMatchers("/user/booking-history").permitAll()
 
 
 
 
-                .antMatchers("/common/generateOTP").permitAll()
-                .antMatchers("/common/validateOTP").permitAll()
+                .antMatchers("/common/generate-otp").permitAll()
+                .antMatchers("/common/validate-otp").permitAll()
 
                 .antMatchers("/business/login").permitAll()
                 .antMatchers("/business/resetPassword").permitAll()
                 .antMatchers("/business/update").permitAll()
 
                 .antMatchers("/business/book-slot").permitAll()
-                .antMatchers("/business/getAllSlots").permitAll()
+                .antMatchers("/business/all-slots").permitAll()
                 .antMatchers("/business/slot/make-unavailable").permitAll()
 
                 .antMatchers("/swagger-ui/**").permitAll()
