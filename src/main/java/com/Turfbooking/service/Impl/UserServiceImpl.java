@@ -1,19 +1,26 @@
 package com.Turfbooking.service.Impl;
 
+import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Otp;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Location;
+import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
+import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
+import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.OtpRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
@@ -27,6 +34,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -35,12 +44,14 @@ public class UserServiceImpl implements UserService {
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
     private OtpRepository otpRepository;
+    private BookedTimeSlotRepository bookedTimeSlotRepository;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,OtpRepository otpRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
+        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -117,6 +128,52 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
+
+        //GET SLOT BY DATE AND SLOT NUMBER
+        BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
+
+        if (slot == null) {
+            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
+                    .bookingId(CommonUtilities.getAlphaNumericString(5))
+                    .userId(bookTimeSlotRequest.getUserId())
+                    .date(bookTimeSlotRequest.getDate())
+                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
+                    .turfId(bookTimeSlotRequest.getTurfId())
+                    .status(BookingStatus.BOOKED_BY_USER.name())
+                    .startTime(bookTimeSlotRequest.getStartTime())
+                    .endTime(bookTimeSlotRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
+
+            BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
+
+            return bookTimeSlotResponse;
+
+        } else {
+            throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
+        }
+    }
+
+    @Override
+    public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException {
+
+        User isExist = userRepository.findByPhoneNumber(userId);
+
+        if (null != isExist) {
+            List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByUserId(userId);
+            AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(bookedTimeSlots);
+            return response;
+
+        } else {
+            throw new GeneralException("No user found with user id: " + userId, HttpStatus.OK);
+        }
+
+    }
+
+    @Override
     public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
 
         String phoneNumber = validateOtpRequest.getPhoneNumber();
@@ -127,7 +184,7 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
             phoneNumberWithCountryCode = phoneNumber;
         else {
-            throw new GeneralException("Phone number or county code is invalid.",HttpStatus.OK);
+            throw new GeneralException("Phone number or county code is invalid.", HttpStatus.OK);
         }
 
         Integer userOtp = validateOtpRequest.getOtp();
@@ -147,7 +204,7 @@ public class UserServiceImpl implements UserService {
         String token;
         String refreshToken;
 
-        if(null != isUserOrNot){
+        if (null != isUserOrNot) {
             token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
             refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
             validateOtpResponse.setToken(token);
@@ -156,14 +213,73 @@ public class UserServiceImpl implements UserService {
             validateOtpResponse.setNameOfTheUser(isUserOrNot.getFirstName());
             UserResponse userResponse = new UserResponse(isUserOrNot);
             validateOtpResponse.setUser(userResponse);
-        }else {
+        } else {
             validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
-
         }
         return validateOtpResponse;
 
     }
 
+    @Override
+    public BookTimeSlotResponse cancelBookedSlot(String bookingId) {
+
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByBookingId(bookingId);
+
+        if (null != timeSlot) {
+            timeSlot = BookedTimeSlot.builder()
+                    ._id(timeSlot.get_id())
+                    .bookingId(timeSlot.getBookingId())
+                    .userId(timeSlot.getUserId())
+                    .slotNumber(null)
+                    .turfId(timeSlot.getTurfId())
+                    .status(BookingStatus.CANCELLED_BY_USER.name())
+                    .date(timeSlot.getDate())
+                    .startTime(timeSlot.getStartTime())
+                    .endTime(timeSlot.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot cancelled = bookedTimeSlotRepository.save(timeSlot);
+
+            if (null != cancelled) {
+
+                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                return response;
+
+            } else {
+                throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
+
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
+
+        if (null != bookedTimeSlot) {
+            bookedTimeSlot = BookedTimeSlot.builder()
+                    ._id(bookedTimeSlot.get_id())
+                    .bookingId(CommonUtilities.getAlphaNumericString(6))
+                    .userId(updateRequest.getUserId())
+                    .slotNumber(updateRequest.getSlotNumber())
+                    .turfId(updateRequest.getTurfId())
+                    .date(updateRequest.getDate())
+                    .status(BookingStatus.RESCHEDULED_BY_USER.name())
+                    .startTime(updateRequest.getStartTime())
+                    .endTime(updateRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(updatedBookedSlot);
+            return response;
+        } else {
+            throw new GeneralException("Invalid booking id.", HttpStatus.OK);
+        }
+    }
 
 
 }

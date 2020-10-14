@@ -1,11 +1,11 @@
 package com.Turfbooking.models.request;
 
-import javax.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 import javax.validation.constraints.NotEmpty;
+
 @AllArgsConstructor
 @Getter
 @Builder

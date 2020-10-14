@@ -9,12 +9,18 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot,String> {
+public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot, String> {
 
     @Query("{'slotNumber':?0 ,'date':{ $gte: ?1}}")
     BookedTimeSlot findByDateAndSlotNumber(Integer slotNumber, LocalDate date);
 
     @Query("{'date': { $gte: ?0}}")
     List<BookedTimeSlot> findByDate(LocalDate date);
+
+    @Query("{'bookingId':?0}")
+    BookedTimeSlot findByBookingId(String bookingId);
+
+    @Query("{'userId': ?0}")
+    List<BookedTimeSlot> findByUserId(String userId);
 
 }

@@ -1,18 +1,17 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.documents.Business;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
-import com.Turfbooking.models.request.CreateEditBookingRequest;
+import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
-import com.Turfbooking.models.response.BusinessResponse;
-import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.response.BookTimeSlotResponse;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
+import com.Turfbooking.models.response.RescheduleBookingResponse;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,17 +35,19 @@ public class BusinessController {
     }
 
     @PostMapping("/book-slot")
-    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
+    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest) {
         CommonResponse response = new CommonResponse<>(businessService.bookSlot(bookTimeSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    //all booked slot by date
-    @PostMapping("/getAllSlots")
-    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest){
+    //cache - change on booking
+    //all slots - available and unavailable by date
+    @PostMapping("/all-slots")
+    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
+
 
     @PostMapping("/login")
     public CommonResponse<CreateBusinessLoginResponse> businessLogin(@RequestBody @Valid CreateBusinessLoginRequest request) {
@@ -54,22 +55,23 @@ public class BusinessController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-
-    @PostMapping("/resetPassword")
+    @PostMapping("/reset-password")
     public CommonResponse<CreatePasswordResponse> resetPassword(@RequestBody @Valid CreateUpdatePasswordRequest createUpdatePasswordRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.resetPassword(createUpdatePasswordRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
+
+    //not required in minimum viable product
     @PutMapping("/update")
     public CommonResponse<CreateBusinessUpdateResponse> update(@RequestBody UpdateBusinessRequest updateBusinessRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.updateBusiness(updateBusinessRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @PostMapping("/editBooking")
-    public CommonResponse editBooking (@RequestBody CreateEditBookingRequest createEditBookingRequest) {
-        CommonResponse commonResponse = new CommonResponse(businessService.editBooking(createEditBookingRequest));
+    @PostMapping("/reschedule-booking")
+    public CommonResponse<RescheduleBookingResponse> rescheduleBooking (@RequestBody CreateRescheduleBookingRequest createRescheduleBookingRequest) {
+        CommonResponse commonResponse = new CommonResponse(businessService.rescheduleBooking(createRescheduleBookingRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 

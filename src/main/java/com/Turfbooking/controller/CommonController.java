@@ -27,13 +27,13 @@ public class CommonController {
         this.commonService = commonService;
     }
 
-    @PostMapping("/generateOTP")
+    @PostMapping("/generate-otp")
     public CommonResponse<CreateResponse> generateOTP(@RequestBody GenerateOtpRequest request) throws IOException, MessagingException {
         CommonResponse commonResponse = new CommonResponse<>(commonService.generateOtp(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @PostMapping("/validateOTP")
+    @PostMapping("/validate-otp")
     public CommonResponse<ValidateOtpResponse> validateOTP(@RequestBody ValidateOtpRequest request) {
         CommonResponse commonResponse = new CommonResponse<>(commonService.validateOTP(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);

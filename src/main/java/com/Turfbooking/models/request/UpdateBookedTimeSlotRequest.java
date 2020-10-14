@@ -1,25 +1,26 @@
 package com.Turfbooking.models.request;
 
-import lombok.Data;
+import lombok.Getter;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Data
 @Valid
-public class BookTimeSlotRequest {
+@Getter
+public class UpdateBookedTimeSlotRequest {
 
-    @NotEmpty
+    @NotNull
+    private String bookingId;
+    @NotNull
     private Integer slotNumber;
+    @NotNull
     private String turfId;
-    @NotEmpty
+    @NotNull
     private String userId; // phone number (unique id) to know who booked this slot
-    //not in past
+    @NotNull
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-//    private Integer totalNumberOfSlots;
-
 }

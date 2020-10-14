@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-public class BookTimeSlotResponse {
+public class RescheduleBookingResponse {
 
     private String bookingId;
     private String userId;
@@ -19,7 +19,7 @@ public class BookTimeSlotResponse {
     private LocalDateTime endTime;
     private LocalDateTime timestamp;
 
-    public BookTimeSlotResponse(BookedTimeSlot bookedTimeSlot){
+    public RescheduleBookingResponse(BookedTimeSlot bookedTimeSlot){
         this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
@@ -29,25 +29,5 @@ public class BookTimeSlotResponse {
         this.startTime = bookedTimeSlot.getStartTime();
         this.endTime = bookedTimeSlot.getEndTime();
         this.timestamp = bookedTimeSlot.getTimeStamp(); //LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
-    }
-
-    public BookTimeSlotResponse(String userId, String turfId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
-        this.userId = userId;
-        this.turfId = turfId;
-        this.slotNumber = slotNumber;
-        this.status = status;
-        this.date = date;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.timestamp = timestamp;
-    }
-
-    public BookTimeSlotResponse(String turfId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime) {
-        this.turfId = turfId;
-        this.slotNumber = slotNumber;
-        this.status = status;
-        this.date = date;
-        this.startTime = startTime;
-        this.endTime = endTime;
     }
 }
