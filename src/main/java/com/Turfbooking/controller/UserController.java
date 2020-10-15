@@ -15,6 +15,7 @@ import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,7 +36,8 @@ public class UserController {
         this.userService = userService;
     }
 
-    /*TODO:: make a booking*/
+    /*TODO:: make a booking -- Completed.
+    *  */
 
     @PostMapping("/sign-up")
     public CommonResponse<CreateUserResponse> createUser(@RequestBody @Valid CreateUserRequest createUserRequest) {
@@ -57,6 +59,11 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
+    @CacheEvict(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
+            condition = "#bookTimeSlotRequest.turfId != null")
+    //we need to get booking id,date for removing cache ,as we need key which is turfId and date
     @GetMapping("slot/cancel")
     public CommonResponse cancelBookedSlot(@RequestParam String bookingId) {
         BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
@@ -64,12 +71,20 @@ public class UserController {
         return response;
     }
 
+    @CacheEvict(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
+            condition = "#bookTimeSlotRequest.turfId != null")
     @PostMapping("/book-slot")
     public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
         CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
+    @CacheEvict(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#updateBookedTimeSlotRequest.turfId.concat('-').concat(#updateBookedTimeSlotRequest.date.toString())",
+            condition = "#updateBookedTimeSlotRequest.turfId != null")
     @PostMapping("update-slot")
     public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest){
         BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
