@@ -1,6 +1,7 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
@@ -76,6 +77,9 @@ public class BusinessController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-
-
+    @PostMapping("/slot/make-unavailable")
+    public CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+        CommonResponse response = new CommonResponse(businessService.makeSlotUnavailable(cancelOrUnavailableSlotRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
 }

@@ -5,6 +5,7 @@ import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
@@ -194,5 +195,43 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         return timeSlotsList;
+    }
+
+    @Override
+    public BookTimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest makeUnavailableSlotRequest) {
+
+        BookedTimeSlot slotExist = bookedTimeSlotRepository.findByDateAndSlotNumber(makeUnavailableSlotRequest.getSlotNumber(),makeUnavailableSlotRequest.getDate());
+
+        if(null != slotExist){
+            slotExist = BookedTimeSlot.builder()
+                    ._id(slotExist.get_id())
+                    .bookingId(slotExist.getBookingId())
+                    .userId(slotExist.getUserId())
+                    .turfId(slotExist.getTurfId())
+                    .slotNumber(slotExist.getSlotNumber())
+                    .date(makeUnavailableSlotRequest.getDate())
+                    .startTime(slotExist.getStartTime())
+                    .endTime(slotExist.getEndTime())
+                    .status(BookingStatus.CANCELLED_BY_BUSINESS.name()+" AND "+ BookingStatus.NOT_AVAILABLE) //this is cancelled by business and made unavailable.
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+            BookedTimeSlot cancelledAndUnavailableSlot = bookedTimeSlotRepository.save(slotExist);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(cancelledAndUnavailableSlot);
+            return response;
+        }else{
+            slotExist = BookedTimeSlot.builder()
+                    .slotNumber(makeUnavailableSlotRequest.getSlotNumber())
+                    .turfId(makeUnavailableSlotRequest.getTurfId())
+                    .date(makeUnavailableSlotRequest.getDate())
+                    .status(BookingStatus.NOT_AVAILABLE.name())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .startTime(makeUnavailableSlotRequest.getStartTime())
+                    .endTime(makeUnavailableSlotRequest.getEndTime())
+                    .build();
+
+            BookedTimeSlot unavailableSlot = bookedTimeSlotRepository.insert(slotExist);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(unavailableSlot);
+            return response;
+        }
     }
 }
