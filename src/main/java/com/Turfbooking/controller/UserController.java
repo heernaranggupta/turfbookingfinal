@@ -90,4 +90,5 @@ public class UserController {
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
+
 }

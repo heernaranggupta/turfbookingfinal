@@ -164,6 +164,7 @@ public class CommonServiceImpl implements CommonService {
             throw new GeneralException("Error in sending OTP, please try again after sometime.", HttpStatus.BAD_GATEWAY);
         } else return 1;
     }
+/*
 
     @Override
     public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
@@ -224,6 +225,54 @@ public class CommonServiceImpl implements CommonService {
                 validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
         }
         return validateOtpResponse;
+    }
+*/
+
+    @Override
+    public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
+
+        String phoneNumber = validateOtpRequest.getPhoneNumber();
+        String countryCode = validateOtpRequest.getCountryCode();
+
+        String phoneNumberWithCountryCode = null;
+
+        if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
+            phoneNumberWithCountryCode = phoneNumber;
+        else {
+            throw new GeneralException("Phone number or county code is invalid.", HttpStatus.OK);
+        }
+
+        Integer userOtp = validateOtpRequest.getOtp();
+        ValidateOtpResponse validateOtpResponse = new ValidateOtpResponse();
+        Otp otp = otpRepository.findByPhoneNumberAndOtp(phoneNumberWithCountryCode, validateOtpRequest.getOtp());
+
+        if (null != otp && validateOtpRequest.getOtp().intValue() == userOtp.intValue() && LocalDateTime.now().isBefore(otp.getTimeTillActive())) {
+            //delete otp entry from database
+            long otpdeltedCount = otpRepository.deleteByPhoneNumber(otp.getPhoneNumber());
+            validateOtpResponse.setOtpStatus(OtpStatus.VALID.name());
+        } else {
+            validateOtpResponse.setOtpStatus(OtpStatus.INVALID.name());
+        }
+
+        //logic for is this user exist or not.
+        User isUserOrNot = userRepository.findByPhoneNumber(phoneNumber);
+        String token;
+        String refreshToken;
+
+        if (null != isUserOrNot) {
+            token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
+            refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
+            validateOtpResponse.setToken(token);
+            validateOtpResponse.setRefreshToken(refreshToken);
+            validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
+            validateOtpResponse.setNameOfTheUser(isUserOrNot.getFirstName());
+            UserResponse userResponse = new UserResponse(isUserOrNot);
+            validateOtpResponse.setUser(userResponse);
+        } else {
+            validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
+        }
+        return validateOtpResponse;
+
     }
 
 }

@@ -11,10 +11,10 @@ import java.util.List;
 @Repository
 public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot, String> {
 
-    @Query("{'slotNumber':?0 ,'date':{ $gte: ?1}}")
+    @Query("{'slotNumber':?0 ,'date':{ eq: ?1}}")
     BookedTimeSlot findByDateAndSlotNumber(Integer slotNumber, LocalDate date);
 
-    @Query("{'date':{ $gte: ?0}, 'turfId':?1}")
+    @Query("{'date':{ $eq: ?0}, 'turfId':?1}")
     List<BookedTimeSlot> findByDateAndTurfId(LocalDate date,String turfId);
 
     @Query("{'date': { $gte: ?0}}")

@@ -293,7 +293,6 @@ public class UserServiceImpl implements UserService {
 
         if (days >= 0) { //means today or in future
             List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),getAllSlotsRequest.getTurfId());
-//            List<Integer> integerList = new ArrayList();
             List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
             List<Integer> integerList = slotFromDB.stream()
