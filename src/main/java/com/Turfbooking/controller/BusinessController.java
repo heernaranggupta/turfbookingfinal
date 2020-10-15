@@ -3,7 +3,7 @@ package com.Turfbooking.controller;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
@@ -50,8 +50,8 @@ public class BusinessController {
     //cache - change on booking
     //all slots - available and unavailable by date
     @PostMapping("/all-slots")
-    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
-        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsRequest));
+    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
+        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 

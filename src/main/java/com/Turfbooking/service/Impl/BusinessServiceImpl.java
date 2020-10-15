@@ -7,7 +7,7 @@ import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
@@ -80,7 +80,6 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public CreatePasswordResponse resetPassword(CreateUpdatePasswordRequest createUpdatePasswordRequest) {
-
         String phoneNumber = createUpdatePasswordRequest.getPhoneNumber();
         Business business = businessRepository.findByPhoneNumber(phoneNumber);
 
@@ -100,7 +99,6 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
-
         //GET SLOT BY DATE AND SLOT NUMBER
         BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
 
@@ -118,9 +116,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .build();
 
             BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
-
             BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
-
             return bookTimeSlotResponse;
 
         } else {
@@ -146,33 +142,38 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
+    public GetAllSlotsResponse getAllSlots(GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
-        int days = getAllSlotsRequest.getDate().compareTo(today);
+        int days = getAllSlotsBusinessRequest.getDate().compareTo(today);
+        //get all turfs which requested for slots
+        List<String> turfs = getAllSlotsBusinessRequest.getTurfIds();
 
         if (days >= 0) { //means today or in future
-            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),getAllSlotsRequest.getTurfId());
-//            List<Integer> integerList = new ArrayList();
-            List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
+            List<List<BookTimeSlotResponse>> responseList = new ArrayList<>();
+            for(String turf : turfs){
 
-            List<Integer> integerList = slotFromDB.stream()
-                    .map(x -> x.getSlotNumber())
-                    .collect(Collectors.toList());
+                List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsBusinessRequest.getDate(),turf);
+                List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsBusinessRequest.getDate(), getAllSlotsBusinessRequest.getOpenTime(), getAllSlotsBusinessRequest.getCloseTime(), getAllSlotsBusinessRequest.getSlotDuration());
 
-            allSlotList.stream().
-                    forEach((response) -> {
-                        if (integerList.contains(response.getSlotNumber())) {
-                            slotFromDB.stream().forEach((bookedSlot) -> {
-                                if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
-                                    BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
-                                    allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
-                                }
-                            });
-                        }
-                    });
+                List<Integer> integerList = slotFromDB.stream()
+                        .map(x -> x.getSlotNumber())
+                        .collect(Collectors.toList());
 
-            GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
-            return response;
+                allSlotList.stream().
+                        forEach((response) -> {
+                            if (integerList.contains(response.getSlotNumber())) {
+                                slotFromDB.stream().forEach((bookedSlot) -> {
+                                    if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
+                                        BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
+                                        allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
+                                    }
+                                });
+                            }
+                        });
+                    responseList.add(allSlotList);
+            }
+            GetAllSlotsResponse finalResponse = new GetAllSlotsResponse(responseList);
+            return finalResponse;
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
         }
@@ -186,11 +187,12 @@ public class BusinessServiceImpl implements BusinessService {
 
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
-            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+               slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
             timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
             count++;
         }
+
         return timeSlotsList;
     }
 }

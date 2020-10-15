@@ -19,7 +19,7 @@ import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.GetAllSlotsByUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
@@ -287,7 +287,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
+    public GetAllSlotsByUserResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         int days = getAllSlotsRequest.getDate().compareTo(today);
 
@@ -312,7 +312,7 @@ public class UserServiceImpl implements UserService {
                         }
                     });
 
-            GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
+            GetAllSlotsByUserResponse response = new GetAllSlotsByUserResponse(allSlotList);
             return response;
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
