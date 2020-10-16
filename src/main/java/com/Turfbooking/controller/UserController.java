@@ -2,6 +2,7 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
@@ -36,8 +37,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    /*TODO:: make a booking -- Completed.
-    *  */
+    /*TODO:: make a booking*/
 
     @PostMapping("/sign-up")
     public CommonResponse<CreateUserResponse> createUser(@RequestBody @Valid CreateUserRequest createUserRequest) {
@@ -64,7 +64,7 @@ public class UserController {
             key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
             condition = "#bookTimeSlotRequest.turfId != null")
     //we need to get booking id,date for removing cache ,as we need key which is turfId and date
-    @GetMapping("slot/cancel")
+    @GetMapping("cancel-booking")
     public CommonResponse cancelBookedSlot(@RequestParam String bookingId) {
         BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
         CommonResponse response = new CommonResponse(timeSlotResponse);
@@ -85,7 +85,7 @@ public class UserController {
             value = "listOfSlotsByTurfIdAndDate",
             key = "#updateBookedTimeSlotRequest.turfId.concat('-').concat(#updateBookedTimeSlotRequest.date.toString())",
             condition = "#updateBookedTimeSlotRequest.turfId != null")
-    @PostMapping("update-slot")
+    @PostMapping("update-booking")
     public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest){
         BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
@@ -97,5 +97,11 @@ public class UserController {
     public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId) {
         CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userId));
         return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @PostMapping("/get-all-slots-by-date")
+    public CommonResponse getAllSlotsByDate(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
+        CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 }

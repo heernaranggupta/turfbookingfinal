@@ -24,22 +24,19 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
         http.csrf().disable().authorizeRequests()
                 .antMatchers("/user/sign-up").permitAll()
                 .antMatchers("/user/login").permitAll()
-                .antMatchers("/user/getAllSlots").permitAll()
-                .antMatchers("/user/validate-otp").permitAll()
-                .antMatchers("/user/slot/cancel").permitAll()
-                .antMatchers("/user/book-slot").permitAll()
-                .antMatchers("/user/update-slot").permitAll()
-                .antMatchers("/user/cancel-slot").permitAll()
                 .antMatchers("/user/booking-history").permitAll()
-
-
+                .antMatchers("/user/validate-otp").permitAll()
+                .antMatchers("/user/cancel-booking").permitAll()
+                .antMatchers("/user/book-slot").permitAll()
+                .antMatchers("/user/update-booking").permitAll()
+                .antMatchers("/user/get-all-slots-by-date").permitAll()
 
 
                 .antMatchers("/common/generate-otp").permitAll()
                 .antMatchers("/common/validate-otp").permitAll()
 
                 .antMatchers("/business/login").permitAll()
-                .antMatchers("/business/resetPassword").permitAll()
+                .antMatchers("/business/reset-password").permitAll()
                 .antMatchers("/business/update").permitAll()
                 .antMatchers("/business/book-slot").permitAll()
                 .antMatchers("/business/all-slots").permitAll()
