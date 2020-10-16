@@ -154,7 +154,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest)throws GeneralException {
 
-        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(createRescheduleBookingRequest.getBookingId());
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(createRescheduleBookingRequest.getSlotNumber(),createRescheduleBookingRequest.getDate());
 
         if (null != bookedTimeSlot) {
             bookedTimeSlot = BookedTimeSlot.builder()
@@ -217,8 +217,8 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public BookTimeSlotResponse cancelBooking(String bookingId) {
-        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByBookingId(bookingId);
+    public BookTimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelRequest) {
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(),cancelRequest.getDate());
 
         if (null != timeSlot) {
             timeSlot = BookedTimeSlot.builder()
@@ -245,7 +245,7 @@ public class BusinessServiceImpl implements BusinessService {
                 throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+            throw new GeneralException("No booked slot with booking id: " + cancelRequest.getTurfId() , HttpStatus.OK);
         }
     }
 

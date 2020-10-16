@@ -1,6 +1,7 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
@@ -77,9 +78,9 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @GetMapping("cancel-booking")
-    public CommonResponse cancelBookedSlot(@RequestParam String bookingId) {
-        BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
+    @PostMapping("cancel-booking")
+    public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+        BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }

@@ -94,9 +94,9 @@ public class BusinessController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @GetMapping("/cancel-booking")
-    public CommonResponse cancelBooking(@RequestParam String bookingId) {
-        BookTimeSlotResponse timeSlotResponse = businessService.cancelBooking(bookingId);
+    @PostMapping("/cancel-booking")
+    public CommonResponse cancelBooking(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+        BookTimeSlotResponse timeSlotResponse = businessService.cancelBooking(cancelOrUnavailableSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }

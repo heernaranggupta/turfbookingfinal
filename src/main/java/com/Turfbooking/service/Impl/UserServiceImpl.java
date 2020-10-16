@@ -8,6 +8,7 @@ import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
@@ -209,9 +210,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BookTimeSlotResponse cancelBookedSlot(String bookingId) {
+    public BookTimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
 
-        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByBookingId(bookingId);
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(),cancelRequest.getDate());
 
         if (null != timeSlot) {
             timeSlot = BookedTimeSlot.builder()
@@ -238,14 +239,14 @@ public class UserServiceImpl implements UserService {
                 throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+            throw new GeneralException("No booked slot.", HttpStatus.OK);
         }
     }
 
     @Override
     public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
 
-        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(),updateRequest.getDate());
 
         BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(),updateRequest.getDate());
         if(null != isSlotBooked){
