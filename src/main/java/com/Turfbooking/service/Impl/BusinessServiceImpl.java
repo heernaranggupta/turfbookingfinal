@@ -6,17 +6,19 @@ import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
-import com.Turfbooking.models.response.BusinessViewAllBookingResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.RescheduleBookingResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.service.BusinessService;
@@ -148,6 +150,33 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
+    public RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest) throws GeneralException {
+
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(createRescheduleBookingRequest.getBookingId());
+
+        if (null != bookedTimeSlot) {
+            bookedTimeSlot = BookedTimeSlot.builder()
+                    ._id(bookedTimeSlot.get_id())
+                    .bookingId(CommonUtilities.getAlphaNumericString(6))
+                    .userId(createRescheduleBookingRequest.getUserId())
+                    .slotNumber(createRescheduleBookingRequest.getSlotNumber())
+                    .turfId(createRescheduleBookingRequest.getTurfId())
+                    .date(createRescheduleBookingRequest.getDate())
+                    .status(BookingStatus.RESCHEDULED_BY_BUSINESS.name())
+                    .startTime(createRescheduleBookingRequest.getStartTime())
+                    .endTime(createRescheduleBookingRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
+            RescheduleBookingResponse response = new RescheduleBookingResponse(updatedBookedSlot);
+            return response;
+        } else {
+            throw new GeneralException("Invalid booking id.", HttpStatus.OK);
+        }
+    }
+
+    @Override
     public GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         int days = getAllSlotsRequest.getDate().compareTo(today);
@@ -175,6 +204,24 @@ public class BusinessServiceImpl implements BusinessService {
                         }
                     });
 
+
+//            for (BookedTimeSlot slot : slotFromDB) {
+//                integerList.add(slot.getSlotNumber());
+//            }
+//
+//            for (BookTimeSlotResponse slotResponse : allSlotList) {
+//                if (integerList.contains(slotResponse.getSlotNumber())) {
+//                    for (BookedTimeSlot bookedTimeSlot : slotFromDB) {
+//                        if (slotResponse.getSlotNumber() == bookedTimeSlot.getSlotNumber()) {
+//
+//                            BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedTimeSlot);
+//
+//                            allSlotList.set(slotResponse.getSlotNumber() - 1, bookedResponse);
+//
+//                        }
+//                    }// replace slots - for loop end
+//                }
+//            }// all slots - for loop end
             GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
             return response;
         } else {
@@ -195,10 +242,10 @@ public class BusinessServiceImpl implements BusinessService {
                 BookTimeSlotResponse response = new BookTimeSlotResponse(slot);
                 responseList.add(response);
             }
-        //    BusinessViewAllBookingResponse response = new BusinessViewAllBookingResponse(responseList);
+            //    BusinessViewAllBookingResponse response = new BusinessViewAllBookingResponse(responseList);
             return responseList;
         } else if (status == null) {
-            bookedList = bookedTimeSlotRepository.findAllByFromDateAndToDate(fromDate, toDate);
+            bookedList = bookedTimeSlotRepository.findAllByDate(fromDate, toDate);
             List<BookTimeSlotResponse> responseList = new ArrayList<>();
             for (BookedTimeSlot slot : bookedList) {
                 BookTimeSlotResponse response = new BookTimeSlotResponse(slot);
@@ -209,9 +256,40 @@ public class BusinessServiceImpl implements BusinessService {
         } else {
             throw new GeneralException("Error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
     }
 
+    @Override
+    public BookTimeSlotResponse cancelBooking(String bookingId) {
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByBookingId(bookingId);
+
+        if (null != timeSlot) {
+            timeSlot = BookedTimeSlot.builder()
+                    ._id(timeSlot.get_id())
+                    .bookingId(timeSlot.getBookingId())
+                    .userId(timeSlot.getUserId())
+                    .slotNumber(null)
+                    .turfId(timeSlot.getTurfId())
+                    .status(BookingStatus.CANCELLED_BY_BUSINESS.name())
+                    .date(timeSlot.getDate())
+                    .startTime(timeSlot.getStartTime())
+                    .endTime(timeSlot.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot cancelled = bookedTimeSlotRepository.save(timeSlot);
+
+            if (null != cancelled) {
+
+                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                return response;
+
+            } else {
+                throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+        }
+    }
 
     private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
         List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
@@ -227,5 +305,43 @@ public class BusinessServiceImpl implements BusinessService {
             count++;
         }
         return timeSlotsList;
+    }
+
+    @Override
+    public BookTimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest makeUnavailableSlotRequest) {
+
+        BookedTimeSlot slotExist = bookedTimeSlotRepository.findByDateAndSlotNumber(makeUnavailableSlotRequest.getSlotNumber(), makeUnavailableSlotRequest.getDate());
+
+        if (null != slotExist) {
+            slotExist = BookedTimeSlot.builder()
+                    ._id(slotExist.get_id())
+                    .bookingId(slotExist.getBookingId())
+                    .userId(slotExist.getUserId())
+                    .turfId(slotExist.getTurfId())
+                    .slotNumber(slotExist.getSlotNumber())
+                    .date(makeUnavailableSlotRequest.getDate())
+                    .startTime(slotExist.getStartTime())
+                    .endTime(slotExist.getEndTime())
+                    .status(BookingStatus.CANCELLED_BY_BUSINESS.name() + " AND " + BookingStatus.NOT_AVAILABLE) //this is cancelled by business and made unavailable.
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+            BookedTimeSlot cancelledAndUnavailableSlot = bookedTimeSlotRepository.save(slotExist);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(cancelledAndUnavailableSlot);
+            return response;
+        } else {
+            slotExist = BookedTimeSlot.builder()
+                    .slotNumber(makeUnavailableSlotRequest.getSlotNumber())
+                    .turfId(makeUnavailableSlotRequest.getTurfId())
+                    .date(makeUnavailableSlotRequest.getDate())
+                    .status(BookingStatus.NOT_AVAILABLE.name())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .startTime(makeUnavailableSlotRequest.getStartTime())
+                    .endTime(makeUnavailableSlotRequest.getEndTime())
+                    .build();
+
+            BookedTimeSlot unavailableSlot = bookedTimeSlotRepository.insert(slotExist);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(unavailableSlot);
+            return response;
+        }
     }
 }

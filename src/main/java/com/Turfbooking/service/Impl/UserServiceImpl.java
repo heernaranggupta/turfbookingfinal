@@ -5,12 +5,15 @@ import com.Turfbooking.documents.Otp;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
+import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
@@ -18,6 +21,8 @@ import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
+import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
@@ -33,9 +38,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -76,10 +84,13 @@ public class UserServiceImpl implements UserService {
 
         User addUser = User.builder()
                 .nameOfUser(createUserRequest.getName())
+                .gender(createUserRequest.getGender())
+                .dateOfBirth(createUserRequest.getDateOfBirth())
                 .countryCode(createUserRequest.getCountryCode())
                 .password(CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()))
                 .phoneNumber(createUserRequest.getPhoneNumber())
                 .emailId(createUserRequest.getEmailId())
+                .displayImageUrl(createUserRequest.getDisplayImageUrl())
                 .build();
         Location userLocation = new Location();
         if (null != createUserRequest && null != createUserRequest.getLatitude() && null != createUserRequest.getLongitude()) {
@@ -215,9 +226,32 @@ public class UserServiceImpl implements UserService {
             validateOtpResponse.setUser(userResponse);
         } else {
             validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
+
         }
         return validateOtpResponse;
 
+    }
+
+    @Override
+    public CustomerProfileUpdateResponse updateProfile(CustomerProfileUpdateRequest customerProfileUpdateRequest) throws GeneralException {
+
+        User userDocument = userRepository.findByPhoneNumber(customerProfileUpdateRequest.getPhoneNumber());
+
+        if (userDocument != null) {
+            userDocument.setNameOfUser(customerProfileUpdateRequest.getName());
+            userDocument.setGender(customerProfileUpdateRequest.getGender());
+            userDocument.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
+            userDocument.setAddress(new Address(customerProfileUpdateRequest.getAddressLine(), customerProfileUpdateRequest.getZipCode(), customerProfileUpdateRequest.getCity(), customerProfileUpdateRequest.getState(), "INDIA"));
+            userDocument.setEmailId(customerProfileUpdateRequest.getEmailId());
+            User newCreatedUser = userRepository.save(userDocument);
+            UserResponse userResponse = new UserResponse(newCreatedUser);
+            CustomerProfileUpdateResponse customerProfileUpdateResponse = CustomerProfileUpdateResponse.builder()
+                    .user(userResponse)
+                    .build();
+            return customerProfileUpdateResponse;
+        } else {
+            throw new GeneralException("User does not exist with this PhoneNumber ", HttpStatus.OK);
+        }
     }
 
     @Override
@@ -281,5 +315,53 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+        int days = getAllSlotsRequest.getDate().compareTo(today);
+
+        if (days >= 0) { //means today or in future
+            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),getAllSlotsRequest.getTurfId());
+//            List<Integer> integerList = new ArrayList();
+            List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
+
+            List<Integer> integerList = slotFromDB.stream()
+                    .map(x -> x.getSlotNumber())
+                    .collect(Collectors.toList());
+
+            allSlotList.stream().
+                    forEach((response) -> {
+                        if (integerList.contains(response.getSlotNumber())) {
+                            slotFromDB.stream().forEach((bookedSlot) -> {
+                                if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
+                                    BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
+                                    allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
+                                }
+                            });
+                        }
+                    });
+
+            GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
+            return response;
+        } else {
+            throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+        List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
+        LocalDateTime slotStartTime = openTime;
+        LocalDateTime slotEndTime;
+        int count = 1;
+
+        //slot end time should be before close time.
+        while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
+            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            slotStartTime = slotEndTime;
+            count++;
+        }
+        return timeSlotsList;
+    }
 
 }
