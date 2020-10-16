@@ -8,6 +8,8 @@ import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
+import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
+import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
@@ -60,9 +62,9 @@ public class BusinessController {
             condition = "#getAllSlotsRequest.turfId != null")
 
     @PostMapping("/all-slots")
-    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
-        log.info("Get all slots method executed. : " + getAllSlotsRequest.getTurfId() + "--" + getAllSlotsRequest.getDate());
-        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsRequest));
+    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
+        log.info("Get all slots method executed. : "+ getAllSlotsBusinessRequest.getTurfIds().get(1)+"--"+getAllSlotsBusinessRequest.getDate());
+        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
@@ -88,7 +90,8 @@ public class BusinessController {
     }
 
     @PostMapping("/slot/make-unavailable")
-    public CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+    public
+    CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
         CommonResponse response = new CommonResponse(businessService.makeSlotUnavailable(cancelOrUnavailableSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }

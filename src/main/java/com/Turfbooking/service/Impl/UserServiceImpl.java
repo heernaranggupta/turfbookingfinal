@@ -12,8 +12,8 @@ import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
@@ -21,8 +21,8 @@ import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
+import com.Turfbooking.models.response.GetAllSlotsByUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
@@ -226,7 +226,6 @@ public class UserServiceImpl implements UserService {
             validateOtpResponse.setUser(userResponse);
         } else {
             validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
-
         }
         return validateOtpResponse;
 
@@ -316,13 +315,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
+    public GetAllSlotsByUserResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         int days = getAllSlotsRequest.getDate().compareTo(today);
 
         if (days >= 0) { //means today or in future
             List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),getAllSlotsRequest.getTurfId());
-//            List<Integer> integerList = new ArrayList();
             List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
             List<Integer> integerList = slotFromDB.stream()
@@ -341,7 +339,7 @@ public class UserServiceImpl implements UserService {
                         }
                     });
 
-            GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
+            GetAllSlotsByUserResponse response = new GetAllSlotsByUserResponse(allSlotList);
             return response;
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
