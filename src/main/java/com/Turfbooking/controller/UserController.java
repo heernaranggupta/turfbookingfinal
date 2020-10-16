@@ -67,11 +67,23 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @CacheEvict(
+    /*@CacheEvict(
             value = "listOfSlotsByTurfIdAndDate",
             key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
-            condition = "#bookTimeSlotRequest.turfId != null")
+            condition = "#bookTimeSlotRequest.turfId != null")*/
+
+    //make post and get request class for cache
     //we need to get booking id,date for removing cache ,as we need key which is turfId and date
+//    @CacheEvict(
+//            value = "listOfSlotsByTurfIdAndDate",
+//            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
+//            condition = "#bookTimeSlotRequest.turfId != null")
+    @PostMapping("/book-slot")
+    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
+        CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
     @GetMapping("cancel-booking")
     public CommonResponse cancelBookedSlot(@RequestParam String bookingId) {
         BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
@@ -79,20 +91,10 @@ public class UserController {
         return response;
     }
 
-    @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
-            condition = "#bookTimeSlotRequest.turfId != null")
-    @PostMapping("/book-slot")
-    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
-        CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
-        return ResponseUtilities.createSuccessResponse(response);
-    }
-
-    @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            key = "#updateBookedTimeSlotRequest.turfId.concat('-').concat(#updateBookedTimeSlotRequest.date.toString())",
-            condition = "#updateBookedTimeSlotRequest.turfId != null")
+//    @CacheEvict(
+//            value = "listOfSlotsByTurfIdAndDate",
+//            key = "#updateBookedTimeSlotRequest.turfId.concat('-').concat(#updateBookedTimeSlotRequest.date.toString())",
+//            condition = "#updateBookedTimeSlotRequest.turfId != null")
     @PostMapping("update-booking")
     public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest){
         BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
@@ -112,4 +114,5 @@ public class UserController {
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
+
 }

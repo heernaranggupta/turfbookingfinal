@@ -141,31 +141,37 @@ public class UserServiceImpl implements UserService {
     @Override
     public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
 
-        //GET SLOT BY DATE AND SLOT NUMBER
-        BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
+        User isExistUser = userRepository.findByPhoneNumber(bookTimeSlotRequest.getUserId());
 
-        if (slot == null) {
-            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
-                    .bookingId(CommonUtilities.getAlphaNumericString(5))
-                    .userId(bookTimeSlotRequest.getUserId())
-                    .date(bookTimeSlotRequest.getDate())
-                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
-                    .turfId(bookTimeSlotRequest.getTurfId())
-                    .status(BookingStatus.BOOKED_BY_USER.name())
-                    .startTime(bookTimeSlotRequest.getStartTime())
-                    .endTime(bookTimeSlotRequest.getEndTime())
-                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .build();
-
-            BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
-
-            BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
-
-            return bookTimeSlotResponse;
-
-        } else {
-            throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
+        if(null == isExistUser) {
+            throw new GeneralException("Invalid user id.",HttpStatus.OK);
         }
+            //GET SLOT BY DATE AND SLOT NUMBER
+            BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
+
+            if (slot == null) {
+                BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
+                        .bookingId(CommonUtilities.getAlphaNumericString(5))
+                        .userId(bookTimeSlotRequest.getUserId())
+                        .date(bookTimeSlotRequest.getDate())
+                        .slotNumber(bookTimeSlotRequest.getSlotNumber())
+                        .turfId(bookTimeSlotRequest.getTurfId())
+                        .status(BookingStatus.BOOKED_BY_USER.name())
+                        .startTime(bookTimeSlotRequest.getStartTime())
+                        .endTime(bookTimeSlotRequest.getEndTime())
+                        .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                        .build();
+
+                BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
+
+                BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
+
+                return bookTimeSlotResponse;
+
+            } else {
+                throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
+            }
+
     }
 
     @Override
