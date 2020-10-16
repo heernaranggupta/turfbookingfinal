@@ -2,11 +2,11 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
-import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
-import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
+import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
@@ -40,28 +40,27 @@ public class BusinessController {
     public BusinessController(BusinessService businessService) {
         this.businessService = businessService;
     }
+
     @CacheEvict(
             value = "listOfSlotsByTurfIdAndDate",
             key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
             condition = "#bookTimeSlotRequest.turfId != null")
     @PostMapping("/book-slot")
     public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest) {
-
-        //create api like this to make slot unavailable
         CommonResponse response = new CommonResponse<>(businessService.bookSlot(bookTimeSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-
+    //cache - change on booking
+    //all slots - available and unavailable by date
     @Cacheable(
             value = "listOfSlotsByTurfIdAndDate",
             key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date.toString())",
             condition = "#getAllSlotsRequest.turfId != null")
     @PostMapping("/all-slots")
-
-    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
-        log.info("Get all slots method executed. : "+ getAllSlotsRequest.getTurfId()+"--"+getAllSlotsRequest.getDate());
-        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsRequest));
+    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
+        log.info("Get all slots method executed. : "+ getAllSlotsBusinessRequest.getTurfIds().get(1)+"--"+getAllSlotsBusinessRequest.getDate());
+        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
@@ -87,8 +86,7 @@ public class BusinessController {
     }
 
     @PostMapping("/slot/make-unavailable")
-    public
-    CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+    public CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
         CommonResponse response = new CommonResponse(businessService.makeSlotUnavailable(cancelOrUnavailableSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }

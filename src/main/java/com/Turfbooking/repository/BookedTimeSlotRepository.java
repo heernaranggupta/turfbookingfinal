@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot, String> {
 
-    @Query("{'slotNumber':?0 ,'date':{ $gte: ?1}}")
+    @Query("{'slotNumber':?0 ,'date':{ eq: ?1}}")
     BookedTimeSlot findByDateAndSlotNumber(Integer slotNumber, LocalDate date);
 
     @Query("{'date':{ $eq: ?0}, 'turfId':?1}")

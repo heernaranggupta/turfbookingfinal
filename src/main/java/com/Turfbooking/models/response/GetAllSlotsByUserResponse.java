@@ -11,11 +11,11 @@ import java.util.List;
 @Setter
 @Builder
 @NoArgsConstructor
-public class GetAllSlotsResponse {
+public class GetAllSlotsByUserResponse {
 
-    List<List<BookTimeSlotResponse>> responseList;
+    List<BookTimeSlotResponse> responseList;
 
-    public GetAllSlotsResponse(List<List<BookTimeSlotResponse>> responseList) {
+    public GetAllSlotsByUserResponse(List<BookTimeSlotResponse> responseList) {
         this.responseList = responseList;
     }
 }
