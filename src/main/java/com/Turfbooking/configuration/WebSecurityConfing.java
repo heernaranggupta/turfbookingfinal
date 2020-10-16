@@ -24,10 +24,19 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
         http.csrf().disable().authorizeRequests()
                 .antMatchers("/user/sign-up").permitAll()
                 .antMatchers("/user/login").permitAll()
+                .antMatchers("/user/getAllSlots").permitAll()
+                .antMatchers("/user/validate-otp").permitAll()
+                .antMatchers("/user/slot/cancel").permitAll()
                 .antMatchers("/user/booking-history").permitAll()
                 .antMatchers("/user/validate-otp").permitAll()
                 .antMatchers("/user/cancel-booking").permitAll()
                 .antMatchers("/user/book-slot").permitAll()
+                .antMatchers("/user/update-slot").permitAll()
+                .antMatchers("/user/cancel-slot").permitAll()
+                .antMatchers("/user/updateProfile").permitAll()
+
+                .antMatchers("/common/generateOTP").permitAll()
+                .antMatchers("/common/validateOTP").permitAll()
                 .antMatchers("/user/update-booking").permitAll()
                 .antMatchers("/user/get-all-slots-by-date").permitAll()
 
@@ -43,6 +52,9 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
 
                 .antMatchers("/business/slot/make-unavailable").permitAll()
 
+
+                .antMatchers("/images/uploadFile").permitAll()
+                .antMatchers("/images/downloadFile/**").permitAll()
 
                 .antMatchers("/swagger-ui/**").permitAll()
                 .antMatchers("/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()

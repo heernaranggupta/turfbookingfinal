@@ -25,6 +25,7 @@ public class UserResponse {
     private String emailId;
     private String addressLine;
     private String zipCode;
+    private String displayImageUrl;
 
 
     public UserResponse(User userDocument) {
@@ -45,6 +46,9 @@ public class UserResponse {
             Address address = userDocument.getAddress();
             this.addressLine = address.getAddressLine();
             this.zipCode = address.getZipCode();
+        }
+        if (userDocument.getDisplayImageUrl() != null) {
+            this.displayImageUrl = userDocument.getDisplayImageUrl();
         }
     }
 }

@@ -5,6 +5,7 @@ import com.Turfbooking.documents.Otp;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
+import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpStatus;
@@ -12,6 +13,7 @@ import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
@@ -20,6 +22,7 @@ import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
@@ -81,10 +84,13 @@ public class UserServiceImpl implements UserService {
 
         User addUser = User.builder()
                 .nameOfUser(createUserRequest.getName())
+                .gender(createUserRequest.getGender())
+                .dateOfBirth(createUserRequest.getDateOfBirth())
                 .countryCode(createUserRequest.getCountryCode())
                 .password(CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()))
                 .phoneNumber(createUserRequest.getPhoneNumber())
                 .emailId(createUserRequest.getEmailId())
+                .displayImageUrl(createUserRequest.getDisplayImageUrl())
                 .build();
         Location userLocation = new Location();
         if (null != createUserRequest && null != createUserRequest.getLatitude() && null != createUserRequest.getLongitude()) {
@@ -220,9 +226,32 @@ public class UserServiceImpl implements UserService {
             validateOtpResponse.setUser(userResponse);
         } else {
             validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
+
         }
         return validateOtpResponse;
 
+    }
+
+    @Override
+    public CustomerProfileUpdateResponse updateProfile(CustomerProfileUpdateRequest customerProfileUpdateRequest) throws GeneralException {
+
+        User userDocument = userRepository.findByPhoneNumber(customerProfileUpdateRequest.getPhoneNumber());
+
+        if (userDocument != null) {
+            userDocument.setNameOfUser(customerProfileUpdateRequest.getName());
+            userDocument.setGender(customerProfileUpdateRequest.getGender());
+            userDocument.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
+            userDocument.setAddress(new Address(customerProfileUpdateRequest.getAddressLine(), customerProfileUpdateRequest.getZipCode(), customerProfileUpdateRequest.getCity(), customerProfileUpdateRequest.getState(), "INDIA"));
+            userDocument.setEmailId(customerProfileUpdateRequest.getEmailId());
+            User newCreatedUser = userRepository.save(userDocument);
+            UserResponse userResponse = new UserResponse(newCreatedUser);
+            CustomerProfileUpdateResponse customerProfileUpdateResponse = CustomerProfileUpdateResponse.builder()
+                    .user(userResponse)
+                    .build();
+            return customerProfileUpdateResponse;
+        } else {
+            throw new GeneralException("User does not exist with this PhoneNumber ", HttpStatus.OK);
+        }
     }
 
     @Override
