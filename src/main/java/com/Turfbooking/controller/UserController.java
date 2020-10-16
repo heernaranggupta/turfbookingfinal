@@ -40,8 +40,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    /*TODO:: make a booking*/
-
     @PostMapping("/sign-up")
     public CommonResponse<CreateUserResponse> createUser(@RequestBody @Valid CreateUserRequest createUserRequest) {
         CreateUserResponse userResponse = userService.createNewUser(createUserRequest);
