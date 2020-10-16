@@ -281,7 +281,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .date(LocalDateTime.of(makeUnavailableSlotRequest.getDate(),LocalTime.of(00,00)))
                     .startTime(slotExist.getStartTime())
                     .endTime(slotExist.getEndTime())
-                    .status(BookingStatus.CANCELLED_BY_BUSINESS.name()+" AND "+ BookingStatus.NOT_AVAILABLE) //this is cancelled by business and made unavailable.
+                    .status(BookingStatus.NOT_AVAILABLE.name()) //this is cancelled by business and made unavailable.
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
             BookedTimeSlot cancelledAndUnavailableSlot = bookedTimeSlotRepository.save(slotExist);

@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Getter
 public class CancelOrUnavailableSlotRequest {
 
-    private String bookingId;
     @NotNull
     private String turfId;
     @NotNull
