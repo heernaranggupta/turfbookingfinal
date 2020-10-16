@@ -1,6 +1,7 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
