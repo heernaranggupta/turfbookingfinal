@@ -237,7 +237,7 @@ public class CommonServiceImpl implements CommonService {
         String phoneNumberWithCountryCode = null;
 
         if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
-            phoneNumberWithCountryCode = phoneNumber;
+            phoneNumberWithCountryCode = StringUtils.join(countryCode,phoneNumber);
         else {
             throw new GeneralException("Phone number or county code is invalid.", HttpStatus.OK);
         }

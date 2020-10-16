@@ -18,7 +18,6 @@ import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -52,12 +51,6 @@ public class UserController {
         CreateUserLoginResponse userResponse = userService.userLogin(userLoginRequest);
         CommonResponse response = new CommonResponse(userResponse);
         return ResponseUtilities.createSuccessResponse(response);
-    }
-
-    @PostMapping("/validate-otp")
-    public CommonResponse<ValidateOtpResponse> validateOTP(@RequestBody ValidateOtpRequest request) {
-        CommonResponse commonResponse = new CommonResponse<>(userService.validateOTP(request));
-        return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
     @PutMapping("/update-profile")

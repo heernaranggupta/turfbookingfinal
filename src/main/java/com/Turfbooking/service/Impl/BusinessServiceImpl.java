@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +117,7 @@ public class BusinessServiceImpl implements BusinessService {
             BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
                     .bookingId(CommonUtilities.getAlphaNumericString(5))
                     .userId(bookTimeSlotRequest.getUserId())
-                    .date(bookTimeSlotRequest.getDate())
+                    .date(LocalDateTime.of(bookTimeSlotRequest.getDate(), LocalTime.of(00,00)))
                     .slotNumber(bookTimeSlotRequest.getSlotNumber())
                     .turfId(bookTimeSlotRequest.getTurfId())
                     .status(BookingStatus.BOOKED_BY_BUSINESS.name())
@@ -162,7 +163,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .userId(createRescheduleBookingRequest.getUserId())
                     .slotNumber(createRescheduleBookingRequest.getSlotNumber())
                     .turfId(createRescheduleBookingRequest.getTurfId())
-                    .date(createRescheduleBookingRequest.getDate())
+                    .date(LocalDateTime.of(createRescheduleBookingRequest.getDate(),LocalTime.of(00,00)))
                     .status(BookingStatus.RESCHEDULED_BY_BUSINESS.name())
                     .startTime(createRescheduleBookingRequest.getStartTime())
                     .endTime(createRescheduleBookingRequest.getEndTime())
@@ -277,7 +278,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .userId(slotExist.getUserId())
                     .turfId(slotExist.getTurfId())
                     .slotNumber(slotExist.getSlotNumber())
-                    .date(makeUnavailableSlotRequest.getDate())
+                    .date(LocalDateTime.of(makeUnavailableSlotRequest.getDate(),LocalTime.of(00,00)))
                     .startTime(slotExist.getStartTime())
                     .endTime(slotExist.getEndTime())
                     .status(BookingStatus.CANCELLED_BY_BUSINESS.name()+" AND "+ BookingStatus.NOT_AVAILABLE) //this is cancelled by business and made unavailable.
@@ -290,7 +291,7 @@ public class BusinessServiceImpl implements BusinessService {
             slotExist = BookedTimeSlot.builder()
                     .slotNumber(makeUnavailableSlotRequest.getSlotNumber())
                     .turfId(makeUnavailableSlotRequest.getTurfId())
-                    .date(makeUnavailableSlotRequest.getDate())
+                    .date(LocalDateTime.of(makeUnavailableSlotRequest.getDate(),LocalTime.of(00,00)))
                     .status(BookingStatus.NOT_AVAILABLE.name())
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .startTime(makeUnavailableSlotRequest.getStartTime())
