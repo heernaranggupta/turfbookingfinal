@@ -2,25 +2,31 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
+import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
+import com.Turfbooking.models.response.RescheduleBookingResponse;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -37,15 +43,6 @@ public class BusinessController {
         this.businessService = businessService;
     }
 
-    /*Juhi :: TODO:: 1. create api like this to make slot unavailable
-    * Juhi :: TODO:: 2. create api to get all bookings - filter using query parameter; status and date; default 1 week from now only confirmed bookings;
-      Arpit :: TODO:: 3. Caching
-      TODO:: 4. Create business config to store open time; close time and holidays; might need to have it in memory - cache
-     TODO :: 5. Create an api to update business config
-    * */
-
-
-    //create api like this to make slot unavailable
     @CacheEvict(
             value = "listOfSlotsByTurfIdAndDate",
             key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
@@ -94,5 +91,17 @@ public class BusinessController {
     public CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
         CommonResponse response = new CommonResponse(businessService.makeSlotUnavailable(cancelOrUnavailableSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
+    }
+    @PostMapping("/reschedule-booking")
+    public CommonResponse<RescheduleBookingResponse> rescheduleBooking (@RequestBody CreateRescheduleBookingRequest createRescheduleBookingRequest) {
+        CommonResponse commonResponse = new CommonResponse(businessService.rescheduleBooking(createRescheduleBookingRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
+
+    @GetMapping("/cancel-booking")
+    public CommonResponse cancelBooking(@RequestParam String bookingId) {
+        BookTimeSlotResponse timeSlotResponse = businessService.cancelBooking(bookingId);
+        CommonResponse response = new CommonResponse(timeSlotResponse);
+        return response;
     }
 }

@@ -7,15 +7,18 @@ import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.RescheduleBookingResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.service.BusinessService;
@@ -141,6 +144,32 @@ public class BusinessServiceImpl implements BusinessService {
             throw new GeneralException("Please Provide phone number for update", HttpStatus.OK);
         }
     }
+    @Override
+    public RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest)throws GeneralException {
+
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(createRescheduleBookingRequest.getBookingId());
+
+        if (null != bookedTimeSlot) {
+            bookedTimeSlot = BookedTimeSlot.builder()
+                    ._id(bookedTimeSlot.get_id())
+                    .bookingId(CommonUtilities.getAlphaNumericString(6))
+                    .userId(createRescheduleBookingRequest.getUserId())
+                    .slotNumber(createRescheduleBookingRequest.getSlotNumber())
+                    .turfId(createRescheduleBookingRequest.getTurfId())
+                    .date(createRescheduleBookingRequest.getDate())
+                    .status(BookingStatus.RESCHEDULED_BY_BUSINESS.name())
+                    .startTime(createRescheduleBookingRequest.getStartTime())
+                    .endTime(createRescheduleBookingRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
+            RescheduleBookingResponse response = new RescheduleBookingResponse(updatedBookedSlot);
+            return response;
+        } else {
+            throw new GeneralException("Invalid booking id.", HttpStatus.OK);
+        }
+    }
 
     @Override
     public GetAllSlotsResponse getAllSlots(GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) throws GeneralException {
@@ -180,8 +209,41 @@ public class BusinessServiceImpl implements BusinessService {
         }
     }
 
+    @Override
+    public BookTimeSlotResponse cancelBooking(String bookingId) {
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByBookingId(bookingId);
+
+        if (null != timeSlot) {
+            timeSlot = BookedTimeSlot.builder()
+                    ._id(timeSlot.get_id())
+                    .bookingId(timeSlot.getBookingId())
+                    .userId(timeSlot.getUserId())
+                    .slotNumber(null)
+                    .turfId(timeSlot.getTurfId())
+                    .status(BookingStatus.CANCELLED_BY_BUSINESS.name())
+                    .date(timeSlot.getDate())
+                    .startTime(timeSlot.getStartTime())
+                    .endTime(timeSlot.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot cancelled = bookedTimeSlotRepository.save(timeSlot);
+
+            if (null != cancelled) {
+
+                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                return response;
+
+            } else {
+                throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+        }
+    }
+
     private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
-        List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
+           List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
         int count = 1;

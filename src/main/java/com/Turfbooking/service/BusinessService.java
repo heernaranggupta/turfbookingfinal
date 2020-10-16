@@ -3,14 +3,18 @@ package com.Turfbooking.service;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.RescheduleBookingResponse;
+
 
 
 public interface BusinessService {
@@ -23,8 +27,13 @@ public interface BusinessService {
 
     CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest);
 
+
+    GetAllSlotsResponse getAllSlots(GetAllSlotsRequest getAllSlotsRequest);
     GetAllSlotsResponse getAllSlots(GetAllSlotsBusinessRequest getAllSlotsBusinessRequest);
 
     BookTimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
 
+    RescheduleBookingResponse rescheduleBooking( CreateRescheduleBookingRequest createRescheduleBookingRequest);
+
+    BookTimeSlotResponse cancelBooking(String bookingId);
 }
