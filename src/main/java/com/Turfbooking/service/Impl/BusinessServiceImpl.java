@@ -5,6 +5,7 @@ import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
@@ -30,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BusinessServiceImpl implements BusinessService {
@@ -150,27 +152,26 @@ public class BusinessServiceImpl implements BusinessService {
         int days = getAllSlotsRequest.getDate().compareTo(today);
 
         if (days >= 0) { //means today or in future
-            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDate(getAllSlotsRequest.getDate());
-            List<Integer> integerList = new ArrayList();
+            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),getAllSlotsRequest.getTurfId());
+//            List<Integer> integerList = new ArrayList();
             List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
-            for (BookedTimeSlot slot : slotFromDB) {
-                integerList.add(slot.getSlotNumber());
-            }
+            List<Integer> integerList = slotFromDB.stream()
+                    .map(x -> x.getSlotNumber())
+                    .collect(Collectors.toList());
 
-            for (BookTimeSlotResponse slotResponse : allSlotList) {
-                if (integerList.contains(slotResponse.getSlotNumber())) {
-                    for (BookedTimeSlot bookedTimeSlot : slotFromDB) {
-                        if (slotResponse.getSlotNumber() == bookedTimeSlot.getSlotNumber()) {
-
-                            BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedTimeSlot);
-
-                            allSlotList.set(slotResponse.getSlotNumber() - 1, bookedResponse);
-
+            allSlotList.stream().
+                    forEach((response) -> {
+                        if (integerList.contains(response.getSlotNumber())) {
+                            slotFromDB.stream().forEach((bookedSlot) -> {
+                                if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
+                                    BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
+                                    allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
+                                }
+                            });
                         }
-                    }// replace slots - for loop end
-                }
-            }// all slots - for loop end
+                    });
+
             GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
             return response;
         } else {
@@ -192,5 +193,43 @@ public class BusinessServiceImpl implements BusinessService {
             count++;
         }
         return timeSlotsList;
+    }
+
+    @Override
+    public BookTimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest makeUnavailableSlotRequest) {
+
+        BookedTimeSlot slotExist = bookedTimeSlotRepository.findByDateAndSlotNumber(makeUnavailableSlotRequest.getSlotNumber(),makeUnavailableSlotRequest.getDate());
+
+        if(null != slotExist){
+            slotExist = BookedTimeSlot.builder()
+                    ._id(slotExist.get_id())
+                    .bookingId(slotExist.getBookingId())
+                    .userId(slotExist.getUserId())
+                    .turfId(slotExist.getTurfId())
+                    .slotNumber(slotExist.getSlotNumber())
+                    .date(makeUnavailableSlotRequest.getDate())
+                    .startTime(slotExist.getStartTime())
+                    .endTime(slotExist.getEndTime())
+                    .status(BookingStatus.CANCELLED_BY_BUSINESS.name()+" AND "+ BookingStatus.NOT_AVAILABLE) //this is cancelled by business and made unavailable.
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+            BookedTimeSlot cancelledAndUnavailableSlot = bookedTimeSlotRepository.save(slotExist);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(cancelledAndUnavailableSlot);
+            return response;
+        }else{
+            slotExist = BookedTimeSlot.builder()
+                    .slotNumber(makeUnavailableSlotRequest.getSlotNumber())
+                    .turfId(makeUnavailableSlotRequest.getTurfId())
+                    .date(makeUnavailableSlotRequest.getDate())
+                    .status(BookingStatus.NOT_AVAILABLE.name())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .startTime(makeUnavailableSlotRequest.getStartTime())
+                    .endTime(makeUnavailableSlotRequest.getEndTime())
+                    .build();
+
+            BookedTimeSlot unavailableSlot = bookedTimeSlotRepository.insert(slotExist);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(unavailableSlot);
+            return response;
+        }
     }
 }

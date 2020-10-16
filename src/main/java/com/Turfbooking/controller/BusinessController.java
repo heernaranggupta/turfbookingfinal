@@ -12,7 +12,10 @@ import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+@Slf4j
 @RestController
 @RequestMapping("/business")
 public class BusinessController {
@@ -31,14 +35,15 @@ public class BusinessController {
     public BusinessController(BusinessService businessService) {
         this.businessService = businessService;
     }
-    /*Juhi :: TODO:: 1. create api like this to make slot unavailable
-    * Juhi :: TODO:: 2. create api to get all bookings - filter using query parameter; status and date; default 1 week from now only confirmed bookings;
-      Arpit :: TODO:: 3. Caching
-      TODO:: 4. Create business config to store open time; close time and holidays; might need to have it in memory - cache
-     TODO :: 5. Create an api to update business config
-    * */
 
-    @PostMapping("/bookSlot")
+
+
+    //create api like this to make slot unavailable
+    @CacheEvict(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
+            condition = "#bookTimeSlotRequest.turfId != null")
+    @PostMapping("/book-slot")
     public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest) {
 
         //create api like this to make slot unavailable
@@ -48,8 +53,14 @@ public class BusinessController {
 
     //cache - change on booking
     //all slots - available and unavailable by date
+    @Cacheable(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date.toString())",
+            condition = "#getAllSlotsRequest.turfId != null")
     @PostMapping("/all-slots")
-    public CommonResponse getAllSlots(@RequestBody @Valid GetAllSlotsRequest getAllSlotsRequest) {
+
+    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
+        log.info("Get all slots method executed. : "+ getAllSlotsRequest.getTurfId()+"--"+getAllSlotsRequest.getDate());
         CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
@@ -67,6 +78,7 @@ public class BusinessController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
+
     //not required in minimum viable product
     @PutMapping("/update")
     public CommonResponse<CreateBusinessUpdateResponse> update(@RequestBody UpdateBusinessRequest updateBusinessRequest) {
@@ -74,4 +86,9 @@ public class BusinessController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
+    @PostMapping("/slot/make-unavailable")
+    public CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+        CommonResponse response = new CommonResponse(businessService.makeSlotUnavailable(cancelOrUnavailableSlotRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
 }
