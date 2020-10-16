@@ -27,23 +27,36 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/getAllSlots").permitAll()
                 .antMatchers("/user/validate-otp").permitAll()
                 .antMatchers("/user/slot/cancel").permitAll()
+                .antMatchers("/user/booking-history").permitAll()
+                .antMatchers("/user/validate-otp").permitAll()
+                .antMatchers("/user/cancel-booking").permitAll()
                 .antMatchers("/user/book-slot").permitAll()
                 .antMatchers("/user/update-slot").permitAll()
                 .antMatchers("/user/cancel-slot").permitAll()
-
-
-
+                .antMatchers("/user/updateProfile").permitAll()
 
                 .antMatchers("/common/generateOTP").permitAll()
                 .antMatchers("/common/validateOTP").permitAll()
+                .antMatchers("/user/update-booking").permitAll()
+                .antMatchers("/user/get-all-slots-by-date").permitAll()
+
+
+                .antMatchers("/common/generate-otp").permitAll()
+                .antMatchers("/common/validate-otp").permitAll()
 
                 .antMatchers("/business/login").permitAll()
-                .antMatchers("/business/resetPassword").permitAll()
+                .antMatchers("/business/reset-password").permitAll()
                 .antMatchers("/business/update").permitAll()
                 .antMatchers("/business/reschedule-booking").permitAll()
 
                 .antMatchers("/business/book-slot").permitAll()
-                .antMatchers("/business/getAllSlots").permitAll()
+                .antMatchers("/business/all-slots").permitAll()
+
+                .antMatchers("/business/slot/make-unavailable").permitAll()
+
+
+                .antMatchers("/images/uploadFile").permitAll()
+                .antMatchers("/images/downloadFile/**").permitAll()
 
                 .antMatchers("/swagger-ui/**").permitAll()
                 .antMatchers("/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
