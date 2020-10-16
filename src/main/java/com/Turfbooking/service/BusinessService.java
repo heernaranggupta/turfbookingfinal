@@ -33,4 +33,5 @@ public interface BusinessService {
 
     RescheduleBookingResponse rescheduleBooking( CreateRescheduleBookingRequest createRescheduleBookingRequest);
 
+    BookTimeSlotResponse cancelBooking(String bookingId);
 }

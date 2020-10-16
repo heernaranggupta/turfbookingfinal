@@ -33,6 +33,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/book-slot").permitAll()
                 .antMatchers("/user/update-slot").permitAll()
                 .antMatchers("/user/cancel-slot").permitAll()
+
                 .antMatchers("/user/updateProfile").permitAll()
 
                 .antMatchers("/common/generateOTP").permitAll()
