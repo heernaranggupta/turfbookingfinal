@@ -5,12 +5,14 @@ import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
+import com.Turfbooking.models.response.BusinessViewAllBookingResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
@@ -173,30 +175,43 @@ public class BusinessServiceImpl implements BusinessService {
                         }
                     });
 
-
-//            for (BookedTimeSlot slot : slotFromDB) {
-//                integerList.add(slot.getSlotNumber());
-//            }
-//
-//            for (BookTimeSlotResponse slotResponse : allSlotList) {
-//                if (integerList.contains(slotResponse.getSlotNumber())) {
-//                    for (BookedTimeSlot bookedTimeSlot : slotFromDB) {
-//                        if (slotResponse.getSlotNumber() == bookedTimeSlot.getSlotNumber()) {
-//
-//                            BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedTimeSlot);
-//
-//                            allSlotList.set(slotResponse.getSlotNumber() - 1, bookedResponse);
-//
-//                        }
-//                    }// replace slots - for loop end
-//                }
-//            }// all slots - for loop end
             GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
             return response;
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
         }
     }
+
+    @Override
+    public List<BookTimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest) {
+        LocalDate fromDate = (null != businessViewAllBookingRequest.getFromDate()) ? businessViewAllBookingRequest.getFromDate() : LocalDate.now(ZoneId.of("Asia/Kolkata"));
+        LocalDate toDate = (null != businessViewAllBookingRequest.getToDate()) ? businessViewAllBookingRequest.getToDate() : LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(7);
+        String status = businessViewAllBookingRequest.getStatus();
+        List<BookedTimeSlot> bookedList = new ArrayList<>();
+        if (null != status) {
+            bookedList = bookedTimeSlotRepository.findAllByDateAndStatus(fromDate, toDate, status);
+            List<BookTimeSlotResponse> responseList = new ArrayList<>();
+            for (BookedTimeSlot slot : bookedList) {
+                BookTimeSlotResponse response = new BookTimeSlotResponse(slot);
+                responseList.add(response);
+            }
+        //    BusinessViewAllBookingResponse response = new BusinessViewAllBookingResponse(responseList);
+            return responseList;
+        } else if (status == null) {
+            bookedList = bookedTimeSlotRepository.findAllByFromDateAndToDate(fromDate, toDate);
+            List<BookTimeSlotResponse> responseList = new ArrayList<>();
+            for (BookedTimeSlot slot : bookedList) {
+                BookTimeSlotResponse response = new BookTimeSlotResponse(slot);
+                responseList.add(response);
+            }
+            //BusinessViewAllBookingResponse response = new BusinessViewAllBookingResponse(responseList);
+            return responseList;
+        } else {
+            throw new GeneralException("Error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
 
     private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
         List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
