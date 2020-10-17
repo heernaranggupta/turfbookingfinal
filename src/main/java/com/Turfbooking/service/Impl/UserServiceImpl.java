@@ -246,7 +246,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
 
-        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(),updateRequest.getDate());
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
 
         BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(),updateRequest.getDate());
         if(null != isSlotBooked){

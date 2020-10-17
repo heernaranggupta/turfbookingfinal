@@ -2,7 +2,6 @@ package com.Turfbooking.service.Impl;
 
 import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Business;
-import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
@@ -105,7 +104,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
 
-        Business isExistBusiness = businessRepository.findByPhoneNumber(bookTimeSlotRequest.getUserId());
+        Business isExistBusiness = businessRepository.findByUsername(bookTimeSlotRequest.getUserId());
 
         if(null == isExistBusiness) {
             throw new GeneralException("Invalid user id.",HttpStatus.OK);
