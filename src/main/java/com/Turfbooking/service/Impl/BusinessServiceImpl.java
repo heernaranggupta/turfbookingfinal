@@ -2,7 +2,8 @@ package com.Turfbooking.service.Impl;
 
 import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Business;
-import com.Turfbooking.documents.User;
+import com.Turfbooking.documents.BusinessConfig;
+import com.Turfbooking.documents.TurfSlotPricing;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
@@ -11,6 +12,7 @@ import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
+import com.Turfbooking.models.request.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
@@ -19,7 +21,9 @@ import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
+import com.Turfbooking.models.response.UpdateBusinessConfigRequest;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
+import com.Turfbooking.repository.BusinessConfigRepository;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.CommonUtilities;
@@ -43,12 +47,14 @@ public class BusinessServiceImpl implements BusinessService {
     private BusinessRepository businessRepository;
     private JwtTokenUtil jwtTokenUtil;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
+    private BusinessConfigRepository businessConfigRepository;
 
     @Autowired
-    public BusinessServiceImpl(BusinessRepository businessRepository, JwtTokenUtil jwtTokenUtil, BookedTimeSlotRepository bookedTimeSlotRepository) {
-        this.businessRepository = businessRepository;
+    public BusinessServiceImpl(JwtTokenUtil jwtTokenUtil, BusinessRepository businessRepository, BookedTimeSlotRepository bookedTimeSlotRepository, BusinessConfigRepository businessConfigRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
+        this.businessRepository = businessRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
+        this.businessConfigRepository = businessConfigRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -303,4 +309,35 @@ public class BusinessServiceImpl implements BusinessService {
             return response;
         }
     }
+
+    @Override
+    public UpdateBusinessConfigResponse updateBusinessConfig(UpdateBusinessConfigRequest updateRequest) {
+
+        Business isBusinessExist = businessRepository.findByUsername(updateRequest.getBusinessId());
+
+        if(null != isBusinessExist){
+            TurfSlotPricing pricing = TurfSlotPricing.builder()
+                    .startTime(updateRequest.getStartTime())
+                    .endTime(updateRequest.getEndTime())
+                    .price(updateRequest.getPrice())
+                    .coupon(updateRequest.getCoupon())
+                    .build();
+
+            BusinessConfig saveConfig = BusinessConfig.builder()
+                    .day(updateRequest.getDay())
+                    .date(updateRequest.getDate())
+                    .openTime(updateRequest.getOpenTime())
+                    .closeTime(updateRequest.getCloseTime())
+                    .pricing(pricing)
+                    .build();
+
+            BusinessConfig savedConfig = businessConfigRepository.save(saveConfig);
+            UpdateBusinessConfigResponse response = new UpdateBusinessConfigResponse(savedConfig);
+            return  response;
+        }else {
+            throw new GeneralException("Please provide valid business id.",HttpStatus.OK);
+        }
+    }
+
+
 }

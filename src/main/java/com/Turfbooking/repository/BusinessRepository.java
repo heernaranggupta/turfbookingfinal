@@ -11,5 +11,8 @@ public interface BusinessRepository extends MongoRepository<Business, String> {
     @Query("{'username' : ?0 , 'password' : ?1}")
     Business findByUsernameAndPassword(String username, String password);
 
+    @Query("{'phoneNumber':?0}")
     Business findByPhoneNumber(String phoneNumber);
+
+    Business findByUsername(String username);
 }
