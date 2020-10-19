@@ -1,10 +1,13 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -38,6 +42,12 @@ public class BusinessController {
     public BusinessController(BusinessService businessService) {
         this.businessService = businessService;
     }
+
+    /*@CacheEvict(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
+            condition = "#bookTimeSlotRequest.turfId != null")
+      */
 //
 //    @CacheEvict(
 //            value = "listOfSlotsByTurfIdAndDate",
@@ -49,12 +59,19 @@ public class BusinessController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
+
+   /* @Cacheable(
+            value = "listOfSlotsByTurfIdAndDate",
+            key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date.toString())",
+            condition = "#getAllSlotsRequest.turfId != null")*/
+
     //cache - change on booking
     //all slots - available and unavailable by date
 //    @Cacheable(
 //            value = "listOfSlotsByTurfIdAndDate",
 //            key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date.toString())",
 //            condition = "#getAllSlotsRequest.turfId != null")
+
     @PostMapping("/all-slots")
     public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
         log.info("Get all slots method executed. : "+ getAllSlotsBusinessRequest.getTurfIds().get(1)+"--"+getAllSlotsBusinessRequest.getDate());
@@ -84,12 +101,14 @@ public class BusinessController {
     }
 
     @PostMapping("/slot/make-unavailable")
-    public CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+    public
+    CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
         CommonResponse response = new CommonResponse(businessService.makeSlotUnavailable(cancelOrUnavailableSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
+
     @PostMapping("/reschedule-booking")
-    public CommonResponse<RescheduleBookingResponse> rescheduleBooking (@RequestBody CreateRescheduleBookingRequest createRescheduleBookingRequest) {
+    public CommonResponse<RescheduleBookingResponse> rescheduleBooking(@RequestBody CreateRescheduleBookingRequest createRescheduleBookingRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.rescheduleBooking(createRescheduleBookingRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
@@ -100,4 +119,10 @@ public class BusinessController {
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }
+    @PostMapping("/view-all-bookings")
+    public CommonResponse<List<BookTimeSlotResponse>> viewAllBooking(@RequestBody BusinessViewAllBookingRequest businessViewAllBookingRequest) {
+        CommonResponse commonResponse = new CommonResponse(businessService.viewAllBooking(businessViewAllBookingRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
+
 }

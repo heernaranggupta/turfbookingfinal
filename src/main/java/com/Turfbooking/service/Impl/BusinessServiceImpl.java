@@ -6,6 +6,7 @@ import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
@@ -85,6 +86,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public CreatePasswordResponse resetPassword(CreateUpdatePasswordRequest createUpdatePasswordRequest) {
+
         String phoneNumber = createUpdatePasswordRequest.getPhoneNumber();
         Business business = businessRepository.findByPhoneNumber(phoneNumber);
 
@@ -110,6 +112,7 @@ public class BusinessServiceImpl implements BusinessService {
         if(null == isExistBusiness) {
             throw new GeneralException("Invalid user id.",HttpStatus.OK);
         }
+
         //GET SLOT BY DATE AND SLOT NUMBER
         BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
 
@@ -127,7 +130,9 @@ public class BusinessServiceImpl implements BusinessService {
                     .build();
 
             BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
+
             BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
+
             return bookTimeSlotResponse;
 
         } else {
@@ -151,8 +156,9 @@ public class BusinessServiceImpl implements BusinessService {
             throw new GeneralException("Please Provide phone number for update", HttpStatus.OK);
         }
     }
+
     @Override
-    public RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest)throws GeneralException {
+    public RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest) throws GeneralException {
 
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(createRescheduleBookingRequest.getSlotNumber(),createRescheduleBookingRequest.getDate());
 
@@ -187,14 +193,15 @@ public class BusinessServiceImpl implements BusinessService {
 
         if (days >= 0) { //means today or in future
             List<List<BookTimeSlotResponse>> responseList = new ArrayList<>();
-            for(String turf : turfs){
+            for (String turf : turfs) {
 
-                List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsBusinessRequest.getDate(),turf);
+                List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsBusinessRequest.getDate(), turf);
                 List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsBusinessRequest.getDate(), getAllSlotsBusinessRequest.getOpenTime(), getAllSlotsBusinessRequest.getCloseTime(), getAllSlotsBusinessRequest.getSlotDuration());
 
                 List<Integer> integerList = slotFromDB.stream()
                         .map(x -> x.getSlotNumber())
                         .collect(Collectors.toList());
+
 
                 allSlotList.stream().
                         forEach((response) -> {
@@ -207,12 +214,42 @@ public class BusinessServiceImpl implements BusinessService {
                                 });
                             }
                         });
-                    responseList.add(allSlotList);
+                responseList.add(allSlotList);
             }
             GetAllSlotsResponse finalResponse = new GetAllSlotsResponse(responseList);
             return finalResponse;
-        } else {
+        }
+             else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public List<BookTimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest) {
+        LocalDate fromDate = (null != businessViewAllBookingRequest.getFromDate()) ? businessViewAllBookingRequest.getFromDate() : LocalDate.now(ZoneId.of("Asia/Kolkata"));
+        LocalDate toDate = (null != businessViewAllBookingRequest.getToDate()) ? businessViewAllBookingRequest.getToDate() : LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(7);
+        String status = businessViewAllBookingRequest.getStatus();
+        List<BookedTimeSlot> bookedList = new ArrayList<>();
+        if (null != status) {
+            bookedList = bookedTimeSlotRepository.findAllByDateAndStatus(fromDate, toDate, status);
+            List<BookTimeSlotResponse> responseList = new ArrayList<>();
+            for (BookedTimeSlot slot : bookedList) {
+                BookTimeSlotResponse response = new BookTimeSlotResponse(slot);
+                responseList.add(response);
+            }
+            //    BusinessViewAllBookingResponse response = new BusinessViewAllBookingResponse(responseList);
+            return responseList;
+        } else if (status == null) {
+            bookedList = bookedTimeSlotRepository.findAllByDate(fromDate, toDate);
+            List<BookTimeSlotResponse> responseList = new ArrayList<>();
+            for (BookedTimeSlot slot : bookedList) {
+                BookTimeSlotResponse response = new BookTimeSlotResponse(slot);
+                responseList.add(response);
+            }
+            //BusinessViewAllBookingResponse response = new BusinessViewAllBookingResponse(responseList);
+            return responseList;
+        } else {
+            throw new GeneralException("Error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -250,7 +287,7 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
-           List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
+        List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
         int count = 1;
@@ -269,9 +306,9 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public BookTimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest makeUnavailableSlotRequest) {
 
-        BookedTimeSlot slotExist = bookedTimeSlotRepository.findByDateAndSlotNumber(makeUnavailableSlotRequest.getSlotNumber(),makeUnavailableSlotRequest.getDate());
+        BookedTimeSlot slotExist = bookedTimeSlotRepository.findByDateAndSlotNumber(makeUnavailableSlotRequest.getSlotNumber(), makeUnavailableSlotRequest.getDate());
 
-        if(null != slotExist){
+        if (null != slotExist) {
             slotExist = BookedTimeSlot.builder()
                     ._id(slotExist.get_id())
                     .bookingId(slotExist.getBookingId())
@@ -282,12 +319,13 @@ public class BusinessServiceImpl implements BusinessService {
                     .startTime(slotExist.getStartTime())
                     .endTime(slotExist.getEndTime())
                     .status(BookingStatus.NOT_AVAILABLE.name()) //this is cancelled by business and made unavailable.
+                    .status(BookingStatus.CANCELLED_BY_BUSINESS.name() + " AND " + BookingStatus.NOT_AVAILABLE) //this is cancelled by business and made unavailable.
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
             BookedTimeSlot cancelledAndUnavailableSlot = bookedTimeSlotRepository.save(slotExist);
             BookTimeSlotResponse response = new BookTimeSlotResponse(cancelledAndUnavailableSlot);
             return response;
-        }else{
+        } else {
             slotExist = BookedTimeSlot.builder()
                     .slotNumber(makeUnavailableSlotRequest.getSlotNumber())
                     .turfId(makeUnavailableSlotRequest.getTurfId())
