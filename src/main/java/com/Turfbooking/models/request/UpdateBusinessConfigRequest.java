@@ -1,23 +1,25 @@
-package com.Turfbooking.models.response;
+package com.Turfbooking.models.request;
 
-import lombok.Builder;
+import com.Turfbooking.documents.TurfSlotPricing;
 import lombok.Getter;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 public class UpdateBusinessConfigRequest {
 
+    @NotNull
+    @NotEmpty
     private String businessId; //phone number or username
 
+    @NotNull
     private String day;
     private LocalDate date;
     private LocalDateTime openTime;
     private LocalDateTime closeTime;
-
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private Double price;
-    private String coupon;
+    private List<TurfSlotPricing> pricings;
 }

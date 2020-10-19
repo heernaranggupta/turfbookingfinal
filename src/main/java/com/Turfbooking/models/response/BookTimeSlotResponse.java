@@ -15,6 +15,7 @@ public class BookTimeSlotResponse {
     private Integer slotNumber;
     private String status;
     private LocalDate date;
+    private Double price;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private LocalDateTime timestamp;
@@ -26,27 +27,30 @@ public class BookTimeSlotResponse {
         this.slotNumber = bookedTimeSlot.getSlotNumber();
         this.status = bookedTimeSlot.getStatus();
         this.date = bookedTimeSlot.getDate().toLocalDate();
+        this.price = bookedTimeSlot.getPrice();
         this.startTime = bookedTimeSlot.getStartTime();
         this.endTime = bookedTimeSlot.getEndTime();
         this.timestamp = bookedTimeSlot.getTimeStamp(); //LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
     }
 
-    public BookTimeSlotResponse(String userId, String turfId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
+    public BookTimeSlotResponse(String userId, String turfId, Integer slotNumber, String status, LocalDate date, Double price, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
         this.userId = userId;
         this.turfId = turfId;
         this.slotNumber = slotNumber;
         this.status = status;
         this.date = date;
+        this.price = price;
         this.startTime = startTime;
         this.endTime = endTime;
         this.timestamp = timestamp;
     }
 
-    public BookTimeSlotResponse(String turfId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime) {
+    public BookTimeSlotResponse(String turfId, Integer slotNumber, String status, LocalDate date, Double price, LocalDateTime startTime, LocalDateTime endTime) {
         this.turfId = turfId;
         this.slotNumber = slotNumber;
         this.status = status;
         this.date = date;
+        this.price = price;
         this.startTime = startTime;
         this.endTime = endTime;
     }

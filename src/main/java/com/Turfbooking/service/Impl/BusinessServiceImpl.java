@@ -12,7 +12,7 @@ import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
-import com.Turfbooking.models.request.UpdateBusinessConfigResponse;
+import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
@@ -21,7 +21,7 @@ import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
-import com.Turfbooking.models.response.UpdateBusinessConfigRequest;
+import com.Turfbooking.models.request.UpdateBusinessConfigRequest;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.BusinessConfigRepository;
 import com.Turfbooking.repository.BusinessRepository;
@@ -261,10 +261,27 @@ public class BusinessServiceImpl implements BusinessService {
         LocalDateTime slotEndTime;
         int count = 1;
 
+        Double price = null;
+
+        BusinessConfig businessConfigList = businessConfigRepository.findByDate(date);
+        if(null == businessConfigList){
+            String day = date.getDayOfWeek().toString();
+            businessConfigList = businessConfigRepository.findByDay(day);
+        }
+        List<TurfSlotPricing> pricing = businessConfigList.getPricing();
+        List<Integer> numberList = pricing.stream()
+                .map(x -> x.getSlotNumber())
+                .collect(Collectors.toList());
+
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
-               slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+            if(numberList.contains(count)){
+                price =pricing.get(count).getPrice();
+                timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, price, slotStartTime, slotEndTime));
+            }else {
+                timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, 350.00/*default price*/, slotStartTime, slotEndTime));
+            }
             slotStartTime = slotEndTime;
             count++;
         }
@@ -316,19 +333,12 @@ public class BusinessServiceImpl implements BusinessService {
         Business isBusinessExist = businessRepository.findByUsername(updateRequest.getBusinessId());
 
         if(null != isBusinessExist){
-            TurfSlotPricing pricing = TurfSlotPricing.builder()
-                    .startTime(updateRequest.getStartTime())
-                    .endTime(updateRequest.getEndTime())
-                    .price(updateRequest.getPrice())
-                    .coupon(updateRequest.getCoupon())
-                    .build();
-
             BusinessConfig saveConfig = BusinessConfig.builder()
                     .day(updateRequest.getDay())
                     .date(updateRequest.getDate())
                     .openTime(updateRequest.getOpenTime())
                     .closeTime(updateRequest.getCloseTime())
-                    .pricing(pricing)
+                    .pricing(updateRequest.getPricings())
                     .build();
 
             BusinessConfig savedConfig = businessConfigRepository.save(saveConfig);

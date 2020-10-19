@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Document
 public class TurfSlotPricing {
 
+    private Integer slotNumber;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Double price;

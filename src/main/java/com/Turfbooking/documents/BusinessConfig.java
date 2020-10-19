@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -17,6 +18,6 @@ public class BusinessConfig {
     private LocalDate date;
     private LocalDateTime openTime;
     private LocalDateTime closeTime;
-    private TurfSlotPricing pricing;
+    private List<TurfSlotPricing> pricing;
 
 }
