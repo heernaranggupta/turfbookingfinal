@@ -1,10 +1,13 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
@@ -19,13 +22,16 @@ import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -38,6 +44,7 @@ public class BusinessController {
     public BusinessController(BusinessService businessService) {
         this.businessService = businessService;
     }
+
 //
 //    @CacheEvict(
 //            value = "listOfSlotsByTurfIdAndDate",
@@ -106,4 +113,10 @@ public class BusinessController {
         CommonResponse response = new CommonResponse<>(businessService.updateBusinessConfig(updateBusinessConfigRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
+    @PostMapping("/view-all-bookings")
+    public CommonResponse<List<BookTimeSlotResponse>> viewAllBooking(@RequestBody BusinessViewAllBookingRequest businessViewAllBookingRequest) {
+        CommonResponse commonResponse = new CommonResponse(businessService.viewAllBooking(businessViewAllBookingRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
+
 }

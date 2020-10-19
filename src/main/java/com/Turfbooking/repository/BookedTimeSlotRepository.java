@@ -15,13 +15,24 @@ public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot
     BookedTimeSlot findByDateAndSlotNumber(Integer slotNumber, LocalDate date);
 
     @Query("{'date':{ $eq: ?0}, 'turfId':?1}")
-    List<BookedTimeSlot> findByDateAndTurfId(LocalDate date,String turfId);
+    List<BookedTimeSlot> findByDateAndTurfId(LocalDate date, String turfId);
 
     @Query("{'date': { $eq: ?0}}")
     List<BookedTimeSlot> findByDate(LocalDate date);
 
+    @Query("{'date' :  { $gte: ?0, $lte: ?1 }} ")
+    List<BookedTimeSlot> findAllByDate(LocalDate fromDate, LocalDate toDate);
+
+    @Query("{'date' :  { $gte: ?0, $lte: ?1 } ,'status' :?2}")
+    List<BookedTimeSlot> findAllByDateAndStatus(LocalDate fromDate, LocalDate toDate, String status);
+
+    @Query("{'bookingId':?0}")
+    BookedTimeSlot findByBookingId(String bookingId);
 
     @Query("{'userId': ?0}")
     List<BookedTimeSlot> findByUserId(String userId);
+
+    @Query("{'status':?0 ,'date':{ $gte: ?1}}")
+    List<BookedTimeSlot> findByDateAndBookingStatus(String status, LocalDate date);
 
 }

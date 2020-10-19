@@ -1,6 +1,7 @@
 package com.Turfbooking.service;
 
 import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
@@ -15,6 +16,8 @@ import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
 import com.Turfbooking.models.request.UpdateBusinessConfigRequest;
+
+import java.util.List;
 
 
 public interface BusinessService {
@@ -34,6 +37,8 @@ public interface BusinessService {
     RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest);
 
     BookTimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
+
+    List<BookTimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest);
 
     UpdateBusinessConfigResponse updateBusinessConfig(UpdateBusinessConfigRequest updateBusinessConfigRequest);
 }
