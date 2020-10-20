@@ -6,6 +6,7 @@ import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.EditBusinessConfigRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
@@ -113,6 +114,13 @@ public class BusinessController {
         CommonResponse response = new CommonResponse<>(businessService.updateBusinessConfig(updateBusinessConfigRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
+
+    @PostMapping("/edit-config")
+    public CommonResponse<UpdateBusinessConfigResponse> editBusinessConfigs(@RequestBody EditBusinessConfigRequest editBusinessConfigRequest){
+        CommonResponse response = new CommonResponse<>(businessService.editBusinessConfig(editBusinessConfigRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
     @PostMapping("/view-all-bookings")
     public CommonResponse<List<BookTimeSlotResponse>> viewAllBooking(@RequestBody BusinessViewAllBookingRequest businessViewAllBookingRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.viewAllBooking(businessViewAllBookingRequest));

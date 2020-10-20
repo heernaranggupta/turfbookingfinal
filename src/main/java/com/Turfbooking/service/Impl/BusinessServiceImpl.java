@@ -12,6 +12,7 @@ import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.EditBusinessConfigRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
@@ -370,6 +371,11 @@ public class BusinessServiceImpl implements BusinessService {
 
         Business isBusinessExist = businessRepository.findByUsername(updateRequest.getBusinessId());
 
+        BusinessConfig isBusinessConfigExist = businessConfigRepository.findByDate(updateRequest.getDate());
+        if(null != isBusinessConfigExist){
+            throw new GeneralException("Configuration already exist.",HttpStatus.OK);
+        }
+
         if(null != isBusinessExist){
             BusinessConfig saveConfig = BusinessConfig.builder()
                     .day(updateRequest.getDay())
@@ -379,7 +385,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .pricing(updateRequest.getPricings())
                     .build();
 
-            BusinessConfig savedConfig = businessConfigRepository.save(saveConfig);
+            BusinessConfig savedConfig = businessConfigRepository.insert(saveConfig);
             UpdateBusinessConfigResponse response = new UpdateBusinessConfigResponse(savedConfig);
             return  response;
         }else {
@@ -387,5 +393,33 @@ public class BusinessServiceImpl implements BusinessService {
         }
     }
 
+    @Override
+    public UpdateBusinessConfigResponse editBusinessConfig(EditBusinessConfigRequest editRequest) {
+
+        Business isBusinessExist = businessRepository.findByUsername(editRequest.getBusinessId());
+        if(null == isBusinessExist){
+            throw new GeneralException("Enter valid business id.",HttpStatus.OK);
+        }
+
+        BusinessConfig isBusinessConfigExist = businessConfigRepository.findByDate(editRequest.getDate());
+        if(null != isBusinessConfigExist){
+            isBusinessConfigExist = BusinessConfig.builder()
+                    ._id(isBusinessConfigExist.get_id())
+                    .day(editRequest.getDay())
+                    .date(editRequest.getDate())
+                    .openTime(editRequest.getOpenTime())
+                    .closeTime(editRequest.getCloseTime())
+                    .pricing(editRequest.getPricings())
+                    .build();
+
+            BusinessConfig savedConfig = businessConfigRepository.save(isBusinessConfigExist);
+
+            UpdateBusinessConfigResponse response = new UpdateBusinessConfigResponse(savedConfig);
+            return response;
+        }else {
+            throw new GeneralException("Configuration for date "+editRequest.getDate()+" does not exist.",HttpStatus.OK);
+        }
+
+    }
 
 }
