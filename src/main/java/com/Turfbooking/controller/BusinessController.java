@@ -20,12 +20,12 @@ import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -43,16 +43,10 @@ public class BusinessController {
         this.businessService = businessService;
     }
 
-    /*@CacheEvict(
+    @CacheEvict(
             value = "listOfSlotsByTurfIdAndDate",
-            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
+            allEntries = true,
             condition = "#bookTimeSlotRequest.turfId != null")
-      */
-//
-//    @CacheEvict(
-//            value = "listOfSlotsByTurfIdAndDate",
-//            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
-//            condition = "#bookTimeSlotRequest.turfId != null")
     @PostMapping("/book-slot")
     public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest) {
         CommonResponse response = new CommonResponse<>(businessService.bookSlot(bookTimeSlotRequest));
@@ -60,21 +54,14 @@ public class BusinessController {
     }
 
 
-   /* @Cacheable(
+
+    @Cacheable(
             value = "listOfSlotsByTurfIdAndDate",
-            key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date.toString())",
-            condition = "#getAllSlotsRequest.turfId != null")*/
-
-    //cache - change on booking
-    //all slots - available and unavailable by date
-//    @Cacheable(
-//            value = "listOfSlotsByTurfIdAndDate",
-//            key = "#getAllSlotsRequest.turfId.concat('-').concat(#getAllSlotsRequest.date.toString())",
-//            condition = "#getAllSlotsRequest.turfId != null")
-
+            key = "#getAllSlotsBusinessRequest.date.toString()",
+            condition = "#getAllSlotsBusinessRequest.date != null")
     @PostMapping("/all-slots")
     public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
-        log.info("Get all slots method executed. : "+ getAllSlotsBusinessRequest.getTurfIds().get(1)+"--"+getAllSlotsBusinessRequest.getDate());
+        log.info("Get all slots method executed. : "+ getAllSlotsBusinessRequest.getTurfIds()+"--"+getAllSlotsBusinessRequest.getDate());
         CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
