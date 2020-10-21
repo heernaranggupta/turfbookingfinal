@@ -106,6 +106,7 @@ public class BusinessController {
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }
+
     @PostMapping("/view-all-bookings")
     public CommonResponse<List<BookTimeSlotResponse>> viewAllBooking(@RequestBody BusinessViewAllBookingRequest businessViewAllBookingRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.viewAllBooking(businessViewAllBookingRequest));

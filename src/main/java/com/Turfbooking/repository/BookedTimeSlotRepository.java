@@ -14,6 +14,9 @@ public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot
     @Query("{'slotNumber':?0 ,'date':{ $eq: ?1}}")
     BookedTimeSlot findByDateAndSlotNumber(Integer slotNumber, LocalDate date);
 
+    @Query("{'slotNumber':?0 ,'date':{ $eq: ?1},'turfId':?3}")
+    BookedTimeSlot findByDateAndSlotNumberAndTurfId(Integer slotNumber, LocalDate date, String turfId);
+
     @Query("{'date':{ $eq: ?0}, 'turfId':?1}")
     List<BookedTimeSlot> findByDateAndTurfId(LocalDate date, String turfId);
 
