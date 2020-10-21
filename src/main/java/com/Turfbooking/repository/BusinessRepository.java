@@ -14,5 +14,6 @@ public interface BusinessRepository extends MongoRepository<Business, String> {
     @Query("{'phoneNumber':?0}")
     Business findByPhoneNumber(String phoneNumber);
 
+    @Query("{'username':?0}")
     Business findByUsername(String username);
 }
