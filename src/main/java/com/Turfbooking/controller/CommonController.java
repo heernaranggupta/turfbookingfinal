@@ -2,10 +2,10 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.GetBusinessConfigRequest;
-import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateResponse;
+import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.utils.ResponseUtilities;

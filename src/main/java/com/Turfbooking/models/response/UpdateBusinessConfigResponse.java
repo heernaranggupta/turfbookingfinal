@@ -2,8 +2,6 @@ package com.Turfbooking.models.response;
 
 import com.Turfbooking.documents.BusinessConfig;
 import com.Turfbooking.documents.TurfSlotPricing;
-import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
