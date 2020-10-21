@@ -1,6 +1,5 @@
 package com.Turfbooking.service.Impl;
 
-import com.Turfbooking.documents.BusinessConfig;
 import com.Turfbooking.documents.Otp;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
@@ -10,13 +9,10 @@ import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
 import com.Turfbooking.models.request.GenerateOtpRequest;
-import com.Turfbooking.models.request.GetBusinessConfigRequest;
-import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
-import com.Turfbooking.repository.BusinessConfigRepository;
 import com.Turfbooking.repository.OtpRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.CommonService;
@@ -47,16 +43,14 @@ public class CommonServiceImpl implements CommonService {
     private OtpRepository otpRepository;
     private RestTemplate restTemplate;
     private UserRepository userRepository;
-    private BusinessConfigRepository businessConfigRepository;
 
 
     @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository,BusinessConfigRepository businessConfigRepository) {
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.otpRepository = otpRepository;
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;
-        this.businessConfigRepository = businessConfigRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -170,6 +164,69 @@ public class CommonServiceImpl implements CommonService {
             throw new GeneralException("Error in sending OTP, please try again after sometime.", HttpStatus.BAD_GATEWAY);
         } else return 1;
     }
+/*
+
+    @Override
+    public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
+
+        String phoneNumber = validateOtpRequest.getPhoneNumber();
+        String emailOrPhoneNumber = CommonUtilities.findEmailIdOrPasswordValidator(phoneNumber);
+        String countryCode = validateOtpRequest.getCountryCode();
+
+        String phoneNumberWithCountryCode = null;
+        if (StringUtils.equals(emailOrPhoneNumber, "email"))
+            phoneNumberWithCountryCode = phoneNumber;
+
+        else {
+            phoneNumberWithCountryCode = StringUtils.join(countryCode, phoneNumber);
+
+        }
+        Integer userOtp = validateOtpRequest.getOtp();
+        ValidateOtpResponse validateOtpResponse = new ValidateOtpResponse();
+        Otp otp = otpRepository.findByPhoneNumberAndOtp(phoneNumberWithCountryCode, validateOtpRequest.getOtp());
+
+        //set otp status valid or not
+        if (null != otp && validateOtpRequest.getOtp().intValue() == userOtp.intValue() && LocalDateTime.now().isBefore(otp.getTimeTillActive())) {
+            //delete otp entry from database
+            long otpdeltedCount = otpRepository.deleteByPhoneNumber(otp.getPhoneNumber());
+            validateOtpResponse.setOtpStatus(OtpStatus.VALID.name());
+        } else
+            validateOtpResponse.setOtpStatus(OtpStatus.INVALID.name());
+
+        //check if user or business login
+        Boolean isBusiness = validateOtpRequest.getIsBusiness();
+        String token;
+        String refreshToken;
+        if (isBusiness) {
+//            Business businessDocument = businessRepository.findByPrimaryPhoneNumber(phoneNumber);
+//            if (null != businessDocument && StringUtils.equals(validateOtpRequest.getCountryCode(), businessDocument.getCountryCode())) {
+//                token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
+//                refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
+//                validateOtpResponse.setToken(token);
+//                validateOtpResponse.setRefreshToken(refreshToken);
+//                validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
+//                validateOtpResponse.setNameOfTheUser(businessDocument.getBusinessDisplayName());
+//                validateOtpResponse.setCompanyUser(FullBusinessResponse.getFullBusinessResponseFromBusinessDocument(businessDocument));
+//            } else
+//                validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
+
+        } else {
+            User userDocument = userRepository.findByPhoneNumber(phoneNumber);
+            if (null != userDocument && StringUtils.equals(validateOtpRequest.getCountryCode(), userDocument.getCountryCode())) {
+                token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
+                refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
+                validateOtpResponse.setToken(token);
+                validateOtpResponse.setRefreshToken(refreshToken);
+                validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
+                validateOtpResponse.setNameOfTheUser(userDocument.getFirstName());
+                UserResponse userResponse = new UserResponse(userDocument);
+                validateOtpResponse.setUser(userResponse);
+            } else
+                validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
+        }
+        return validateOtpResponse;
+    }
+*/
 
     @Override
     public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
@@ -218,20 +275,4 @@ public class CommonServiceImpl implements CommonService {
 
     }
 
-    @Override
-    public UpdateBusinessConfigResponse getBusinessConfig(GetBusinessConfigRequest getBusinessConfigRequest) {
-
-        UpdateBusinessConfigResponse response = null;
-        if(null != getBusinessConfigRequest.getDate()){
-            BusinessConfig config = businessConfigRepository.findByDate(getBusinessConfigRequest.getDate());
-            response = new UpdateBusinessConfigResponse(config);
-        } else if(null != getBusinessConfigRequest.getDay()){
-            BusinessConfig config = businessConfigRepository.findByDay(getBusinessConfigRequest.getDay());
-            response = new UpdateBusinessConfigResponse(config);
-        }else{
-            throw new GeneralException("Provide date or day.",HttpStatus.OK);
-        }
-
-        return response;
-    }
 }
