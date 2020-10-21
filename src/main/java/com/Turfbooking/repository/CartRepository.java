@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CartRepository  extends MongoRepository<Order,String> {
+public interface CartRepository extends MongoRepository<Order, String> {
 
     @Query("{'userId':?0}")
     Order findByUserId(String userId);

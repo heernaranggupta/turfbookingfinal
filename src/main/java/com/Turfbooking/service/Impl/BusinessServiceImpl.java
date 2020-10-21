@@ -43,6 +43,14 @@ public class BusinessServiceImpl implements BusinessService {
     private BusinessRepository businessRepository;
     private JwtTokenUtil jwtTokenUtil;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
+    @Value("${jwt.secret.accessToken}")
+    private String accessSecret;
+    @Value("${jwt.secret.refreshToken}")
+    private String refreshSecret;
+    @Value("${jwt.accessToken.validity}")
+    private long accessTokenValidity;
+    @Value("${jwt.refreshToken.validity}")
+    private long refreshTokenValidity;
 
     @Autowired
     public BusinessServiceImpl(BusinessRepository businessRepository, JwtTokenUtil jwtTokenUtil, BookedTimeSlotRepository bookedTimeSlotRepository) {
@@ -50,18 +58,6 @@ public class BusinessServiceImpl implements BusinessService {
         this.jwtTokenUtil = jwtTokenUtil;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
     }
-
-    @Value("${jwt.secret.accessToken}")
-    private String accessSecret;
-
-    @Value("${jwt.secret.refreshToken}")
-    private String refreshSecret;
-
-    @Value("${jwt.accessToken.validity}")
-    private long accessTokenValidity;
-
-    @Value("${jwt.refreshToken.validity}")
-    private long refreshTokenValidity;
 
     @Override
     public CreateBusinessLoginResponse businessLogin(CreateBusinessLoginRequest createBusinessLoginRequest) throws GeneralException {
@@ -160,7 +156,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest) throws GeneralException {
 
-        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(createRescheduleBookingRequest.getSlotNumber(),createRescheduleBookingRequest.getDate());
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(createRescheduleBookingRequest.getSlotNumber(), createRescheduleBookingRequest.getDate());
 
         if (null != bookedTimeSlot) {
             bookedTimeSlot = BookedTimeSlot.builder()
@@ -169,7 +165,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .userId(createRescheduleBookingRequest.getUserId())
                     .slotNumber(createRescheduleBookingRequest.getSlotNumber())
                     .turfId(createRescheduleBookingRequest.getTurfId())
-                    .date(LocalDateTime.of(createRescheduleBookingRequest.getDate(),LocalTime.of(00,00)))
+                    .date(LocalDateTime.of(createRescheduleBookingRequest.getDate(), LocalTime.of(00, 00)))
                     .status(BookingStatus.RESCHEDULED_BY_BUSINESS.name())
                     .startTime(createRescheduleBookingRequest.getStartTime())
                     .endTime(createRescheduleBookingRequest.getEndTime())
@@ -218,8 +214,7 @@ public class BusinessServiceImpl implements BusinessService {
             }
             GetAllSlotsResponse finalResponse = new GetAllSlotsResponse(responseList);
             return finalResponse;
-        }
-             else {
+        } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
         }
     }
@@ -255,7 +250,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public BookTimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelRequest) {
-        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(),cancelRequest.getDate());
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(), cancelRequest.getDate());
 
         if (null != timeSlot) {
             timeSlot = BookedTimeSlot.builder()
@@ -282,7 +277,7 @@ public class BusinessServiceImpl implements BusinessService {
                 throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            throw new GeneralException("No booked slot with booking id: " + cancelRequest.getTurfId() , HttpStatus.OK);
+            throw new GeneralException("No booked slot with booking id: " + cancelRequest.getTurfId(), HttpStatus.OK);
         }
     }
 
@@ -294,7 +289,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
-               slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
             timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
             count++;
@@ -315,7 +310,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .userId(slotExist.getUserId())
                     .turfId(slotExist.getTurfId())
                     .slotNumber(slotExist.getSlotNumber())
-                    .date(LocalDateTime.of(makeUnavailableSlotRequest.getDate(),LocalTime.of(00,00)))
+                    .date(LocalDateTime.of(makeUnavailableSlotRequest.getDate(), LocalTime.of(00, 00)))
                     .startTime(slotExist.getStartTime())
                     .endTime(slotExist.getEndTime())
                     .status(BookingStatus.NOT_AVAILABLE.name()) //this is cancelled by business and made unavailable.
@@ -329,7 +324,7 @@ public class BusinessServiceImpl implements BusinessService {
             slotExist = BookedTimeSlot.builder()
                     .slotNumber(makeUnavailableSlotRequest.getSlotNumber())
                     .turfId(makeUnavailableSlotRequest.getTurfId())
-                    .date(LocalDateTime.of(makeUnavailableSlotRequest.getDate(),LocalTime.of(00,00)))
+                    .date(LocalDateTime.of(makeUnavailableSlotRequest.getDate(), LocalTime.of(00, 00)))
                     .status(BookingStatus.NOT_AVAILABLE.name())
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .startTime(makeUnavailableSlotRequest.getStartTime())

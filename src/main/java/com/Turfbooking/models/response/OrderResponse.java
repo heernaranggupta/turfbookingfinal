@@ -16,7 +16,7 @@ public class OrderResponse {
     private List<BookedTimeSlot> timeSlots;
     private LocalDateTime timestamp;
 
-    public OrderResponse(Order order){
+    public OrderResponse(Order order) {
         this.userId = order.getUserId();
         this.timestamp = order.getTimestamp();
 

@@ -52,14 +52,13 @@ public class BusinessController {
     }
 
 
-
     @Cacheable(
             value = "listOfSlotsByTurfIdAndDate",
             key = "#getAllSlotsBusinessRequest.date.toString()",
             condition = "#getAllSlotsBusinessRequest.date != null")
     @PostMapping("/all-slots")
     public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
-        log.info("Get all slots method executed. : "+ getAllSlotsBusinessRequest.getTurfIds()+"--"+getAllSlotsBusinessRequest.getDate());
+        log.info("Get all slots method executed. : " + getAllSlotsBusinessRequest.getTurfIds() + "--" + getAllSlotsBusinessRequest.getDate());
         CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
@@ -86,8 +85,7 @@ public class BusinessController {
     }
 
     @PostMapping("/slot/make-unavailable")
-    public
-    CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+    public CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
         CommonResponse response = new CommonResponse(businessService.makeSlotUnavailable(cancelOrUnavailableSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }

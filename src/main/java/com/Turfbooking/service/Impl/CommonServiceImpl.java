@@ -43,8 +43,20 @@ public class CommonServiceImpl implements CommonService {
     private OtpRepository otpRepository;
     private RestTemplate restTemplate;
     private UserRepository userRepository;
-
-
+    @Value("${jwt.secret.accessToken}")
+    private String accessSecret;
+    @Value("${jwt.secret.refreshToken}")
+    private String refreshSecret;
+    @Value("${jwt.accessToken.validity}")
+    private long accessTokenValidity;
+    @Value("${jwt.refreshToken.validity}")
+    private long refreshTokenValidity;
+    @Value("${otp.active.minutes}")
+    private String otpActiveMinutes;
+    @Autowired
+    private Environment environment;
+    @Autowired
+    private JavaMailSender javaMailSender;
     @Autowired
     public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
@@ -52,27 +64,6 @@ public class CommonServiceImpl implements CommonService {
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;
     }
-
-    @Value("${jwt.secret.accessToken}")
-    private String accessSecret;
-
-    @Value("${jwt.secret.refreshToken}")
-    private String refreshSecret;
-
-    @Value("${jwt.accessToken.validity}")
-    private long accessTokenValidity;
-
-    @Value("${jwt.refreshToken.validity}")
-    private long refreshTokenValidity;
-
-    @Value("${otp.active.minutes}")
-    private String otpActiveMinutes;
-
-    @Autowired
-    private Environment environment;
-    @Autowired
-    private JavaMailSender javaMailSender;
-
 
     @Override
     public CreateResponse generateOtp(GenerateOtpRequest otpRequest) throws GeneralException {
@@ -237,7 +228,7 @@ public class CommonServiceImpl implements CommonService {
         String phoneNumberWithCountryCode = null;
 
         if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
-            phoneNumberWithCountryCode = StringUtils.join(countryCode,phoneNumber);
+            phoneNumberWithCountryCode = StringUtils.join(countryCode, phoneNumber);
         else {
             throw new GeneralException("Phone number or county code is invalid.", HttpStatus.OK);
         }

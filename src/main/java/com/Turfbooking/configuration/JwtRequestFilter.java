@@ -27,18 +27,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
     private BusinessRepository businessRepository;
+    @Value("${jwt.secret.accessToken}")
+    private String accessToken;
+    @Value("${jwt.secret.refreshToken}")
+    private String refreshToken;
 
     @Autowired
-    public JwtRequestFilter(UserRepository userRepository,BusinessRepository businessRepository) {
+    public JwtRequestFilter(UserRepository userRepository, BusinessRepository businessRepository) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
     }
-
-    @Value("${jwt.secret.accessToken}")
-    private String accessToken;
-
-    @Value("${jwt.secret.refreshToken}")
-    private String refreshToken;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -69,9 +67,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             if (user != null) {
                 phoneNumberOrBusinessUsername = user.getPhoneNumber();
-            } else if(null != (business = businessRepository.findByUsername(username))){
+            } else if (null != (business = businessRepository.findByUsername(username))) {
                 phoneNumberOrBusinessUsername = business.getUsername();
-            }else{
+            } else {
                 logger.error("User not fond with given username.");
             }
 

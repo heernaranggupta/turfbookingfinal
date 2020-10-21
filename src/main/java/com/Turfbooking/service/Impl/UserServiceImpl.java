@@ -8,21 +8,21 @@ import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.BookingStatus;
-import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsByUserResponse;
+import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.CartRepository;
@@ -55,6 +55,14 @@ public class UserServiceImpl implements UserService {
     private OtpRepository otpRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
     private CartRepository cartRepository;
+    @Value("${jwt.secret.accessToken}")
+    private String accessSecret;
+    @Value("${jwt.secret.refreshToken}")
+    private String refreshSecret;
+    @Value("${jwt.accessToken.validity}")
+    private long accessTokenValidity;
+    @Value("${jwt.refreshToken.validity}")
+    private long refreshTokenValidity;
 
     @Autowired
     public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository) {
@@ -64,18 +72,6 @@ public class UserServiceImpl implements UserService {
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.cartRepository = cartRepository;
     }
-
-    @Value("${jwt.secret.accessToken}")
-    private String accessSecret;
-
-    @Value("${jwt.secret.refreshToken}")
-    private String refreshSecret;
-
-    @Value("${jwt.accessToken.validity}")
-    private long accessTokenValidity;
-
-    @Value("${jwt.refreshToken.validity}")
-    private long refreshTokenValidity;
 
     @Override
     public CreateUserResponse createNewUser(CreateUserRequest createUserRequest) throws GeneralException {
@@ -299,36 +295,36 @@ public class UserServiceImpl implements UserService {
         }
         //Whenever user create account, his cart is created and set null.
 
-            List<BookTimeSlotRequest> bookTimeSlotRequests = new ArrayList<>();
-            for (BookTimeSlotRequest request : orderRequest.getTimeSlots()) {
-                BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumberAndTurfId(request.getSlotNumber(), request.getDate(),request.getTurfId());
-                if (null == slot) {
-                    bookTimeSlotRequests.add(request);
-                } else {
-                    throw new GeneralException("slot with slot number " + slot.getSlotNumber() + " on date " + slot.getDate() + " is alredy booked.", HttpStatus.OK);
-                }
+        List<BookTimeSlotRequest> bookTimeSlotRequests = new ArrayList<>();
+        for (BookTimeSlotRequest request : orderRequest.getTimeSlots()) {
+            BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumberAndTurfId(request.getSlotNumber(), request.getDate(), request.getTurfId());
+            if (null == slot) {
+                bookTimeSlotRequests.add(request);
+            } else {
+                throw new GeneralException("slot with slot number " + slot.getSlotNumber() + " on date " + slot.getDate() + " is alredy booked.", HttpStatus.OK);
             }
+        }
 
-            List<BookedTimeSlot> bookedTimeSlotList = bookSlot(bookTimeSlotRequests,orderRequest.getUserId());
-            List<String> bookingIdList = bookedTimeSlotList.stream()
-                    .map(x -> x.getBookingId())
-                    .collect(Collectors.toList());
+        List<BookedTimeSlot> bookedTimeSlotList = bookSlot(bookTimeSlotRequests, orderRequest.getUserId());
+        List<String> bookingIdList = bookedTimeSlotList.stream()
+                .map(x -> x.getBookingId())
+                .collect(Collectors.toList());
 
-            Order saveOrder = Order.builder()
-                    .userId(orderRequest.getUserId())
-                    .timeSlots(bookingIdList)
-                    .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .build();
+        Order saveOrder = Order.builder()
+                .userId(orderRequest.getUserId())
+                .timeSlots(bookingIdList)
+                .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                .build();
 
-            Order savedOrder = cartRepository.save(saveOrder);
-            OrderResponse response = new OrderResponse(savedOrder);
-            response.setTimeSlots(bookedTimeSlotList);
-            return response;
+        Order savedOrder = cartRepository.save(saveOrder);
+        OrderResponse response = new OrderResponse(savedOrder);
+        response.setTimeSlots(bookedTimeSlotList);
+        return response;
 
     }
 
 
-    private List<BookedTimeSlot> bookSlot(List<BookTimeSlotRequest> bookTimeSlotRequestList,String userId) throws GeneralException {
+    private List<BookedTimeSlot> bookSlot(List<BookTimeSlotRequest> bookTimeSlotRequestList, String userId) throws GeneralException {
         List<BookedTimeSlot> bookedTimeSlotList = new ArrayList<>();
         for (BookTimeSlotRequest bookTimeSlotRequest : bookTimeSlotRequestList) {
             BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()

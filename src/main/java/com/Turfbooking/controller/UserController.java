@@ -1,19 +1,19 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
+import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+
 @Slf4j
 @RestController
 @RequestMapping("/user")
@@ -92,7 +93,7 @@ public class UserController {
             allEntries = true,
             condition = "#updateBookedTimeSlotRequest.turfId != null")
     @PostMapping("update-booking")
-    public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest){
+    public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest) {
         BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return ResponseUtilities.createSuccessResponse(response);
@@ -111,13 +112,13 @@ public class UserController {
             condition = "#getAllSlotsRequest.date != null")
     @PostMapping("/get-all-slots-by-date")
     public CommonResponse getAllSlotsByDate(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
-        log.info("Method executed"+getAllSlotsRequest.getTurfId()+"--"+getAllSlotsRequest.getDate());
+        log.info("Method executed" + getAllSlotsRequest.getTurfId() + "--" + getAllSlotsRequest.getDate());
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
     @PostMapping("/add-to-cart")
-    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest){
+    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest) {
         CommonResponse response = new CommonResponse<>(userService.placeOrder(orderRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }

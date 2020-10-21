@@ -22,6 +22,10 @@ import java.util.List;
 @OpenAPIDefinition(info = @Info(title = "Turf Booking", version = "0.1", description = "API documentation of turf booking project."))
 public class TurfbookingApplication {
 
+    public static void main(String[] args) {
+        SpringApplication.run(TurfbookingApplication.class, args);
+    }
+
     @Bean
     public RestTemplate getRestTemplate() {
         RestTemplate restTemplate = new RestTemplate();
@@ -31,11 +35,6 @@ public class TurfbookingApplication {
         messageConverters.add(converter);
         restTemplate.setMessageConverters(messageConverters);
         return restTemplate;
-    }
-
-
-    public static void main(String[] args) {
-        SpringApplication.run(TurfbookingApplication.class, args);
     }
 
 }

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class BookTimeSlotRequest {
 
     @NotEmpty
-    @Min(value = 1,message = "Slot number should be <= 1.")
+    @Min(value = 1, message = "Slot number should be <= 1.")
     private Integer slotNumber;
     private String turfId;
     private LocalDate date;
