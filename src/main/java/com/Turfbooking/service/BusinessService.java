@@ -6,7 +6,9 @@ import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.EditBusinessConfigRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
+import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
@@ -14,6 +16,7 @@ import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
+import com.Turfbooking.models.request.UpdateBusinessConfigRequest;
 
 import java.util.List;
 
@@ -30,7 +33,6 @@ public interface BusinessService {
 
     GetAllSlotsResponse getAllSlots(GetAllSlotsBusinessRequest getAllSlotsBusinessRequest);
 
-
     BookTimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
 
     RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest);
@@ -38,4 +40,9 @@ public interface BusinessService {
     BookTimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
 
     List<BookTimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest);
+
+    UpdateBusinessConfigResponse updateBusinessConfig(UpdateBusinessConfigRequest updateBusinessConfigRequest);
+
+    UpdateBusinessConfigResponse editBusinessConfig(EditBusinessConfigRequest editBusinessConfigRequest);
+
 }

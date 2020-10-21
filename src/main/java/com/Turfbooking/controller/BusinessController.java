@@ -6,9 +6,11 @@ import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.EditBusinessConfigRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
+import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
@@ -16,6 +18,7 @@ import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
+import com.Turfbooking.models.request.UpdateBusinessConfigRequest;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -88,14 +91,13 @@ public class BusinessController {
     }
 
     @PostMapping("/slot/make-unavailable")
-    public
-    CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+    public CommonResponse makeSlotUnavailable(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
         CommonResponse response = new CommonResponse(businessService.makeSlotUnavailable(cancelOrUnavailableSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
     @PostMapping("/reschedule-booking")
-    public CommonResponse<RescheduleBookingResponse> rescheduleBooking(@RequestBody CreateRescheduleBookingRequest createRescheduleBookingRequest) {
+    public CommonResponse<RescheduleBookingResponse> rescheduleBooking (@RequestBody CreateRescheduleBookingRequest createRescheduleBookingRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.rescheduleBooking(createRescheduleBookingRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
@@ -106,6 +108,19 @@ public class BusinessController {
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }
+
+    @PostMapping("/update-config")
+    public CommonResponse<UpdateBusinessConfigResponse> updateBusinessConfigs(@RequestBody UpdateBusinessConfigRequest updateBusinessConfigRequest){
+        CommonResponse response = new CommonResponse<>(businessService.updateBusinessConfig(updateBusinessConfigRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @PostMapping("/edit-config")
+    public CommonResponse<UpdateBusinessConfigResponse> editBusinessConfigs(@RequestBody EditBusinessConfigRequest editBusinessConfigRequest){
+        CommonResponse response = new CommonResponse<>(businessService.editBusinessConfig(editBusinessConfigRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
     @PostMapping("/view-all-bookings")
     public CommonResponse<List<BookTimeSlotResponse>> viewAllBooking(@RequestBody BusinessViewAllBookingRequest businessViewAllBookingRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.viewAllBooking(businessViewAllBookingRequest));

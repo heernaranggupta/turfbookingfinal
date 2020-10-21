@@ -1,6 +1,8 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.GenerateOtpRequest;
+import com.Turfbooking.models.request.GetBusinessConfigRequest;
+import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateResponse;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.mail.MessagingException;
+import javax.validation.Valid;
 import java.io.IOException;
 
 @RestController
@@ -38,6 +41,12 @@ public class CommonController {
         CommonResponse commonResponse = new CommonResponse<>(commonService.validateOTP(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);
 
+    }
+
+    @PostMapping("/get-business-config")
+    public CommonResponse<UpdateBusinessConfigResponse> getBusinessConfig(@Valid @RequestBody GetBusinessConfigRequest getBusinessConfigRequest){
+        CommonResponse response = new CommonResponse<>(commonService.getBusinessConfig(getBusinessConfigRequest));
+        return ResponseUtilities.createSuccessResponse(response);
     }
 
 }

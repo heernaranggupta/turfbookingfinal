@@ -22,6 +22,7 @@ public class BookedTimeSlot {
     private String turfId; //turfId
     private String status;
     private LocalDateTime date;
+    private Double price;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private LocalDateTime timeStamp;//add timestamp

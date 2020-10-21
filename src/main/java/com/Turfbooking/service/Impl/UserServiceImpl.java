@@ -1,6 +1,8 @@
 package com.Turfbooking.service.Impl;
 
 import com.Turfbooking.documents.BookedTimeSlot;
+import com.Turfbooking.documents.BusinessConfig;
+import com.Turfbooking.documents.TurfSlotPricing;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
@@ -22,6 +24,7 @@ import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsByUserResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
+import com.Turfbooking.repository.BusinessConfigRepository;
 import com.Turfbooking.repository.OtpRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
@@ -50,13 +53,15 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private OtpRepository otpRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
+    private BusinessConfigRepository businessConfigRepository;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, BusinessConfigRepository businessConfigRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
+        this.businessConfigRepository = businessConfigRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -140,34 +145,34 @@ public class UserServiceImpl implements UserService {
 
         User isExistUser = userRepository.findByPhoneNumber(bookTimeSlotRequest.getUserId());
 
-        if(null == isExistUser) {
-            throw new GeneralException("Invalid user id.",HttpStatus.OK);
+        if (null == isExistUser) {
+            throw new GeneralException("Invalid user id.", HttpStatus.OK);
         }
-            //GET SLOT BY DATE AND SLOT NUMBER
-            BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
+        //GET SLOT BY DATE AND SLOT NUMBER
+        BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
 
-            if (slot == null) {
-                BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
-                        .bookingId(CommonUtilities.getAlphaNumericString(5))
-                        .userId(bookTimeSlotRequest.getUserId())
-                        .date(LocalDateTime.of(bookTimeSlotRequest.getDate(),LocalTime.of(00, 00)) )
-                        .slotNumber(bookTimeSlotRequest.getSlotNumber())
-                        .turfId(bookTimeSlotRequest.getTurfId())
-                        .status(BookingStatus.BOOKED_BY_USER.name())
-                        .startTime(bookTimeSlotRequest.getStartTime())
-                        .endTime(bookTimeSlotRequest.getEndTime())
-                        .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                        .build();
+        if (slot == null) {
+            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
+                    .bookingId(CommonUtilities.getAlphaNumericString(5))
+                    .userId(bookTimeSlotRequest.getUserId())
+                    .date(LocalDateTime.of(bookTimeSlotRequest.getDate(), LocalTime.of(00, 00)))
+                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
+                    .turfId(bookTimeSlotRequest.getTurfId())
+                    .status(BookingStatus.BOOKED_BY_USER.name())
+                    .startTime(bookTimeSlotRequest.getStartTime())
+                    .endTime(bookTimeSlotRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
 
-                BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
+            BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
 
-                BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
+            BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
 
-                return bookTimeSlotResponse;
+            return bookTimeSlotResponse;
 
-            } else {
-                throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
-            }
+        } else {
+            throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
+        }
 
     }
 
@@ -212,7 +217,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public BookTimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
 
-        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(),cancelRequest.getDate());
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(), cancelRequest.getDate());
 
         if (null != timeSlot) {
             timeSlot = BookedTimeSlot.builder()
@@ -246,11 +251,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
 
-        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(),updateRequest.getDate());
 
-        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(),updateRequest.getDate());
-        if(null != isSlotBooked){
-            throw new GeneralException("Slot which you want to book is already booked.",HttpStatus.OK);
+        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(), updateRequest.getDate());
+        if (null != isSlotBooked) {
+            throw new GeneralException("Slot which you want to book is already booked.", HttpStatus.OK);
         }
 
         if (null != bookedTimeSlot) {
@@ -260,7 +265,7 @@ public class UserServiceImpl implements UserService {
                     .userId(updateRequest.getUserId())
                     .slotNumber(updateRequest.getSlotNumber())
                     .turfId(updateRequest.getTurfId())
-                    .date(LocalDateTime.of(updateRequest.getDate(),LocalTime.of(00, 00)) )
+                    .date(LocalDateTime.of(updateRequest.getDate(), LocalTime.of(00, 00)))
                     .status(BookingStatus.RESCHEDULED_BY_USER.name())
                     .startTime(updateRequest.getStartTime())
                     .endTime(updateRequest.getEndTime())
@@ -281,7 +286,7 @@ public class UserServiceImpl implements UserService {
         int days = getAllSlotsRequest.getDate().compareTo(today);
 
         if (days >= 0) { //means today or in future
-            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),getAllSlotsRequest.getTurfId());
+            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), getAllSlotsRequest.getTurfId());
             List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
             List<Integer> integerList = slotFromDB.stream()
@@ -307,16 +312,32 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) throws GeneralException {
         List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
         int count = 1;
+        Double price = null;
+
+        BusinessConfig businessConfigList = businessConfigRepository.findByDate(date);
+        if(null == businessConfigList){
+            String day = date.getDayOfWeek().toString();
+            businessConfigList = businessConfigRepository.findByDay(day);
+        }
+        List<TurfSlotPricing> pricing = businessConfigList.getPricing();
+        List<Integer> numberList = pricing.stream()
+                .map(x -> x.getSlotNumber())
+                .collect(Collectors.toList());
 
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            if(numberList.contains(count)){
+                price =pricing.get(count-1).getPrice();
+                timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, price, slotStartTime, slotEndTime));
+            }else {
+                timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, 350.00/*default price*/, slotStartTime, slotEndTime));
+            }
             slotStartTime = slotEndTime;
             count++;
         }
