@@ -106,7 +106,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
 
-        Business isExistBusiness = businessRepository.findByUsername(bookTimeSlotRequest.getUserId());
+      /*  Business isExistBusiness = businessRepository.findByUsername(bookTimeSlotRequest.getUserId());
 
         if(null == isExistBusiness) {
             throw new GeneralException("Invalid user id.",HttpStatus.OK);
@@ -136,7 +136,8 @@ public class BusinessServiceImpl implements BusinessService {
 
         } else {
             throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
-        }
+        }*/
+        return null;
     }
 
     @Override

@@ -13,12 +13,9 @@ import java.time.LocalDateTime;
 public class BookTimeSlotRequest {
 
     @NotEmpty
-    @Min(value = 1,message = "slot number should be <= 1.")
+    @Min(value = 1,message = "Slot number should be <= 1.")
     private Integer slotNumber;
     private String turfId;
-    @NotEmpty
-    private String userId; // phone number (unique id) to know who booked this slot
-    //not in past
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

@@ -27,6 +27,7 @@ public class UserResponse {
     private String zipCode;
     private String displayImageUrl;
 
+    private Boolean cartCreated;
 
     public UserResponse(User userDocument) {
         this.name = userDocument.getNameOfUser();
