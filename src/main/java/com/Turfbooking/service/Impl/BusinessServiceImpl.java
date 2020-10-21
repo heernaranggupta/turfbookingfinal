@@ -2,8 +2,6 @@ package com.Turfbooking.service.Impl;
 
 import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Business;
-import com.Turfbooking.documents.BusinessConfig;
-import com.Turfbooking.documents.TurfSlotPricing;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
@@ -12,9 +10,7 @@ import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
-import com.Turfbooking.models.request.EditBusinessConfigRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
-import com.Turfbooking.models.response.UpdateBusinessConfigResponse;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
@@ -23,9 +19,7 @@ import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
-import com.Turfbooking.models.request.UpdateBusinessConfigRequest;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
-import com.Turfbooking.repository.BusinessConfigRepository;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.CommonUtilities;
@@ -49,14 +43,12 @@ public class BusinessServiceImpl implements BusinessService {
     private BusinessRepository businessRepository;
     private JwtTokenUtil jwtTokenUtil;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
-    private BusinessConfigRepository businessConfigRepository;
 
     @Autowired
-    public BusinessServiceImpl(JwtTokenUtil jwtTokenUtil, BusinessRepository businessRepository, BookedTimeSlotRepository bookedTimeSlotRepository, BusinessConfigRepository businessConfigRepository) {
-        this.jwtTokenUtil = jwtTokenUtil;
+    public BusinessServiceImpl(BusinessRepository businessRepository, JwtTokenUtil jwtTokenUtil, BookedTimeSlotRepository bookedTimeSlotRepository) {
         this.businessRepository = businessRepository;
+        this.jwtTokenUtil = jwtTokenUtil;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
-        this.businessConfigRepository = businessConfigRepository;
     }
 
     @Value("${jwt.secret.accessToken}")
@@ -114,7 +106,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
 
-        Business isExistBusiness = businessRepository.findByPhoneNumber(bookTimeSlotRequest.getUserId());
+        Business isExistBusiness = businessRepository.findByUsername(bookTimeSlotRequest.getUserId());
 
         if(null == isExistBusiness) {
             throw new GeneralException("Invalid user id.",HttpStatus.OK);
@@ -299,27 +291,10 @@ public class BusinessServiceImpl implements BusinessService {
         LocalDateTime slotEndTime;
         int count = 1;
 
-        Double price = null;
-
-        BusinessConfig businessConfigList = businessConfigRepository.findByDate(date);
-        if(null == businessConfigList){
-            String day = date.getDayOfWeek().toString();
-            businessConfigList = businessConfigRepository.findByDay(day);
-        }
-        List<TurfSlotPricing> pricing = businessConfigList.getPricing();
-        List<Integer> numberList = pricing.stream()
-                .map(x -> x.getSlotNumber())
-                .collect(Collectors.toList());
-
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
-            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            if(numberList.contains(count)){
-                price =pricing.get(count).getPrice();
-                timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, price, slotStartTime, slotEndTime));
-            }else {
-                timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, 350.00/*default price*/, slotStartTime, slotEndTime));
-            }
+               slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
             count++;
         }
@@ -365,61 +340,4 @@ public class BusinessServiceImpl implements BusinessService {
             return response;
         }
     }
-
-    @Override
-    public UpdateBusinessConfigResponse updateBusinessConfig(UpdateBusinessConfigRequest updateRequest) {
-
-        Business isBusinessExist = businessRepository.findByUsername(updateRequest.getBusinessId());
-
-        BusinessConfig isBusinessConfigExist = businessConfigRepository.findByDate(updateRequest.getDate());
-        if(null != isBusinessConfigExist){
-            throw new GeneralException("Configuration already exist.",HttpStatus.OK);
-        }
-
-        if(null != isBusinessExist){
-            BusinessConfig saveConfig = BusinessConfig.builder()
-                    .day(updateRequest.getDay())
-                    .date(updateRequest.getDate())
-                    .openTime(updateRequest.getOpenTime())
-                    .closeTime(updateRequest.getCloseTime())
-                    .pricing(updateRequest.getPricings())
-                    .build();
-
-            BusinessConfig savedConfig = businessConfigRepository.insert(saveConfig);
-            UpdateBusinessConfigResponse response = new UpdateBusinessConfigResponse(savedConfig);
-            return  response;
-        }else {
-            throw new GeneralException("Please provide valid business id.",HttpStatus.OK);
-        }
-    }
-
-    @Override
-    public UpdateBusinessConfigResponse editBusinessConfig(EditBusinessConfigRequest editRequest) {
-
-        Business isBusinessExist = businessRepository.findByUsername(editRequest.getBusinessId());
-        if(null == isBusinessExist){
-            throw new GeneralException("Enter valid business id.",HttpStatus.OK);
-        }
-
-        BusinessConfig isBusinessConfigExist = businessConfigRepository.findByDate(editRequest.getDate());
-        if(null != isBusinessConfigExist){
-            isBusinessConfigExist = BusinessConfig.builder()
-                    ._id(isBusinessConfigExist.get_id())
-                    .day(editRequest.getDay())
-                    .date(editRequest.getDate())
-                    .openTime(editRequest.getOpenTime())
-                    .closeTime(editRequest.getCloseTime())
-                    .pricing(editRequest.getPricings())
-                    .build();
-
-            BusinessConfig savedConfig = businessConfigRepository.save(isBusinessConfigExist);
-
-            UpdateBusinessConfigResponse response = new UpdateBusinessConfigResponse(savedConfig);
-            return response;
-        }else {
-            throw new GeneralException("Configuration for date "+editRequest.getDate()+" does not exist.",HttpStatus.OK);
-        }
-
-    }
-
 }
