@@ -1,12 +1,13 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
@@ -64,7 +65,8 @@ public class UserController {
 
     //make post and get request class for cache
     //we need to get booking id,date for removing cache ,as we need key which is turfId and date
-    @CacheEvict(
+
+   /* @CacheEvict(
             value = "listOfSlotsByTurfIdAndDate",
             allEntries = true,
             condition = "#bookTimeSlotRequest.turfId != null")
@@ -72,7 +74,7 @@ public class UserController {
     public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
         CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
         return ResponseUtilities.createSuccessResponse(response);
-    }
+    }*/
 
     @CacheEvict(
             value = "listOfSlotsByTurfIdAndDate",
@@ -112,6 +114,12 @@ public class UserController {
         log.info("Method executed"+getAllSlotsRequest.getTurfId()+"--"+getAllSlotsRequest.getDate());
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
+
+    @PostMapping("/add-to-cart")
+    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest){
+        CommonResponse response = new CommonResponse<>(userService.placeOrder(orderRequest));
+        return ResponseUtilities.createSuccessResponse(response);
     }
 
 }
