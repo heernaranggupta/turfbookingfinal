@@ -69,8 +69,8 @@ public class BusinessServiceImpl implements BusinessService {
         String password = CommonUtilities.getEncryptedPassword(createBusinessLoginRequest.getPassword());
         Business business = businessRepository.findByUsernameAndPassword(username, password);
         if (business != null) {
-            String token = jwtTokenUtil.generateToken(business.getPhoneNumber(), accessSecret, (accessTokenValidity));
-            String refreshToken = jwtTokenUtil.generateToken(business.getPhoneNumber(), refreshSecret, (refreshTokenValidity));
+            String token = jwtTokenUtil.generateToken(business.getUsername(), accessSecret, (accessTokenValidity));
+            String refreshToken = jwtTokenUtil.generateToken(business.getUsername(), refreshSecret, (refreshTokenValidity));
             BusinessResponse businessResponse = new BusinessResponse(business);
             CreateBusinessLoginResponse response = CreateBusinessLoginResponse.builder()
                     .businessResponse(businessResponse)
