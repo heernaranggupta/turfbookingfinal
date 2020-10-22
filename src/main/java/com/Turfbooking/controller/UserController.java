@@ -117,10 +117,4 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @PostMapping("/add-to-cart")
-    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest) {
-        CommonResponse response = new CommonResponse<>(userService.placeOrder(orderRequest));
-        return ResponseUtilities.createSuccessResponse(response);
-    }
-
 }

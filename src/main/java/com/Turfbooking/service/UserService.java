@@ -29,10 +29,6 @@ public interface UserService {
 
     BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest);
 
-//    BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest);
-
     GetAllSlotsByUserResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest);
-
-    OrderResponse placeOrder(OrderRequest orderRequest);
 
 }
