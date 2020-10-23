@@ -8,24 +8,24 @@ import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.BookingStatus;
-import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsByUserResponse;
+import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
-import com.Turfbooking.repository.CartRepository;
+import com.Turfbooking.repository.OrderRepository;
 import com.Turfbooking.repository.OtpRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
@@ -54,28 +54,24 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private OtpRepository otpRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
-    private CartRepository cartRepository;
+    private OrderRepository orderRepository;
+    @Value("${jwt.secret.accessToken}")
+    private String accessSecret;
+    @Value("${jwt.secret.refreshToken}")
+    private String refreshSecret;
+    @Value("${jwt.accessToken.validity}")
+    private long accessTokenValidity;
+    @Value("${jwt.refreshToken.validity}")
+    private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, OrderRepository orderRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
-        this.cartRepository = cartRepository;
+        this.orderRepository = orderRepository;
     }
-
-    @Value("${jwt.secret.accessToken}")
-    private String accessSecret;
-
-    @Value("${jwt.secret.refreshToken}")
-    private String refreshSecret;
-
-    @Value("${jwt.accessToken.validity}")
-    private long accessTokenValidity;
-
-    @Value("${jwt.refreshToken.validity}")
-    private long refreshTokenValidity;
 
     @Override
     public CreateUserResponse createNewUser(CreateUserRequest createUserRequest) throws GeneralException {
@@ -291,63 +287,6 @@ public class UserServiceImpl implements UserService {
         return timeSlotsList;
     }
 
-    @Override
-    public OrderResponse placeOrder(OrderRequest orderRequest) throws GeneralException {
-        User isUserExist = userRepository.findByPhoneNumber(orderRequest.getUserId());
-        if (null == isUserExist) {
-            throw new GeneralException("User does not exist.", HttpStatus.OK);
-        }
-        //Whenever user create account, his cart is created and set null.
-
-            List<BookTimeSlotRequest> bookTimeSlotRequests = new ArrayList<>();
-            for (BookTimeSlotRequest request : orderRequest.getTimeSlots()) {
-                BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumberAndTurfId(request.getSlotNumber(), request.getDate(),request.getTurfId());
-                if (null == slot) {
-                    bookTimeSlotRequests.add(request);
-                } else {
-                    throw new GeneralException("slot with slot number " + slot.getSlotNumber() + " on date " + slot.getDate() + " is alredy booked.", HttpStatus.OK);
-                }
-            }
-
-            List<BookedTimeSlot> bookedTimeSlotList = bookSlot(bookTimeSlotRequests,orderRequest.getUserId());
-            List<String> bookingIdList = bookedTimeSlotList.stream()
-                    .map(x -> x.getBookingId())
-                    .collect(Collectors.toList());
-
-            Order saveOrder = Order.builder()
-                    .userId(orderRequest.getUserId())
-                    .timeSlots(bookingIdList)
-                    .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .build();
-
-            Order savedOrder = cartRepository.save(saveOrder);
-            OrderResponse response = new OrderResponse(savedOrder);
-            response.setTimeSlots(bookedTimeSlotList);
-            return response;
-
-    }
-
-
-    private List<BookedTimeSlot> bookSlot(List<BookTimeSlotRequest> bookTimeSlotRequestList,String userId) throws GeneralException {
-        List<BookedTimeSlot> bookedTimeSlotList = new ArrayList<>();
-        for (BookTimeSlotRequest bookTimeSlotRequest : bookTimeSlotRequestList) {
-            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
-                    .userId(userId)
-                    .bookingId(CommonUtilities.getAlphaNumericString(5))
-                    .date(LocalDateTime.of(bookTimeSlotRequest.getDate(), LocalTime.of(00, 00)))
-                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
-                    .turfId(bookTimeSlotRequest.getTurfId())
-                    .status(BookingStatus.BOOKED_BY_USER.name())
-                    .startTime(bookTimeSlotRequest.getStartTime())
-                    .endTime(bookTimeSlotRequest.getEndTime())
-                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .build();
-
-            BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
-            bookedTimeSlotList.add(bookedTimeSlot);
-        }
-        return bookedTimeSlotList;
-    }
 
 
 }

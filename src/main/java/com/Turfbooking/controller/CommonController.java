@@ -1,9 +1,11 @@
 package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.GenerateOtpRequest;
+import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateResponse;
+import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.utils.ResponseUtilities;
@@ -39,5 +41,12 @@ public class CommonController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
 
     }
+
+    @PostMapping("/order")
+    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest) {
+        CommonResponse response = new CommonResponse<>(commonService.placeOrder(orderRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
 
 }

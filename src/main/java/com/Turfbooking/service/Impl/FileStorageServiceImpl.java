@@ -61,7 +61,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public CommonResponse deleteFile(String nameOfFile) throws GeneralException{
+    public CommonResponse deleteFile(String nameOfFile) throws GeneralException {
 
 
         // Normalize file name

@@ -19,7 +19,7 @@ public class RescheduleBookingResponse {
     private LocalDateTime endTime;
     private LocalDateTime timestamp;
 
-    public RescheduleBookingResponse(BookedTimeSlot bookedTimeSlot){
+    public RescheduleBookingResponse(BookedTimeSlot bookedTimeSlot) {
         this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();

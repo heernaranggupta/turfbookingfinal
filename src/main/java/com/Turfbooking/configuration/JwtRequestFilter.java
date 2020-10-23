@@ -1,6 +1,8 @@
 package com.Turfbooking.configuration;
 
+import com.Turfbooking.documents.Business;
 import com.Turfbooking.documents.User;
+import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.utils.JwtTokenUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -24,17 +26,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
-
-    @Autowired
-    public JwtRequestFilter(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
+    private BusinessRepository businessRepository;
     @Value("${jwt.secret.accessToken}")
     private String accessToken;
-
     @Value("${jwt.secret.refreshToken}")
     private String refreshToken;
+
+    @Autowired
+    public JwtRequestFilter(UserRepository userRepository, BusinessRepository businessRepository) {
+        this.userRepository = userRepository;
+        this.businessRepository = businessRepository;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -55,28 +57,23 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 logger.error(eje + " Jwt token expired.");
             }
         } else {
-            logger.warn("Jwt token doesnot begin with Bearer string.");
+            logger.warn("Jwt token does not begin with Bearer string.");
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             User user = userRepository.findByPhoneNumber(username);
-//            Seller seller = null;
-            String phoneNumber = null;
+            Business business = null;
+            String phoneNumberOrBusinessUsername = null;
 
             if (user != null) {
-                phoneNumber = user.getPhoneNumber();
+                phoneNumberOrBusinessUsername = user.getPhoneNumber();
+            } else if (null != (business = businessRepository.findByUsername(username))) {
+                phoneNumberOrBusinessUsername = business.getUsername();
             } else {
-//                seller = sellerRepository.findByPrimaryPhoneNumber(username);
-//                if(seller != null){
-//                    phoneNumber = seller.getPrimaryPhoneNumber();
-//                }else {
-//                    logger.error("User not fond.");
-//                }
-                logger.error("User not fond.");
-
+                logger.error("User not fond with given username.");
             }
 
-            if (jwtTokenUtil.validateToken(jwt, phoneNumber, accessToken)) {
+            if (jwtTokenUtil.validateToken(jwt, phoneNumberOrBusinessUsername, accessToken)) {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                         new UsernamePasswordAuthenticationToken(user, null, null);
                 usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

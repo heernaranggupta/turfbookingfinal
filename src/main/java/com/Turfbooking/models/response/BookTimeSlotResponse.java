@@ -19,7 +19,7 @@ public class BookTimeSlotResponse {
     private LocalDateTime endTime;
     private LocalDateTime timestamp;
 
-    public BookTimeSlotResponse(BookedTimeSlot bookedTimeSlot){
+    public BookTimeSlotResponse(BookedTimeSlot bookedTimeSlot) {
         this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
