@@ -4,10 +4,11 @@ import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
-import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.mics.CustomBusinessUserDetails;
 import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateBusinessRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
@@ -15,6 +16,7 @@ import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
+import com.Turfbooking.models.response.CreateBusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
@@ -60,14 +62,41 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
+    public CreateBusinessResponse createBusinessUser(CreateBusinessRequest createBusinessRequest) {
+
+        Business isBusinessExist = businessRepository.findByUsername(createBusinessRequest.getUsername());
+
+        if(null == isBusinessExist){
+            Business saveBusiness = new Business( createBusinessRequest.getUsername(),
+                    createBusinessRequest.getPassword(),
+                    createBusinessRequest.getPhoneNumber(),
+                    createBusinessRequest.getCompanyName(),
+                    createBusinessRequest.getRole() );
+
+            Business savedBusiness = businessRepository.save(saveBusiness);
+            CustomBusinessUserDetails customBusinessUserDetails = new CustomBusinessUserDetails(savedBusiness);
+            String token = jwtTokenUtil.generateToken(createBusinessRequest.getUsername(),customBusinessUserDetails,accessSecret,accessTokenValidity);
+            String refreshToken = jwtTokenUtil.generateToken(createBusinessRequest.getUsername(),customBusinessUserDetails,refreshSecret,refreshTokenValidity);
+            CreateBusinessResponse response = new CreateBusinessResponse(new BusinessResponse(savedBusiness),token,refreshToken);
+            return response;
+
+        } else {
+            throw new GeneralException("Username already exist",HttpStatus.OK);
+        }
+
+    }
+
+    @Override
     public CreateBusinessLoginResponse businessLogin(CreateBusinessLoginRequest createBusinessLoginRequest) throws GeneralException {
         String username = createBusinessLoginRequest.getUsername();
         String password = CommonUtilities.getEncryptedPassword(createBusinessLoginRequest.getPassword());
         Business business = businessRepository.findByUsernameAndPassword(username, password);
         if (business != null) {
-            String token = jwtTokenUtil.generateToken(business.getUsername(), accessSecret, (accessTokenValidity));
-            String refreshToken = jwtTokenUtil.generateToken(business.getUsername(), refreshSecret, (refreshTokenValidity));
+            CustomBusinessUserDetails businessUserDetails = new CustomBusinessUserDetails(business);
+            String token = jwtTokenUtil.generateToken(business.getUsername(), businessUserDetails, accessSecret, (accessTokenValidity));
+            String refreshToken = jwtTokenUtil.generateToken(business.getUsername(), businessUserDetails, refreshSecret, (refreshTokenValidity));
             BusinessResponse businessResponse = new BusinessResponse(business);
+            CustomBusinessUserDetails customBusinessUserDetails = new CustomBusinessUserDetails(business);
             CreateBusinessLoginResponse response = CreateBusinessLoginResponse.builder()
                     .businessResponse(businessResponse)
                     .token(token)
@@ -75,7 +104,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .build();
             return response;
         } else {
-            throw new GeneralException("Invalid Username  and Password", HttpStatus.UNAUTHORIZED);
+            throw new GeneralException("Invalid username and password", HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -97,43 +126,6 @@ public class BusinessServiceImpl implements BusinessService {
         } else {
             throw new GeneralException("Incorrect UserName", HttpStatus.UNAUTHORIZED);
         }
-    }
-
-    @Override
-    public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
-
-      /*  Business isExistBusiness = businessRepository.findByUsername(bookTimeSlotRequest.getUserId());
-
-        if(null == isExistBusiness) {
-            throw new GeneralException("Invalid user id.",HttpStatus.OK);
-        }
-
-        //GET SLOT BY DATE AND SLOT NUMBER
-        BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
-
-        if (slot == null) {
-            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
-                    .bookingId(CommonUtilities.getAlphaNumericString(5))
-                    .userId(bookTimeSlotRequest.getUserId())
-                    .date(LocalDateTime.of(bookTimeSlotRequest.getDate(), LocalTime.of(00,00)))
-                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
-                    .turfId(bookTimeSlotRequest.getTurfId())
-                    .status(BookingStatus.BOOKED_BY_BUSINESS.name())
-                    .startTime(bookTimeSlotRequest.getStartTime())
-                    .endTime(bookTimeSlotRequest.getEndTime())
-                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .build();
-
-            BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
-
-            BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
-
-            return bookTimeSlotResponse;
-
-        } else {
-            throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
-        }*/
-        return null;
     }
 
     @Override

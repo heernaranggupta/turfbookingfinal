@@ -11,6 +11,7 @@ import com.Turfbooking.models.enums.OtpActiveStatus;
 import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
+import com.Turfbooking.models.mics.CustomUserDetails;
 import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.OrderRequest;
@@ -214,8 +215,9 @@ public class CommonServiceImpl implements CommonService {
         String refreshToken;
 
         if (null != isUserOrNot) {
-            token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
-            refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
+            CustomUserDetails customUserDetails = new CustomUserDetails(isUserOrNot);
+            token = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, accessSecret, accessTokenValidity);
+            refreshToken = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, refreshSecret, refreshTokenValidity);
             validateOtpResponse.setToken(token);
             validateOtpResponse.setRefreshToken(refreshToken);
             validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());

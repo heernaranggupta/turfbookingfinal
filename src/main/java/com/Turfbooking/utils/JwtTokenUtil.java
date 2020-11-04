@@ -3,11 +3,17 @@ package com.Turfbooking.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -42,8 +48,18 @@ public class JwtTokenUtil implements Serializable {
     }
 
     //generate token for user
-    public String generateToken(String username, String secret, long tokenValidity) {
+    public String generateToken(String username, UserDetails userDetails, String secret, long tokenValidity) {
         Map<String, Object> claims = new HashMap<>();
+
+        Collection<? extends GrantedAuthority> roles = userDetails.getAuthorities();
+
+        if (roles.contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            claims.put("isAdmin", true);
+        }
+        if (roles.contains(new SimpleGrantedAuthority("ROLE_USER"))) {
+            claims.put("isUser", true);
+        }
+
         return doGenerateToken(claims, username, secret, tokenValidity);
     }
 
@@ -62,5 +78,24 @@ public class JwtTokenUtil implements Serializable {
     public Boolean validateToken(String token, String userName, String secret) {
         final String username = getUsernameFromToken(token, secret);
         return (username.equals(userName) && !isTokenExpired(token, secret));
+    }
+
+    public List<SimpleGrantedAuthority> getRolesFromToken(String token, String secret) {
+        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+
+        List<SimpleGrantedAuthority> roles = null;
+
+        Boolean isAdmin = claims.get("isAdmin", Boolean.class);
+        Boolean isUser = claims.get("isUser", Boolean.class);
+
+        if (isAdmin != null && isAdmin) {
+            roles = Arrays.asList(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+
+        if (isUser != null && isUser) {
+            roles = Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
+        }
+        return roles;
+
     }
 }

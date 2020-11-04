@@ -78,17 +78,21 @@ public class CommonUtilities {
     }
 
     public static String findEmailIdOrPasswordValidator(String username) {
-
         Pattern pattern = Pattern.compile(regex);
-
-
         Matcher matcher = pattern.matcher(username);
         if (matcher.matches()) {
             return "email";
         } else
             return "phoneNumber";
+    }
 
-
+    public static String findUsernameOrPhoneNumber(String username) {
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(username);
+        if (matcher.matches()) {
+            return "username";
+        } else
+            return "phoneNumber";
     }
 }
 
