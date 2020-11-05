@@ -64,19 +64,6 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    //make post and get request class for cache
-    //we need to get booking id,date for removing cache ,as we need key which is turfId and date
-
-   /* @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            allEntries = true,
-            condition = "#bookTimeSlotRequest.turfId != null")
-    @PostMapping("/book-slot")
-    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
-        CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
-        return ResponseUtilities.createSuccessResponse(response);
-    }*/
-
     @CacheEvict(
             value = "listOfSlotsByTurfIdAndDate",
             allEntries = true,

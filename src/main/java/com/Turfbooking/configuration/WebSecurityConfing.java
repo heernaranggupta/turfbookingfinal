@@ -25,7 +25,17 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/sign-up").permitAll()
                 .antMatchers("/user/login").permitAll()
 
+                .antMatchers("/business/signup").hasRole("ADMIN")
                 .antMatchers("/business/login").permitAll()
+
+                .antMatchers("/business/all-slots").hasAnyRole("ADMIN","MANAGER","EMPLOYEE")
+                .antMatchers("/business/all-slots").hasAnyRole("ADMIN","MANAGER","EMPLOYEE")
+
+
+                .antMatchers("/business/reset-password").hasRole("ADMIN")
+                .antMatchers("/business/update").hasRole("ADMIN")
+                .antMatchers("/business/slot/make-unavailable").hasAnyRole("ADMIN","MANAGER")
+                .antMatchers("/business/reschedule-booking").hasAnyRole("ADMIN","MANAGER")
 
                 .antMatchers("/actuator/**").permitAll()
                 .antMatchers("/swagger-ui/**").permitAll()

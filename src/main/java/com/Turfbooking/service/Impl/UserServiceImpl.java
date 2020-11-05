@@ -1,19 +1,17 @@
 package com.Turfbooking.service.Impl;
 
 import com.Turfbooking.documents.BookedTimeSlot;
-import com.Turfbooking.documents.Order;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.BookingStatus;
-import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.mics.CustomUserDetails;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
-import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
@@ -22,7 +20,6 @@ import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsByUserResponse;
-import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.OrderRepository;
@@ -81,17 +78,18 @@ public class UserServiceImpl implements UserService {
             throw new GeneralException("User exist with this phone number.", HttpStatus.BAD_REQUEST);
         }
 
-        User addUser = User.builder()
-                .nameOfUser(createUserRequest.getName())
-                .gender(createUserRequest.getGender())
-                .dateOfBirth(createUserRequest.getDateOfBirth())
-                .countryCode(createUserRequest.getCountryCode())
-                .password(CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()))
-                .phoneNumber(createUserRequest.getPhoneNumber())
-                .emailId(createUserRequest.getEmailId())
-                .displayImageUrl(createUserRequest.getDisplayImageUrl())
-                .build();
-        Location userLocation = new Location();
+        User addUser = new  User(createUserRequest.getName(),
+                CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()),
+                createUserRequest.getGender(),
+                createUserRequest.getDateOfBirth(),
+                createUserRequest.getCountryCode(),
+                createUserRequest.getPhoneNumber(),
+                createUserRequest.getEmailId(),
+                createUserRequest.getDisplayImageUrl(),
+                createUserRequest.getRole()
+                );
+
+       Location userLocation = new Location();
         if (null != createUserRequest && null != createUserRequest.getLatitude() && null != createUserRequest.getLongitude()) {
             userLocation.type = "Point";
             Double[] locationArray = new Double[2];
@@ -103,8 +101,9 @@ public class UserServiceImpl implements UserService {
 
         User newCreatedUser = userRepository.insert(addUser);
         UserResponse userResponse = new UserResponse(newCreatedUser);
-        String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), accessSecret, accessTokenValidity);
-        String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), refreshSecret, refreshTokenValidity);
+        CustomUserDetails customUserDetails = new CustomUserDetails(newCreatedUser);
+        String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), customUserDetails, accessSecret, accessTokenValidity);
+        String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), customUserDetails, refreshSecret, refreshTokenValidity);
 
         CreateUserResponse response = new CreateUserResponse(userResponse, token, refreshToken);
         return response;
@@ -124,8 +123,9 @@ public class UserServiceImpl implements UserService {
         }
 
         if (null != isExist) {
-            String token = jwtTokenUtil.generateToken(username, accessSecret, accessTokenValidity);
-            String refreshToken = jwtTokenUtil.generateToken(username, refreshSecret, refreshTokenValidity);
+            CustomUserDetails customUserDetails = new CustomUserDetails(isExist);
+            String token = jwtTokenUtil.generateToken(username, customUserDetails, accessSecret, accessTokenValidity);
+            String refreshToken = jwtTokenUtil.generateToken(username, customUserDetails, refreshSecret, refreshTokenValidity);
 
             UserResponse userResponse = new UserResponse(isExist);
             CreateUserLoginResponse loginResponse = new CreateUserLoginResponse(userResponse, token, refreshToken);
@@ -286,7 +286,6 @@ public class UserServiceImpl implements UserService {
         }
         return timeSlotsList;
     }
-
 
 
 }

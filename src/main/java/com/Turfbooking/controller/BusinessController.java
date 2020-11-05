@@ -4,6 +4,7 @@ import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateBusinessRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
@@ -11,6 +12,7 @@ import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
+import com.Turfbooking.models.response.CreateBusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
@@ -41,13 +43,10 @@ public class BusinessController {
         this.businessService = businessService;
     }
 
-    @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            allEntries = true,
-            condition = "#bookTimeSlotRequest.turfId != null")
-    @PostMapping("/book-slot")
-    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest) {
-        CommonResponse response = new CommonResponse<>(businessService.bookSlot(bookTimeSlotRequest));
+
+    @PostMapping("/signup")
+    public CommonResponse<CreateBusinessResponse> createNewBusinessUser(@Valid @RequestBody CreateBusinessRequest createBusinessRequest){
+        CommonResponse response = new CommonResponse(businessService.createBusinessUser(createBusinessRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 

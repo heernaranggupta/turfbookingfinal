@@ -25,5 +25,6 @@ public class CreateUserRequest {
     private Double latitude;
     private Double longitude;
     private String displayImageUrl;
+    private String role;
 
 }
