@@ -1,6 +1,5 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
 import com.Turfbooking.models.request.CreateBusinessLoginRequest;
@@ -20,8 +19,8 @@ import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +33,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/business")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class BusinessController {
 
     private BusinessService businessService;

@@ -10,6 +10,7 @@ import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/common")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class CommonController {
 
     private CommonService commonService;
