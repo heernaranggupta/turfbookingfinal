@@ -51,7 +51,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public CommonResponse<UserResponse> userLogin(@Valid @RequestBody UserLoginRequest userLoginRequest) {
+    public CommonResponse<CreateUserLoginResponse> userLogin(@Valid @RequestBody UserLoginRequest userLoginRequest) {
         CreateUserLoginResponse userResponse = userService.userLogin(userLoginRequest);
         CommonResponse response = new CommonResponse(userResponse);
         return ResponseUtilities.createSuccessResponse(response);
