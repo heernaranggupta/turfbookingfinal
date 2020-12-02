@@ -2,9 +2,7 @@ package com.Turfbooking.documents;
 
 import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.IndexDirection;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -16,6 +14,8 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Document
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
