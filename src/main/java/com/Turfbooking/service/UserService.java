@@ -7,13 +7,7 @@ import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
-import com.Turfbooking.models.response.CreateUserLoginResponse;
-import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
-import com.Turfbooking.models.response.GetAllSlotsByUserResponse;
-import com.Turfbooking.models.response.OrderResponse;
+import com.Turfbooking.models.response.*;
 
 public interface UserService {
 
@@ -29,6 +23,6 @@ public interface UserService {
 
     BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest);
 
-    GetAllSlotsByUserResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest);
+    GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest);
 
 }

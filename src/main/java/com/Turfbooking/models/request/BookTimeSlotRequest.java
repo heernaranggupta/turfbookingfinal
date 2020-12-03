@@ -15,10 +15,11 @@ public class BookTimeSlotRequest {
     @NotEmpty
     @Min(value = 1, message = "Slot number should be <= 1.")
     private Integer slotNumber;
+
     private String turfId;
     private LocalDate date;
     private LocalDateTime startTime;
+
     private LocalDateTime endTime;
-//    private Integer totalNumberOfSlots;
 
 }

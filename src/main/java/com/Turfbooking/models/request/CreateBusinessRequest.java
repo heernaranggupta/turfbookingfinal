@@ -12,12 +12,12 @@ import javax.validation.constraints.NotNull;
 @Valid
 public class CreateBusinessRequest {
 
-    @NotNull @NotEmpty
+    @NotEmpty(message = "please enter username")
     private String username;
-    @NotNull @NotEmpty
+    @NotEmpty(message = "please enter password")
     private String password;
     private String phoneNumber;
     private String companyName;
-    @NotNull @NotEmpty
+    @NotEmpty(message = "please enter role")
     private String role;
 }
