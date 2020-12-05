@@ -1,24 +1,18 @@
 package com.Turfbooking.service.Impl;
 
 import com.Turfbooking.documents.BookedTimeSlot;
+import com.Turfbooking.documents.Cart;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
+import com.Turfbooking.models.common.Slot;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.mics.CustomUserDetails;
-import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
-import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
-import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
-import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.request.*;
 import com.Turfbooking.models.response.*;
-import com.Turfbooking.repository.BookedTimeSlotRepository;
-import com.Turfbooking.repository.OrderRepository;
-import com.Turfbooking.repository.OtpRepository;
-import com.Turfbooking.repository.UserRepository;
+import com.Turfbooking.repository.*;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
@@ -28,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,6 +41,8 @@ public class UserServiceImpl implements UserService {
     private OtpRepository otpRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
     private OrderRepository orderRepository;
+    private CartRepository cartRepository;
+
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
     @Value("${jwt.secret.refreshToken}")
@@ -56,12 +53,13 @@ public class UserServiceImpl implements UserService {
     private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, OrderRepository orderRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, OrderRepository orderRepository,CartRepository cartRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.orderRepository = orderRepository;
+        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -251,7 +249,6 @@ public class UserServiceImpl implements UserService {
                         .map(x -> x.getSlotNumber())
                         .collect(Collectors.toList());
 
-
                 allSlotList.stream().
                         forEach((response) -> {
                             if (integerList.contains(response.getSlotNumber())) {
@@ -288,5 +285,53 @@ public class UserServiceImpl implements UserService {
         return timeSlotsList;
     }
 
+    @Override
+    public CartResponse addToCart(CartRequest cartRequest) throws GeneralException {
+        Cart cart = cartRepository.findByUserPhoneNumber(cartRequest.getUserPhoneNumber());
+        if(null != cart){
+            Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                    .collect(Collectors.summingDouble(Double::intValue));
 
+            cartTotal = cartTotal + cart.getCartTotal();
+
+            List<Slot> selectedSlotList = cart.getSelectedSlots();
+            selectedSlotList.addAll(cartRequest.getSelectedSlots());
+
+            Cart saveCart = new Cart(cart.get_cartId(),
+                    cartRequest.getUserPhoneNumber(),
+                    selectedSlotList,
+                    cartTotal,
+                    LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+            );
+
+            Cart savedCart = cartRepository.save(saveCart);
+            CartResponse response = new CartResponse(savedCart);
+            return response;
+        } else{
+            Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                    .collect(Collectors.summingDouble(Double::intValue));
+
+            Cart saveCart =  new Cart(
+                    cartRequest.getUserPhoneNumber(),
+                    cartRequest.getSelectedSlots(),
+                    cartTotal,
+                    LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+            );
+
+            Cart savedCart = cartRepository.insert(saveCart);
+            CartResponse response = new CartResponse(savedCart);
+            return response;
+        }
+    }
+
+    @Override
+    public CartResponse getCart(@RequestParam String phoneNumber) throws GeneralException {
+        Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
+        if(null != cart){
+            CartResponse response = new CartResponse(cart);
+            return response;
+        } else {
+            throw new GeneralException("Cart not exist",HttpStatus.NOT_FOUND);
+        }
+    }
 }
