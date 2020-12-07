@@ -23,4 +23,6 @@ public interface UserService {
 
     CartResponse getCart(String PhoneNumber);
 
+    CartResponse removeFromCart(RemoveCartRequest removeCartRequest);
+
 }

@@ -1,5 +1,6 @@
 package com.Turfbooking.controller;
 
+import com.Turfbooking.documents.Cart;
 import com.Turfbooking.models.request.*;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
@@ -104,7 +105,12 @@ public class UserController {
     public CommonResponse getCart(@RequestParam String phoneNumber){
         CommonResponse response = new CommonResponse(userService.getCart(phoneNumber));
         return ResponseUtilities.createSuccessResponse(response);
+    }
 
+    @PostMapping("/cart/remove")
+    public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest){
+        CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
+        return ResponseUtilities.createSucessResponseWithMessage(response,"Slot successfully removed");
     }
 
 }

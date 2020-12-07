@@ -4,13 +4,11 @@ import com.Turfbooking.models.common.Slot;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
-public class CartRequest {
+public class RemoveCartRequest {
 
     private String userPhoneNumber;
-    private List<Slot> selectedSlots;
+    private Slot removeSlot;
 
 }

@@ -334,4 +334,24 @@ public class UserServiceImpl implements UserService {
             throw new GeneralException("Cart not exist",HttpStatus.NOT_FOUND);
         }
     }
+
+    @Override
+    public CartResponse removeFromCart(RemoveCartRequest removeCartRequest) throws GeneralException {
+        Cart cart = cartRepository.findByUserPhoneNumber(removeCartRequest.getUserPhoneNumber());
+        List<Slot> slotList = cart.getSelectedSlots();
+        if(null != cart){
+            for (Slot slot: cart.getSelectedSlots()) {
+                if(slot.getDate().equals(removeCartRequest.getRemoveSlot()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())){
+                    slotList.remove(slot);
+                }
+            }
+            cart.setSelectedSlots(slotList);
+            Cart savedCart = cartRepository.save(cart);
+            CartResponse cartResponse = new CartResponse(savedCart);
+            return cartResponse;
+
+        } else {
+            throw new GeneralException("Cart is already empty",HttpStatus.BAD_REQUEST);
+        }
+    }
 }
