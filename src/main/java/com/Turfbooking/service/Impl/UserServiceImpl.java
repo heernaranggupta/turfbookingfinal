@@ -14,13 +14,7 @@ import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
-import com.Turfbooking.models.response.CreateUserLoginResponse;
-import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
-import com.Turfbooking.models.response.GetAllSlotsByUserResponse;
-import com.Turfbooking.models.response.UserResponse;
+import com.Turfbooking.models.response.*;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.OrderRepository;
 import com.Turfbooking.repository.OtpRepository;
@@ -240,32 +234,39 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public GetAllSlotsByUserResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
+    public GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         int days = getAllSlotsRequest.getDate().compareTo(today);
+        //get all turfs which requested for slots
+        List<String> turfs = getAllSlotsRequest.getTurfIds();
 
         if (days >= 0) { //means today or in future
-            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), getAllSlotsRequest.getTurfId());
-            List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
+            List<List<BookTimeSlotResponse>> responseList = new ArrayList<>();
+            for (String turf : turfs) {
 
-            List<Integer> integerList = slotFromDB.stream()
-                    .map(x -> x.getSlotNumber())
-                    .collect(Collectors.toList());
+                List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
+                List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
-            allSlotList.stream().
-                    forEach((response) -> {
-                        if (integerList.contains(response.getSlotNumber())) {
-                            slotFromDB.stream().forEach((bookedSlot) -> {
-                                if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
-                                    BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
-                                    allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
-                                }
-                            });
-                        }
-                    });
+                List<Integer> integerList = slotFromDB.stream()
+                        .map(x -> x.getSlotNumber())
+                        .collect(Collectors.toList());
 
-            GetAllSlotsByUserResponse response = new GetAllSlotsByUserResponse(allSlotList);
-            return response;
+
+                allSlotList.stream().
+                        forEach((response) -> {
+                            if (integerList.contains(response.getSlotNumber())) {
+                                slotFromDB.stream().forEach((bookedSlot) -> {
+                                    if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
+                                        BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
+                                        allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
+                                    }
+                                });
+                            }
+                        });
+                responseList.add(allSlotList);
+            }
+            GetAllSlotsResponse finalResponse = new GetAllSlotsResponse(responseList);
+            return finalResponse;
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
         }

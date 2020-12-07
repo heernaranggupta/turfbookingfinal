@@ -93,13 +93,12 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @Cacheable(
-            value = "listOfSlotsByTurfIdAndDate",
-            key = "#getAllSlotsRequest.turfId.concat(#getAllSlotsRequest.date.toString())",
-            condition = "#getAllSlotsRequest.date != null")
+//    @Cacheable(
+//            value = "listOfSlotsByTurfIdAndDate",
+//            key = "#getAllSlotsRequest.turfIds.concat(#getAllSlotsRequest.date.toString())",
+//            condition = "#getAllSlotsRequest.date != null")
     @PostMapping("/get-all-slots-by-date")
     public CommonResponse getAllSlotsByDate(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
-        log.info("Method executed" + getAllSlotsRequest.getTurfId() + "--" + getAllSlotsRequest.getDate());
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
