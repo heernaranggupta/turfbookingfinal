@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -53,7 +54,7 @@ public class UserServiceImpl implements UserService {
     private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, OrderRepository orderRepository,CartRepository cartRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, OrderRepository orderRepository, CartRepository cartRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
@@ -70,7 +71,7 @@ public class UserServiceImpl implements UserService {
             throw new GeneralException("User exist with this phone number.", HttpStatus.BAD_REQUEST);
         }
 
-        User addUser = new  User(createUserRequest.getName(),
+        User addUser = new User(createUserRequest.getName(),
                 CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()),
                 createUserRequest.getGender(),
                 createUserRequest.getDateOfBirth(),
@@ -79,9 +80,9 @@ public class UserServiceImpl implements UserService {
                 createUserRequest.getEmailId(),
                 createUserRequest.getDisplayImageUrl(),
                 createUserRequest.getRole()
-                );
+        );
 
-       Location userLocation = new Location();
+        Location userLocation = new Location();
         if (null != createUserRequest && null != createUserRequest.getLatitude() && null != createUserRequest.getLongitude()) {
             userLocation.type = "Point";
             Double[] locationArray = new Double[2];
@@ -288,41 +289,82 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CartResponse addToCart(CartRequest cartRequest) throws GeneralException {
-        Cart cart = cartRepository.findByUserPhoneNumber(cartRequest.getUserPhoneNumber());
-        if(null != cart){
-            Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
-                    .collect(Collectors.summingDouble(Double::intValue));
 
-            cartTotal = cartTotal + cart.getCartTotal();
+        if (null != cartRequest.getUserPhoneNumber()) {
 
-            List<Slot> selectedSlotList = cart.getSelectedSlots();
-            selectedSlotList.addAll(cartRequest.getSelectedSlots());
+            Cart cart = cartRepository.findByUserPhoneNumber(cartRequest.getUserPhoneNumber());
+            if (null != cart) {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
 
-            Cart saveCart = new Cart(cart.get_cartId(),
-                    cartRequest.getUserPhoneNumber(),
-                    selectedSlotList,
-                    cartTotal,
-                    LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
-            );
+                cartTotal = cartTotal + cart.getCartTotal();
 
-            Cart savedCart = cartRepository.save(saveCart);
-            CartResponse response = new CartResponse(savedCart);
-            return response;
-        } else{
-            Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
-                    .collect(Collectors.summingDouble(Double::intValue));
+                List<Slot> selectedSlotList = cart.getSelectedSlots();
+                selectedSlotList.addAll(cartRequest.getSelectedSlots());
 
-            Cart saveCart =  new Cart(
-                    cartRequest.getUserPhoneNumber(),
-                    cartRequest.getSelectedSlots(),
-                    cartTotal,
-                    LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
-            );
+                Cart saveCart = new Cart(cart.get_cartId(),
+                        cartRequest.getUserPhoneNumber(),
+                        selectedSlotList,
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
 
-            Cart savedCart = cartRepository.insert(saveCart);
-            CartResponse response = new CartResponse(savedCart);
-            return response;
+                Cart savedCart = cartRepository.save(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            } else {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+
+                Cart saveCart = new Cart(
+                        cartRequest.getUserPhoneNumber(),
+                        cartRequest.getSelectedSlots(),
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+
+                Cart savedCart = cartRepository.insert(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            }
+        } else {
+            Cart cart = cartRepository.findBy_cartId(cartRequest.getCartId());
+            if (null != cart) {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+
+                cartTotal = cartTotal + cart.getCartTotal();
+
+                List<Slot> selectedSlotList = cart.getSelectedSlots();
+                selectedSlotList.addAll(cartRequest.getSelectedSlots());
+
+                Cart saveCart = new Cart(cart.get_cartId(),
+                        cartRequest.getUserPhoneNumber(),
+                        selectedSlotList,
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+
+                Cart savedCart = cartRepository.save(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            } else {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+
+                Cart saveCart = new Cart(
+                        cartRequest.getUserPhoneNumber(),
+                        cartRequest.getSelectedSlots(),
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+
+                Cart savedCart = cartRepository.insert(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            }
         }
+
     }
 
     @Override
@@ -354,5 +396,15 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new GeneralException("Cart is already empty",HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @Scheduled(cron = "0 15 10 1 * ?", zone = "Asia/Kolkata")
+    public void deleteNonUsedCart(){
+        LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+        time = time.minusDays(30);
+
+        List<Cart> listDeletedCarts = cartRepository.deleteNonUsedCarts(time);
+
+
     }
 }
