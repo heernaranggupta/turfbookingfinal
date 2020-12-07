@@ -1,12 +1,6 @@
 package com.Turfbooking.service;
 
-import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
-import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
-import com.Turfbooking.models.request.OrderRequest;
-import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
-import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.request.*;
 import com.Turfbooking.models.response.*;
 
 public interface UserService {
@@ -24,5 +18,11 @@ public interface UserService {
     BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest);
 
     GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest);
+
+    CartResponse addToCart(CartRequest cartRequest);
+
+    CartResponse getCart(String PhoneNumber);
+
+    CartResponse removeFromCart(RemoveCartRequest removeCartRequest);
 
 }

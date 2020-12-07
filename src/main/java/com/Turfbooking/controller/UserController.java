@@ -1,11 +1,7 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
-import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
-import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
-import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.documents.Cart;
+import com.Turfbooking.models.request.*;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
@@ -93,14 +89,28 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-//    @Cacheable(
-//            value = "listOfSlotsByTurfIdAndDate",
-//            key = "#getAllSlotsRequest.turfIds.concat(#getAllSlotsRequest.date.toString())",
-//            condition = "#getAllSlotsRequest.date != null")
     @PostMapping("/get-all-slots-by-date")
     public CommonResponse getAllSlotsByDate(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
+
+    @PostMapping("/cart")
+    public CommonResponse addToCart(@Valid @RequestBody CartRequest cartRequest){
+        CommonResponse response = new CommonResponse(userService.addToCart(cartRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @GetMapping("/cart")
+    public CommonResponse getCart(@RequestParam String phoneNumber){
+        CommonResponse response = new CommonResponse(userService.getCart(phoneNumber));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @PostMapping("/cart/remove")
+    public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest){
+        CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
+        return ResponseUtilities.createSucessResponseWithMessage(response,"Slot successfully removed");
     }
 
 }
