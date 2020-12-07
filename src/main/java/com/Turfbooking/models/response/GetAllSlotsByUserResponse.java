@@ -13,9 +13,9 @@ import java.util.List;
 @NoArgsConstructor
 public class GetAllSlotsByUserResponse {
 
-    List<BookTimeSlotResponse> responseList;
+    List<TimeSlotResponse> responseList;
 
-    public GetAllSlotsByUserResponse(List<BookTimeSlotResponse> responseList) {
+    public GetAllSlotsByUserResponse(List<TimeSlotResponse> responseList) {
         this.responseList = responseList;
     }
 }

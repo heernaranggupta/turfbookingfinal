@@ -1,20 +1,17 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.documents.Cart;
 import com.Turfbooking.models.request.*;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
-import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,7 +63,7 @@ public class UserController {
             condition = "#cancelOrUnavailableSlotRequest.turfId != null")
     @PostMapping("cancel-booking")
     public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
-        BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
+        TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }
@@ -77,7 +74,7 @@ public class UserController {
             condition = "#updateBookedTimeSlotRequest.turfId != null")
     @PostMapping("update-booking")
     public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest) {
-        BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
+        TimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return ResponseUtilities.createSuccessResponse(response);
     }

@@ -167,7 +167,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BookTimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
+    public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
 
         BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(), cancelRequest.getDate());
 
@@ -189,7 +189,7 @@ public class UserServiceImpl implements UserService {
 
             if (null != cancelled) {
 
-                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                TimeSlotResponse response = new TimeSlotResponse(cancelled);
                 return response;
 
             } else {
@@ -201,7 +201,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
+    public TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
 
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
         BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(), updateRequest.getDate());
@@ -216,6 +216,7 @@ public class UserServiceImpl implements UserService {
                     .userId(updateRequest.getUserId())
                     .slotNumber(updateRequest.getSlotNumber())
                     .turfId(updateRequest.getTurfId())
+                    .price(updateRequest.getPrice())
                     .date(LocalDateTime.of(updateRequest.getDate(), LocalTime.of(00, 00)))
                     .status(BookingStatus.RESCHEDULED_BY_USER.name())
                     .startTime(updateRequest.getStartTime())
@@ -224,7 +225,7 @@ public class UserServiceImpl implements UserService {
                     .build();
 
             BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
-            BookTimeSlotResponse response = new BookTimeSlotResponse(updatedBookedSlot);
+            TimeSlotResponse response = new TimeSlotResponse(updatedBookedSlot);
             return response;
         } else {
             throw new GeneralException("Invalid booking id.", HttpStatus.OK);
@@ -239,11 +240,11 @@ public class UserServiceImpl implements UserService {
         List<String> turfs = getAllSlotsRequest.getTurfIds();
 
         if (days >= 0) { //means today or in future
-            List<List<BookTimeSlotResponse>> responseList = new ArrayList<>();
+            List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
 
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
-                List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
+                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
                 List<Integer> integerList = slotFromDB.stream()
                         .map(x -> x.getSlotNumber())
@@ -254,7 +255,7 @@ public class UserServiceImpl implements UserService {
                             if (integerList.contains(response.getSlotNumber())) {
                                 slotFromDB.stream().forEach((bookedSlot) -> {
                                     if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
-                                        BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
+                                        TimeSlotResponse bookedResponse = new TimeSlotResponse(bookedSlot);
                                         allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
                                     }
                                 });
@@ -269,8 +270,8 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
-        List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
+    private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+        List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
         int count = 1;
@@ -278,7 +279,7 @@ public class UserServiceImpl implements UserService {
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            timeSlotsList.add(new TimeSlotResponse(turfId, count, 200.00, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
             count++;
         }
