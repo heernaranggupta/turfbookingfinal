@@ -380,31 +380,45 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CartResponse removeFromCart(RemoveCartRequest removeCartRequest) throws GeneralException {
-        Cart cart = cartRepository.findByUserPhoneNumber(removeCartRequest.getUserPhoneNumber());
-        List<Slot> slotList = cart.getSelectedSlots();
-        if(null != cart){
-            for (Slot slot: cart.getSelectedSlots()) {
-                if(slot.getDate().equals(removeCartRequest.getRemoveSlot()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())){
-                    slotList.remove(slot);
-                }
-            }
-            cart.setSelectedSlots(slotList);
-            Cart savedCart = cartRepository.save(cart);
-            CartResponse cartResponse = new CartResponse(savedCart);
-            return cartResponse;
 
-        } else {
-            throw new GeneralException("Cart is already empty",HttpStatus.BAD_REQUEST);
+        if (null != removeCartRequest.getUserPhoneNumber()) {
+            Cart cart = cartRepository.findByUserPhoneNumber(removeCartRequest.getUserPhoneNumber());
+            if (null != cart) {
+                for (Slot slot : cart.getSelectedSlots()) {
+                    if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())) {
+                        cart.getSelectedSlots().remove(slot);
+                    }
+                }
+                Cart savedCart = cartRepository.save(cart);
+                CartResponse cartResponse = new CartResponse(savedCart);
+                return cartResponse;
+            } else {
+                throw new GeneralException("Cart is empty", HttpStatus.NOT_FOUND);
+            }
+
+        } else if (null != removeCartRequest.getCartId()) {
+            Cart cartWithoutUser = cartRepository.findBy_cartId(removeCartRequest.getCartId());
+            if (null != cartWithoutUser) {
+                for (Slot slot : cartWithoutUser.getSelectedSlots()) {
+                    if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())) {
+                        cartWithoutUser.getSelectedSlots().remove(slot);
+                    }
+                }
+                Cart savedCart = cartRepository.save(cartWithoutUser);
+                CartResponse cartResponse = new CartResponse(savedCart);
+                return cartResponse;
+            } else {
+                throw new GeneralException("Identification required", HttpStatus.BAD_REQUEST);
+            }
         }
+        return null;
     }
 
     @Scheduled(cron = "0 15 10 1 * ?", zone = "Asia/Kolkata")
     public void deleteNonUsedCart(){
         LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
         time = time.minusDays(30);
-
         List<Cart> listDeletedCarts = cartRepository.deleteNonUsedCarts(time);
-
-
+        log.info("Deleted carts",listDeletedCarts.toString());
     }
 }
