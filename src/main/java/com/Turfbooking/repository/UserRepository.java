@@ -6,17 +6,21 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends MongoRepository<User,String> {
+public interface UserRepository extends MongoRepository<User, String> {
 
+    @Query("{'phoneNumber':?0}")
     User findByPhoneNumber(String phoneNumber);
 
-    @Query("{'emaiId' : ?0}")
-    User findByEmail(String email);
+    User findByEmailId(String emailId);
+
+   /* @Query("{'emaiId' : ?0}")
+    User findByEmail(String email);*/
 
     @Query("{'phoneNumber' : ?0 , 'password' : ?1}")
     User findByPhoneNumberAndPassword(String phoneNumber, String password);
 
     @Query("{'emailId' : ?0 , 'password' : ?1}")
     User findByEmailIdAndPassword(String phoneNumber, String password);
+
 
 }

@@ -1,16 +1,18 @@
 package com.Turfbooking.service.Impl;
 
+import com.Turfbooking.documents.BookedTimeSlot;
+import com.Turfbooking.documents.Cart;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
+import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
-import com.Turfbooking.models.enums.UserStatus;
-import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.CreateUserLoginResponse;
-import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.UserResponse;
-import com.Turfbooking.repository.UserRepository;
+import com.Turfbooking.models.common.Slot;
+import com.Turfbooking.models.enums.BookingStatus;
+import com.Turfbooking.models.mics.CustomUserDetails;
+import com.Turfbooking.models.request.*;
+import com.Turfbooking.models.response.*;
+import com.Turfbooking.repository.*;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
@@ -20,48 +22,66 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
-
-    @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository) {
-        this.jwtTokenUtil = jwtTokenUtil;
-        this.userRepository = userRepository;
-    }
+    private OtpRepository otpRepository;
+    private BookedTimeSlotRepository bookedTimeSlotRepository;
+    private OrderRepository orderRepository;
+    private CartRepository cartRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
-
     @Value("${jwt.secret.refreshToken}")
     private String refreshSecret;
-
     @Value("${jwt.accessToken.validity}")
     private long accessTokenValidity;
-
     @Value("${jwt.refreshToken.validity}")
     private long refreshTokenValidity;
+
+    @Autowired
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, OrderRepository orderRepository,CartRepository cartRepository) {
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.userRepository = userRepository;
+        this.otpRepository = otpRepository;
+        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
+        this.orderRepository = orderRepository;
+        this.cartRepository = cartRepository;
+    }
 
     @Override
     public CreateUserResponse createNewUser(CreateUserRequest createUserRequest) throws GeneralException {
 
         User isExist = userRepository.findByPhoneNumber(createUserRequest.getPhoneNumber());
-        String responseStatus = null;
         if (isExist != null) {
             throw new GeneralException("User exist with this phone number.", HttpStatus.BAD_REQUEST);
         }
 
-        User addUser = User.builder()
-                .nameOfUser(createUserRequest.getName())
-                .countryCode(createUserRequest.getCountryCode())
-                .password(CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()))
-                .phoneNumber(createUserRequest.getPhoneNumber())
-                .emailId(createUserRequest.getEmailId())
-                .build();
-        Location userLocation = new Location();
+        User addUser = new  User(createUserRequest.getName(),
+                CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()),
+                createUserRequest.getGender(),
+                createUserRequest.getDateOfBirth(),
+                createUserRequest.getCountryCode(),
+                createUserRequest.getPhoneNumber(),
+                createUserRequest.getEmailId(),
+                createUserRequest.getDisplayImageUrl(),
+                createUserRequest.getRole()
+                );
+
+       Location userLocation = new Location();
         if (null != createUserRequest && null != createUserRequest.getLatitude() && null != createUserRequest.getLongitude()) {
             userLocation.type = "Point";
             Double[] locationArray = new Double[2];
@@ -73,12 +93,11 @@ public class UserServiceImpl implements UserService {
 
         User newCreatedUser = userRepository.insert(addUser);
         UserResponse userResponse = new UserResponse(newCreatedUser);
-        responseStatus = UserStatus.NEWUSERCREATED.name();
+        CustomUserDetails customUserDetails = new CustomUserDetails(newCreatedUser);
+        String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), customUserDetails, accessSecret, accessTokenValidity);
+        String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), customUserDetails, refreshSecret, refreshTokenValidity);
 
-        String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), accessSecret, accessTokenValidity);
-        String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), refreshSecret, refreshTokenValidity);
-
-        CreateUserResponse response = new CreateUserResponse(userResponse, responseStatus, token, refreshToken);
+        CreateUserResponse response = new CreateUserResponse(userResponse, token, refreshToken);
         return response;
     }
 
@@ -96,8 +115,9 @@ public class UserServiceImpl implements UserService {
         }
 
         if (null != isExist) {
-            String token = jwtTokenUtil.generateToken(username, accessSecret, accessTokenValidity);
-            String refreshToken = jwtTokenUtil.generateToken(username, refreshSecret, refreshTokenValidity);
+            CustomUserDetails customUserDetails = new CustomUserDetails(isExist);
+            String token = jwtTokenUtil.generateToken(username, customUserDetails, accessSecret, accessTokenValidity);
+            String refreshToken = jwtTokenUtil.generateToken(username, customUserDetails, refreshSecret, refreshTokenValidity);
 
             UserResponse userResponse = new UserResponse(isExist);
             CreateUserLoginResponse loginResponse = new CreateUserLoginResponse(userResponse, token, refreshToken);
@@ -108,5 +128,230 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException {
 
+        User isExist = userRepository.findByPhoneNumber(userId);
+
+        if (null != isExist) {
+            List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByUserId(userId);
+            AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(bookedTimeSlots);
+            return response;
+
+        } else {
+            throw new GeneralException("No user found with user id: " + userId, HttpStatus.OK);
+        }
+
+    }
+
+    @Override
+    public CustomerProfileUpdateResponse updateProfile(CustomerProfileUpdateRequest customerProfileUpdateRequest) throws GeneralException {
+
+        User userDocument = userRepository.findByPhoneNumber(customerProfileUpdateRequest.getPhoneNumber());
+
+        if (userDocument != null) {
+            userDocument.setNameOfUser(customerProfileUpdateRequest.getName());
+            userDocument.setGender(customerProfileUpdateRequest.getGender());
+            userDocument.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
+            userDocument.setAddress(new Address(customerProfileUpdateRequest.getAddressLine(), customerProfileUpdateRequest.getZipCode(), customerProfileUpdateRequest.getCity(), customerProfileUpdateRequest.getState(), "INDIA"));
+            userDocument.setEmailId(customerProfileUpdateRequest.getEmailId());
+            User newCreatedUser = userRepository.save(userDocument);
+            UserResponse userResponse = new UserResponse(newCreatedUser);
+            CustomerProfileUpdateResponse customerProfileUpdateResponse = CustomerProfileUpdateResponse.builder()
+                    .user(userResponse)
+                    .build();
+            return customerProfileUpdateResponse;
+        } else {
+            throw new GeneralException("User does not exist with this PhoneNumber ", HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public BookTimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
+
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(), cancelRequest.getDate());
+
+        if (null != timeSlot) {
+            timeSlot = BookedTimeSlot.builder()
+                    ._id(timeSlot.get_id())
+                    .bookingId(timeSlot.getBookingId())
+                    .userId(timeSlot.getUserId())
+                    .slotNumber(null)
+                    .turfId(timeSlot.getTurfId())
+                    .status(BookingStatus.CANCELLED_BY_USER.name())
+                    .date(timeSlot.getDate())
+                    .startTime(timeSlot.getStartTime())
+                    .endTime(timeSlot.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot cancelled = bookedTimeSlotRepository.save(timeSlot);
+
+            if (null != cancelled) {
+
+                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                return response;
+
+            } else {
+                throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            throw new GeneralException("No booked slot.", HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
+
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
+        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(), updateRequest.getDate());
+        if (null != isSlotBooked) {
+            throw new GeneralException("Slot which you want to book is already booked.", HttpStatus.OK);
+        }
+
+        if (null != bookedTimeSlot) {
+            bookedTimeSlot = BookedTimeSlot.builder()
+                    ._id(bookedTimeSlot.get_id())
+                    .bookingId(CommonUtilities.getAlphaNumericString(6))
+                    .userId(updateRequest.getUserId())
+                    .slotNumber(updateRequest.getSlotNumber())
+                    .turfId(updateRequest.getTurfId())
+                    .date(LocalDateTime.of(updateRequest.getDate(), LocalTime.of(00, 00)))
+                    .status(BookingStatus.RESCHEDULED_BY_USER.name())
+                    .startTime(updateRequest.getStartTime())
+                    .endTime(updateRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
+            BookTimeSlotResponse response = new BookTimeSlotResponse(updatedBookedSlot);
+            return response;
+        } else {
+            throw new GeneralException("Invalid booking id.", HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+        int days = getAllSlotsRequest.getDate().compareTo(today);
+        //get all turfs which requested for slots
+        List<String> turfs = getAllSlotsRequest.getTurfIds();
+
+        if (days >= 0) { //means today or in future
+            List<List<BookTimeSlotResponse>> responseList = new ArrayList<>();
+            for (String turf : turfs) {
+
+                List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
+                List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
+
+                List<Integer> integerList = slotFromDB.stream()
+                        .map(x -> x.getSlotNumber())
+                        .collect(Collectors.toList());
+
+                allSlotList.stream().
+                        forEach((response) -> {
+                            if (integerList.contains(response.getSlotNumber())) {
+                                slotFromDB.stream().forEach((bookedSlot) -> {
+                                    if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
+                                        BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
+                                        allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
+                                    }
+                                });
+                            }
+                        });
+                responseList.add(allSlotList);
+            }
+            GetAllSlotsResponse finalResponse = new GetAllSlotsResponse(responseList);
+            return finalResponse;
+        } else {
+            throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+        List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
+        LocalDateTime slotStartTime = openTime;
+        LocalDateTime slotEndTime;
+        int count = 1;
+
+        //slot end time should be before close time.
+        while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
+            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            slotStartTime = slotEndTime;
+            count++;
+        }
+        return timeSlotsList;
+    }
+
+    @Override
+    public CartResponse addToCart(CartRequest cartRequest) throws GeneralException {
+        Cart cart = cartRepository.findByUserPhoneNumber(cartRequest.getUserPhoneNumber());
+        if(null != cart){
+            Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                    .collect(Collectors.summingDouble(Double::intValue));
+
+            cartTotal = cartTotal + cart.getCartTotal();
+
+            List<Slot> selectedSlotList = cart.getSelectedSlots();
+            selectedSlotList.addAll(cartRequest.getSelectedSlots());
+
+            Cart saveCart = new Cart(cart.get_cartId(),
+                    cartRequest.getUserPhoneNumber(),
+                    selectedSlotList,
+                    cartTotal,
+                    LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+            );
+
+            Cart savedCart = cartRepository.save(saveCart);
+            CartResponse response = new CartResponse(savedCart);
+            return response;
+        } else{
+            Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                    .collect(Collectors.summingDouble(Double::intValue));
+
+            Cart saveCart =  new Cart(
+                    cartRequest.getUserPhoneNumber(),
+                    cartRequest.getSelectedSlots(),
+                    cartTotal,
+                    LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+            );
+
+            Cart savedCart = cartRepository.insert(saveCart);
+            CartResponse response = new CartResponse(savedCart);
+            return response;
+        }
+    }
+
+    @Override
+    public CartResponse getCart(@RequestParam String phoneNumber) throws GeneralException {
+        Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
+        if(null != cart){
+            CartResponse response = new CartResponse(cart);
+            return response;
+        } else {
+            throw new GeneralException("Cart not exist",HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public CartResponse removeFromCart(RemoveCartRequest removeCartRequest) throws GeneralException {
+        Cart cart = cartRepository.findByUserPhoneNumber(removeCartRequest.getUserPhoneNumber());
+        List<Slot> slotList = cart.getSelectedSlots();
+        if(null != cart){
+            for (Slot slot: cart.getSelectedSlots()) {
+                if(slot.getDate().equals(removeCartRequest.getRemoveSlot()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())){
+                    slotList.remove(slot);
+                }
+            }
+            cart.setSelectedSlots(slotList);
+            Cart savedCart = cartRepository.save(cart);
+            CartResponse cartResponse = new CartResponse(savedCart);
+            return cartResponse;
+
+        } else {
+            throw new GeneralException("Cart is already empty",HttpStatus.BAD_REQUEST);
+        }
+    }
 }

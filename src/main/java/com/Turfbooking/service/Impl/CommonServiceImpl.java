@@ -1,18 +1,27 @@
 package com.Turfbooking.service.Impl;
 
+import com.Turfbooking.documents.BookedTimeSlot;
+import com.Turfbooking.documents.Order;
 import com.Turfbooking.documents.Otp;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.miscellaneous.StringConstants;
+import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpActiveStatus;
 import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
+import com.Turfbooking.models.mics.CustomUserDetails;
+import com.Turfbooking.models.request.BookTimeSlotRequest;
 import com.Turfbooking.models.request.GenerateOtpRequest;
+import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CreateResponse;
+import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.repository.BookedTimeSlotRepository;
+import com.Turfbooking.repository.OrderRepository;
 import com.Turfbooking.repository.OtpRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.CommonService;
@@ -32,6 +41,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -43,15 +57,9 @@ public class CommonServiceImpl implements CommonService {
     private OtpRepository otpRepository;
     private RestTemplate restTemplate;
     private UserRepository userRepository;
+    private OrderRepository orderRepository;
+    private BookedTimeSlotRepository bookedTimeSlotRepository;
 
-
-    @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil,OtpRepository otpRepository, RestTemplate restTemplate,UserRepository userRepository) {
-        this.jwtTokenUtil = jwtTokenUtil;
-        this.otpRepository = otpRepository;
-        this.restTemplate = restTemplate;
-        this.userRepository = userRepository;
-    }
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
 
@@ -69,9 +77,20 @@ public class CommonServiceImpl implements CommonService {
 
     @Autowired
     private Environment environment;
+
     @Autowired
     private JavaMailSender javaMailSender;
 
+    @Autowired
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository) {
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.otpRepository = otpRepository;
+        this.restTemplate = restTemplate;
+        this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
+        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
+
+    }
 
     @Override
     public CreateResponse generateOtp(GenerateOtpRequest otpRequest) throws GeneralException {
@@ -123,7 +142,7 @@ public class CommonServiceImpl implements CommonService {
     }
 
     //    convert it to lambda expression
-    private int     sendMail(String mailId, Integer otp) {
+    private int sendMail(String mailId, Integer otp) {
 
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(mailId);
@@ -168,61 +187,104 @@ public class CommonServiceImpl implements CommonService {
     public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
 
         String phoneNumber = validateOtpRequest.getPhoneNumber();
-        String emailOrPhoneNumber = CommonUtilities.findEmailIdOrPasswordValidator(phoneNumber);
         String countryCode = validateOtpRequest.getCountryCode();
 
         String phoneNumberWithCountryCode = null;
-        if (StringUtils.equals(emailOrPhoneNumber, "email"))
-            phoneNumberWithCountryCode = phoneNumber;
 
-        else {
+        if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
             phoneNumberWithCountryCode = StringUtils.join(countryCode, phoneNumber);
-
+        else {
+            throw new GeneralException("Phone number or county code is invalid.", HttpStatus.OK);
         }
+
         Integer userOtp = validateOtpRequest.getOtp();
         ValidateOtpResponse validateOtpResponse = new ValidateOtpResponse();
         Otp otp = otpRepository.findByPhoneNumberAndOtp(phoneNumberWithCountryCode, validateOtpRequest.getOtp());
 
-        //set otp status valid or not
         if (null != otp && validateOtpRequest.getOtp().intValue() == userOtp.intValue() && LocalDateTime.now().isBefore(otp.getTimeTillActive())) {
             //delete otp entry from database
             long otpdeltedCount = otpRepository.deleteByPhoneNumber(otp.getPhoneNumber());
             validateOtpResponse.setOtpStatus(OtpStatus.VALID.name());
-        } else
+        } else {
             validateOtpResponse.setOtpStatus(OtpStatus.INVALID.name());
+        }
 
-        //check if user or business login
-        Boolean isBusiness = validateOtpRequest.getIsBusiness();
+        //logic for is this user exist or not.
+        User isUserOrNot = userRepository.findByPhoneNumber(phoneNumber);
         String token;
         String refreshToken;
-        if (isBusiness) {
-//            Business businessDocument = businessRepository.findByPrimaryPhoneNumber(phoneNumber);
-//            if (null != businessDocument && StringUtils.equals(validateOtpRequest.getCountryCode(), businessDocument.getCountryCode())) {
-//                token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
-//                refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
-//                validateOtpResponse.setToken(token);
-//                validateOtpResponse.setRefreshToken(refreshToken);
-//                validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
-//                validateOtpResponse.setNameOfTheUser(businessDocument.getBusinessDisplayName());
-//                validateOtpResponse.setCompanyUser(FullBusinessResponse.getFullBusinessResponseFromBusinessDocument(businessDocument));
-//            } else
-//                validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
 
+        if (null != isUserOrNot) {
+            CustomUserDetails customUserDetails = new CustomUserDetails(isUserOrNot);
+            token = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, accessSecret, accessTokenValidity);
+            refreshToken = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, refreshSecret, refreshTokenValidity);
+            validateOtpResponse.setToken(token);
+            validateOtpResponse.setRefreshToken(refreshToken);
+            validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
+            validateOtpResponse.setNameOfTheUser(isUserOrNot.getFirstName());
+            UserResponse userResponse = new UserResponse(isUserOrNot);
+            validateOtpResponse.setUser(userResponse);
         } else {
-            User userDocument = userRepository.findByPhoneNumber(phoneNumber);
-            if (null != userDocument && StringUtils.equals(validateOtpRequest.getCountryCode(), userDocument.getCountryCode())) {
-                token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
-                refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
-                validateOtpResponse.setToken(token);
-                validateOtpResponse.setRefreshToken(refreshToken);
-                validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
-                validateOtpResponse.setNameOfTheUser(userDocument.getFirstName());
-                UserResponse userResponse = new UserResponse(userDocument);
-                validateOtpResponse.setUser(userResponse);
-            } else
-                validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
+            validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
         }
         return validateOtpResponse;
+
+    }
+
+    @Override
+    public OrderResponse placeOrder(OrderRequest orderRequest) throws GeneralException {
+        User isUserExist = userRepository.findByPhoneNumber(orderRequest.getUserId());
+        if (null == isUserExist) {
+            throw new GeneralException("User does not exist.", HttpStatus.OK);
+        }
+
+        List<BookTimeSlotRequest> bookTimeSlotRequests = new ArrayList<>();
+        for (BookTimeSlotRequest request : orderRequest.getTimeSlots()) {
+            BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumberAndTurfId(request.getSlotNumber(), request.getDate(), request.getTurfId());
+            if (null == slot) {
+                bookTimeSlotRequests.add(request);
+            } else {
+                throw new GeneralException("slot with slot number " + slot.getSlotNumber() + " on date " + slot.getDate() + " is alredy booked.", HttpStatus.OK);
+            }
+        }
+
+        List<BookedTimeSlot> bookedTimeSlotList = bookSlot(bookTimeSlotRequests, orderRequest.getUserId());
+        List<String> bookingIdList = bookedTimeSlotList.stream()
+                .map(x -> x.getBookingId())
+                .collect(Collectors.toList());
+
+        Order saveOrder = Order.builder()
+                .userId(orderRequest.getUserId())
+                .timeSlots(bookingIdList)
+                .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                .build();
+
+        Order savedOrder = orderRepository.save(saveOrder);
+        OrderResponse response = new OrderResponse(savedOrder);
+        response.setTimeSlots(bookedTimeSlotList);
+        return response;
+
+    }
+
+    private List<BookedTimeSlot> bookSlot(List<BookTimeSlotRequest> bookTimeSlotRequestList, String userId) throws GeneralException {
+        List<BookedTimeSlot> bookedTimeSlotList = new ArrayList<>();
+        for (BookTimeSlotRequest bookTimeSlotRequest : bookTimeSlotRequestList) {
+            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
+                    .userId(userId)
+                    .bookingId(CommonUtilities.getAlphaNumericString(5))
+                    .date(LocalDateTime.of(bookTimeSlotRequest.getDate(), LocalTime.of(00, 00)))
+                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
+                    .turfId(bookTimeSlotRequest.getTurfId())
+                    .status(BookingStatus.BOOKED_BY_USER.name())
+                    .startTime(bookTimeSlotRequest.getStartTime())
+                    .endTime(bookTimeSlotRequest.getEndTime())
+                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
+                    .build();
+
+            BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
+            bookedTimeSlotList.add(bookedTimeSlot);
+        }
+        return bookedTimeSlotList;
     }
 
 }
