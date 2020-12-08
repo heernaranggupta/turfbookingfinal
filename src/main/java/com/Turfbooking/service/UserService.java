@@ -21,7 +21,7 @@ public interface UserService {
 
     CartResponse addToCart(CartRequest cartRequest);
 
-    CartResponse getCart(String PhoneNumber);
+    CartResponse getCart(String PhoneNumber,String cartId);
 
     CartResponse removeFromCart(RemoveCartRequest removeCartRequest);
 

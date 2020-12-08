@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -368,14 +367,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CartResponse getCart(@RequestParam String phoneNumber) throws GeneralException {
-        Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
-        if(null != cart){
-            CartResponse response = new CartResponse(cart);
-            return response;
-        } else {
-            throw new GeneralException("Cart not exist",HttpStatus.NOT_FOUND);
-        }
+    public CartResponse getCart(String phoneNumber, String cartId) throws GeneralException {
+       if(null != phoneNumber){
+           Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
+           if(null != cart){
+               CartResponse response = new CartResponse(cart);
+               return response;
+           }
+       } else if (null != cartId){
+           Cart cart = cartRepository.findBy_cartId(cartId);
+           if(null != cart){
+               CartResponse response = new CartResponse(cart);
+               return response;
+           }
+       }
+       return null;
     }
 
     @Override
