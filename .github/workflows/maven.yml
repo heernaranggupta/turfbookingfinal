@@ -19,7 +19,7 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Maven
-      run: mvn clean install
+      run: mvn -Pprod clean install
       
     - name: copy file via ssh key
       uses: appleboy/scp-action@master
