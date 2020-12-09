@@ -386,15 +386,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CartResponse removeFromCart(RemoveCartRequest removeCartRequest) throws GeneralException {
-
         if (null != removeCartRequest.getUserPhoneNumber()) {
             Cart cart = cartRepository.findByUserPhoneNumber(removeCartRequest.getUserPhoneNumber());
+            List<Slot> removeSlotFromCart = new ArrayList<>();
             if (null != cart) {
                 for (Slot slot : cart.getSelectedSlots()) {
                     if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())) {
-                        cart.getSelectedSlots().remove(slot);
+                        removeSlotFromCart.add(slot);
                     }
                 }
+                cart.getSelectedSlots().removeAll(removeSlotFromCart);
                 Cart savedCart = cartRepository.save(cart);
                 CartResponse cartResponse = new CartResponse(savedCart);
                 return cartResponse;
@@ -404,12 +405,14 @@ public class UserServiceImpl implements UserService {
 
         } else if (null != removeCartRequest.getCartId()) {
             Cart cartWithoutUser = cartRepository.findBy_cartId(removeCartRequest.getCartId());
+            List<Slot> removeSlotFromCart = new ArrayList<>();
             if (null != cartWithoutUser) {
                 for (Slot slot : cartWithoutUser.getSelectedSlots()) {
                     if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())) {
-                        cartWithoutUser.getSelectedSlots().remove(slot);
+                        removeSlotFromCart.add(slot);
                     }
                 }
+                cartWithoutUser.getSelectedSlots().removeAll(removeSlotFromCart);
                 Cart savedCart = cartRepository.save(cartWithoutUser);
                 CartResponse cartResponse = new CartResponse(savedCart);
                 return cartResponse;
