@@ -13,15 +13,15 @@ public interface UserService {
 
     CustomerProfileUpdateResponse updateProfile(CustomerProfileUpdateRequest customerProfileUpdateRequest);
 
-    BookTimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
+    TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
 
-    BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest);
+    TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest);
 
     GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest);
 
     CartResponse addToCart(CartRequest cartRequest);
 
-    CartResponse getCart(String PhoneNumber);
+    CartResponse getCart(String PhoneNumber,String cartId);
 
     CartResponse removeFromCart(RemoveCartRequest removeCartRequest);
 

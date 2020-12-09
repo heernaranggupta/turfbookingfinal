@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 public class RemoveCartRequest {
 
+    private String cartId;
     private String userPhoneNumber;
     private Slot removeSlot;
 

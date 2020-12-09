@@ -13,7 +13,7 @@ import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.BusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessResponse;
@@ -180,11 +180,11 @@ public class BusinessServiceImpl implements BusinessService {
         List<String> turfs = getAllSlotsBusinessRequest.getTurfIds();
 
         if (days >= 0) { //means today or in future
-            List<List<BookTimeSlotResponse>> responseList = new ArrayList<>();
+            List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
 
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsBusinessRequest.getDate(), turf);
-                List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsBusinessRequest.getDate(), getAllSlotsBusinessRequest.getOpenTime(), getAllSlotsBusinessRequest.getCloseTime(), getAllSlotsBusinessRequest.getSlotDuration());
+                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsBusinessRequest.getDate(), getAllSlotsBusinessRequest.getOpenTime(), getAllSlotsBusinessRequest.getCloseTime(), getAllSlotsBusinessRequest.getSlotDuration());
 
                 List<Integer> integerList = slotFromDB.stream()
                         .map(x -> x.getSlotNumber())
@@ -196,7 +196,7 @@ public class BusinessServiceImpl implements BusinessService {
                             if (integerList.contains(response.getSlotNumber())) {
                                 slotFromDB.stream().forEach((bookedSlot) -> {
                                     if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
-                                        BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
+                                        TimeSlotResponse bookedResponse = new TimeSlotResponse(bookedSlot);
                                         allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
                                     }
                                 });
@@ -212,25 +212,25 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public List<BookTimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest) {
+    public List<TimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest) {
         LocalDate fromDate = (null != businessViewAllBookingRequest.getFromDate()) ? businessViewAllBookingRequest.getFromDate() : LocalDate.now(ZoneId.of("Asia/Kolkata"));
         LocalDate toDate = (null != businessViewAllBookingRequest.getToDate()) ? businessViewAllBookingRequest.getToDate() : LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(7);
         String status = businessViewAllBookingRequest.getStatus();
         List<BookedTimeSlot> bookedList = new ArrayList<>();
         if (null != status) {
             bookedList = bookedTimeSlotRepository.findAllByDateAndStatus(fromDate, toDate, status);
-            List<BookTimeSlotResponse> responseList = new ArrayList<>();
+            List<TimeSlotResponse> responseList = new ArrayList<>();
             for (BookedTimeSlot slot : bookedList) {
-                BookTimeSlotResponse response = new BookTimeSlotResponse(slot);
+                TimeSlotResponse response = new TimeSlotResponse(slot);
                 responseList.add(response);
             }
             //    BusinessViewAllBookingResponse response = new BusinessViewAllBookingResponse(responseList);
             return responseList;
         } else if (status == null) {
             bookedList = bookedTimeSlotRepository.findAllByDate(fromDate, toDate);
-            List<BookTimeSlotResponse> responseList = new ArrayList<>();
+            List<TimeSlotResponse> responseList = new ArrayList<>();
             for (BookedTimeSlot slot : bookedList) {
-                BookTimeSlotResponse response = new BookTimeSlotResponse(slot);
+                TimeSlotResponse response = new TimeSlotResponse(slot);
                 responseList.add(response);
             }
             //BusinessViewAllBookingResponse response = new BusinessViewAllBookingResponse(responseList);
@@ -241,7 +241,7 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public BookTimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelRequest) {
+    public TimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelRequest) {
         BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(), cancelRequest.getDate());
 
         if (null != timeSlot) {
@@ -262,7 +262,7 @@ public class BusinessServiceImpl implements BusinessService {
 
             if (null != cancelled) {
 
-                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                TimeSlotResponse response = new TimeSlotResponse(cancelled);
                 return response;
 
             } else {
@@ -273,8 +273,8 @@ public class BusinessServiceImpl implements BusinessService {
         }
     }
 
-    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
-        List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
+    private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+        List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
         int count = 1;
@@ -282,7 +282,7 @@ public class BusinessServiceImpl implements BusinessService {
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            timeSlotsList.add(new TimeSlotResponse(turfId, count, 200.00, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
             count++;
         }
@@ -291,7 +291,7 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
-    public BookTimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest makeUnavailableSlotRequest) {
+    public TimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest makeUnavailableSlotRequest) {
 
         BookedTimeSlot slotExist = bookedTimeSlotRepository.findByDateAndSlotNumber(makeUnavailableSlotRequest.getSlotNumber(), makeUnavailableSlotRequest.getDate());
 
@@ -310,7 +310,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
             BookedTimeSlot cancelledAndUnavailableSlot = bookedTimeSlotRepository.save(slotExist);
-            BookTimeSlotResponse response = new BookTimeSlotResponse(cancelledAndUnavailableSlot);
+            TimeSlotResponse response = new TimeSlotResponse(cancelledAndUnavailableSlot);
             return response;
         } else {
             slotExist = BookedTimeSlot.builder()
@@ -324,7 +324,7 @@ public class BusinessServiceImpl implements BusinessService {
                     .build();
 
             BookedTimeSlot unavailableSlot = bookedTimeSlotRepository.insert(slotExist);
-            BookTimeSlotResponse response = new BookTimeSlotResponse(unavailableSlot);
+            TimeSlotResponse response = new TimeSlotResponse(unavailableSlot);
             return response;
         }
     }

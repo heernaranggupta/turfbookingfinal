@@ -12,7 +12,7 @@ import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
 import com.Turfbooking.models.mics.CustomUserDetails;
-import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.TimeSlotRequest;
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
@@ -238,17 +238,17 @@ public class CommonServiceImpl implements CommonService {
             throw new GeneralException("User does not exist.", HttpStatus.OK);
         }
 
-        List<BookTimeSlotRequest> bookTimeSlotRequests = new ArrayList<>();
-        for (BookTimeSlotRequest request : orderRequest.getTimeSlots()) {
+        List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
+        for (TimeSlotRequest request : orderRequest.getTimeSlots()) {
             BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumberAndTurfId(request.getSlotNumber(), request.getDate(), request.getTurfId());
             if (null == slot) {
-                bookTimeSlotRequests.add(request);
+                timeSlotRequests.add(request);
             } else {
                 throw new GeneralException("slot with slot number " + slot.getSlotNumber() + " on date " + slot.getDate() + " is alredy booked.", HttpStatus.OK);
             }
         }
 
-        List<BookedTimeSlot> bookedTimeSlotList = bookSlot(bookTimeSlotRequests, orderRequest.getUserId());
+        List<BookedTimeSlot> bookedTimeSlotList = bookSlot(timeSlotRequests, orderRequest.getUserId());
         List<String> bookingIdList = bookedTimeSlotList.stream()
                 .map(x -> x.getBookingId())
                 .collect(Collectors.toList());
@@ -266,18 +266,19 @@ public class CommonServiceImpl implements CommonService {
 
     }
 
-    private List<BookedTimeSlot> bookSlot(List<BookTimeSlotRequest> bookTimeSlotRequestList, String userId) throws GeneralException {
+    private List<BookedTimeSlot> bookSlot(List<TimeSlotRequest> timeSlotRequestList, String userId) throws GeneralException {
         List<BookedTimeSlot> bookedTimeSlotList = new ArrayList<>();
-        for (BookTimeSlotRequest bookTimeSlotRequest : bookTimeSlotRequestList) {
+        for (TimeSlotRequest timeSlotRequest : timeSlotRequestList) {
             BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
                     .userId(userId)
                     .bookingId(CommonUtilities.getAlphaNumericString(5))
-                    .date(LocalDateTime.of(bookTimeSlotRequest.getDate(), LocalTime.of(00, 00)))
-                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
-                    .turfId(bookTimeSlotRequest.getTurfId())
+                    .date(LocalDateTime.of(timeSlotRequest.getDate(), LocalTime.of(00, 00)))
+                    .slotNumber(timeSlotRequest.getSlotNumber())
+                    .price(timeSlotRequest.getPrice())
+                    .turfId(timeSlotRequest.getTurfId())
                     .status(BookingStatus.BOOKED_BY_USER.name())
-                    .startTime(bookTimeSlotRequest.getStartTime())
-                    .endTime(bookTimeSlotRequest.getEndTime())
+                    .startTime(timeSlotRequest.getStartTime())
+                    .endTime(timeSlotRequest.getEndTime())
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
 

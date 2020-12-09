@@ -5,12 +5,12 @@
 	<profiles>
 		<profile>
 			<id>dev</id>
-			<properties>
-				<activatedProperties>dev</activatedProperties>
-			</properties>
 			<activation>
 				<activeByDefault>true</activeByDefault>
 			</activation>
+			<properties>
+				<activatedProperties>dev</activatedProperties>
+			</properties>
 		</profile>
 		<profile>
 			<id>prod</id>

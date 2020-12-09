@@ -21,8 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
     private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, OrderRepository orderRepository,CartRepository cartRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository, OrderRepository orderRepository, CartRepository cartRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
             throw new GeneralException("User exist with this phone number.", HttpStatus.BAD_REQUEST);
         }
 
-        User addUser = new  User(createUserRequest.getName(),
+        User addUser = new User(createUserRequest.getName(),
                 CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()),
                 createUserRequest.getGender(),
                 createUserRequest.getDateOfBirth(),
@@ -79,9 +79,9 @@ public class UserServiceImpl implements UserService {
                 createUserRequest.getEmailId(),
                 createUserRequest.getDisplayImageUrl(),
                 createUserRequest.getRole()
-                );
+        );
 
-       Location userLocation = new Location();
+        Location userLocation = new Location();
         if (null != createUserRequest && null != createUserRequest.getLatitude() && null != createUserRequest.getLongitude()) {
             userLocation.type = "Point";
             Double[] locationArray = new Double[2];
@@ -167,7 +167,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BookTimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
+    public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
 
         BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByDateAndSlotNumber(cancelRequest.getSlotNumber(), cancelRequest.getDate());
 
@@ -189,7 +189,7 @@ public class UserServiceImpl implements UserService {
 
             if (null != cancelled) {
 
-                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+                TimeSlotResponse response = new TimeSlotResponse(cancelled);
                 return response;
 
             } else {
@@ -201,7 +201,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
+    public TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
 
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
         BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByDateAndSlotNumber(updateRequest.getSlotNumber(), updateRequest.getDate());
@@ -216,6 +216,7 @@ public class UserServiceImpl implements UserService {
                     .userId(updateRequest.getUserId())
                     .slotNumber(updateRequest.getSlotNumber())
                     .turfId(updateRequest.getTurfId())
+                    .price(updateRequest.getPrice())
                     .date(LocalDateTime.of(updateRequest.getDate(), LocalTime.of(00, 00)))
                     .status(BookingStatus.RESCHEDULED_BY_USER.name())
                     .startTime(updateRequest.getStartTime())
@@ -224,7 +225,7 @@ public class UserServiceImpl implements UserService {
                     .build();
 
             BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
-            BookTimeSlotResponse response = new BookTimeSlotResponse(updatedBookedSlot);
+            TimeSlotResponse response = new TimeSlotResponse(updatedBookedSlot);
             return response;
         } else {
             throw new GeneralException("Invalid booking id.", HttpStatus.OK);
@@ -239,11 +240,11 @@ public class UserServiceImpl implements UserService {
         List<String> turfs = getAllSlotsRequest.getTurfIds();
 
         if (days >= 0) { //means today or in future
-            List<List<BookTimeSlotResponse>> responseList = new ArrayList<>();
+            List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
 
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
-                List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
+                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
 
                 List<Integer> integerList = slotFromDB.stream()
                         .map(x -> x.getSlotNumber())
@@ -254,7 +255,7 @@ public class UserServiceImpl implements UserService {
                             if (integerList.contains(response.getSlotNumber())) {
                                 slotFromDB.stream().forEach((bookedSlot) -> {
                                     if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
-                                        BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
+                                        TimeSlotResponse bookedResponse = new TimeSlotResponse(bookedSlot);
                                         allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
                                     }
                                 });
@@ -269,8 +270,8 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
-        List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
+    private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+        List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
         int count = 1;
@@ -278,7 +279,7 @@ public class UserServiceImpl implements UserService {
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            timeSlotsList.add(new TimeSlotResponse(turfId, count, 200.00, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
             count++;
         }
@@ -287,71 +288,143 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CartResponse addToCart(CartRequest cartRequest) throws GeneralException {
-        Cart cart = cartRepository.findByUserPhoneNumber(cartRequest.getUserPhoneNumber());
-        if(null != cart){
-            Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
-                    .collect(Collectors.summingDouble(Double::intValue));
 
-            cartTotal = cartTotal + cart.getCartTotal();
+        if (null != cartRequest.getUserPhoneNumber()) {
 
-            List<Slot> selectedSlotList = cart.getSelectedSlots();
-            selectedSlotList.addAll(cartRequest.getSelectedSlots());
+            Cart cart = cartRepository.findByUserPhoneNumber(cartRequest.getUserPhoneNumber());
+            if (null != cart) {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
 
-            Cart saveCart = new Cart(cart.get_cartId(),
-                    cartRequest.getUserPhoneNumber(),
-                    selectedSlotList,
-                    cartTotal,
-                    LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
-            );
+                cartTotal = cartTotal + cart.getCartTotal();
 
-            Cart savedCart = cartRepository.save(saveCart);
-            CartResponse response = new CartResponse(savedCart);
-            return response;
-        } else{
-            Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
-                    .collect(Collectors.summingDouble(Double::intValue));
+                List<Slot> selectedSlotList = cart.getSelectedSlots();
+                selectedSlotList.addAll(cartRequest.getSelectedSlots());
 
-            Cart saveCart =  new Cart(
-                    cartRequest.getUserPhoneNumber(),
-                    cartRequest.getSelectedSlots(),
-                    cartTotal,
-                    LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
-            );
+                Cart saveCart = new Cart(cart.get_cartId(),
+                        cartRequest.getUserPhoneNumber(),
+                        selectedSlotList,
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
 
-            Cart savedCart = cartRepository.insert(saveCart);
-            CartResponse response = new CartResponse(savedCart);
-            return response;
+                Cart savedCart = cartRepository.save(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            } else {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+
+                Cart saveCart = new Cart(
+                        cartRequest.getUserPhoneNumber(),
+                        cartRequest.getSelectedSlots(),
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+
+                Cart savedCart = cartRepository.insert(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            }
+        } else {
+            Cart cart = cartRepository.findBy_cartId(cartRequest.getCartId());
+            if (null != cart) {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+
+                cartTotal = cartTotal + cart.getCartTotal();
+
+                List<Slot> selectedSlotList = cart.getSelectedSlots();
+                selectedSlotList.addAll(cartRequest.getSelectedSlots());
+
+                Cart saveCart = new Cart(cart.get_cartId(),
+                        cartRequest.getUserPhoneNumber(),
+                        selectedSlotList,
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+
+                Cart savedCart = cartRepository.save(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            } else {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+
+                Cart saveCart = new Cart(
+                        cartRequest.getUserPhoneNumber(),
+                        cartRequest.getSelectedSlots(),
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+
+                Cart savedCart = cartRepository.insert(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            }
         }
+
     }
 
     @Override
-    public CartResponse getCart(@RequestParam String phoneNumber) throws GeneralException {
-        Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
-        if(null != cart){
-            CartResponse response = new CartResponse(cart);
-            return response;
-        } else {
-            throw new GeneralException("Cart not exist",HttpStatus.NOT_FOUND);
-        }
+    public CartResponse getCart(String phoneNumber, String cartId) throws GeneralException {
+       if(null != phoneNumber){
+           Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
+           if(null != cart){
+               CartResponse response = new CartResponse(cart);
+               return response;
+           }
+       } else if (null != cartId){
+           Cart cart = cartRepository.findBy_cartId(cartId);
+           if(null != cart){
+               CartResponse response = new CartResponse(cart);
+               return response;
+           }
+       }
+       return null;
     }
 
     @Override
     public CartResponse removeFromCart(RemoveCartRequest removeCartRequest) throws GeneralException {
-        Cart cart = cartRepository.findByUserPhoneNumber(removeCartRequest.getUserPhoneNumber());
-        List<Slot> slotList = cart.getSelectedSlots();
-        if(null != cart){
-            for (Slot slot: cart.getSelectedSlots()) {
-                if(slot.getDate().equals(removeCartRequest.getRemoveSlot()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())){
-                    slotList.remove(slot);
-                }
-            }
-            cart.setSelectedSlots(slotList);
-            Cart savedCart = cartRepository.save(cart);
-            CartResponse cartResponse = new CartResponse(savedCart);
-            return cartResponse;
 
-        } else {
-            throw new GeneralException("Cart is already empty",HttpStatus.BAD_REQUEST);
+        if (null != removeCartRequest.getUserPhoneNumber()) {
+            Cart cart = cartRepository.findByUserPhoneNumber(removeCartRequest.getUserPhoneNumber());
+            if (null != cart) {
+                for (Slot slot : cart.getSelectedSlots()) {
+                    if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())) {
+                        cart.getSelectedSlots().remove(slot);
+                    }
+                }
+                Cart savedCart = cartRepository.save(cart);
+                CartResponse cartResponse = new CartResponse(savedCart);
+                return cartResponse;
+            } else {
+                throw new GeneralException("Cart is empty", HttpStatus.NOT_FOUND);
+            }
+
+        } else if (null != removeCartRequest.getCartId()) {
+            Cart cartWithoutUser = cartRepository.findBy_cartId(removeCartRequest.getCartId());
+            if (null != cartWithoutUser) {
+                for (Slot slot : cartWithoutUser.getSelectedSlots()) {
+                    if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())) {
+                        cartWithoutUser.getSelectedSlots().remove(slot);
+                    }
+                }
+                Cart savedCart = cartRepository.save(cartWithoutUser);
+                CartResponse cartResponse = new CartResponse(savedCart);
+                return cartResponse;
+            } else {
+                throw new GeneralException("Identification required", HttpStatus.BAD_REQUEST);
+            }
         }
+        return null;
+    }
+
+    @Scheduled(cron = "0 15 10 1 * ?", zone = "Asia/Kolkata")
+    public void deleteNonUsedCart(){
+        LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+        time = time.minusDays(30);
+        List<Cart> listDeletedCarts = cartRepository.deleteNonUsedCarts(time);
+        log.info("Deleted carts",listDeletedCarts.toString());
     }
 }
