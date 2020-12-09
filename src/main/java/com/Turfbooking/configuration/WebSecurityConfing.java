@@ -29,7 +29,9 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable().authorizeRequests()
                 .antMatchers("/user/sign-up").permitAll()
-                .antMatchers("/user/**").permitAll()
+                .antMatchers("/user/login").permitAll()
+                .antMatchers("/user/cart").permitAll()
+                .antMatchers("/user/cart/remove").permitAll()
 
                 .antMatchers("/business/signup").hasRole("ADMIN")
                 .antMatchers("/business/login").permitAll()
