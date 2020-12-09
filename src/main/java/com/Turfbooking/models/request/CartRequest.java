@@ -10,6 +10,7 @@ import java.util.List;
 @Setter
 public class CartRequest {
 
+    private String cartId;
     private String userPhoneNumber;
     private List<Slot> selectedSlots;
 

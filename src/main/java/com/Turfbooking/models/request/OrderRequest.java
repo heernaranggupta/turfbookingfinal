@@ -12,6 +12,6 @@ public class OrderRequest {
     @NotNull
     @NotEmpty
     private String userId;
-    private List<BookTimeSlotRequest> timeSlots;
+    private List<TimeSlotRequest> timeSlots;
 
 }

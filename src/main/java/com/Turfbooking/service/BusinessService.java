@@ -8,7 +8,7 @@ import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.CreateBusinessLoginResponse;
 import com.Turfbooking.models.response.CreateBusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
@@ -34,11 +34,11 @@ public interface BusinessService {
     GetAllSlotsResponse getAllSlots(GetAllSlotsBusinessRequest getAllSlotsBusinessRequest);
 
 
-    BookTimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
+    TimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
 
     RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest);
 
-    BookTimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
+    TimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
 
-    List<BookTimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest);
+    List<TimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest);
 }
