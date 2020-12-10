@@ -37,7 +37,7 @@ jobs:
         username: ec2-user
         key: ${{ secrets.MEDICAL_STORE_KEY }}
         script: |
-          fuser -k -n tcp 7070
+          sudo fuser -k -n tcp 7070
           fuser -k -n tcp 7070
           fuser -k -n tcp 7070
           fuser -k -n tcp 7070
