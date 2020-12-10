@@ -406,12 +406,15 @@ public class UserServiceImpl implements UserService {
         } else if (null != removeCartRequest.getCartId()) {
             Cart cartWithoutUser = cartRepository.findBy_cartId(removeCartRequest.getCartId());
             List<Slot> removeSlotFromCart = new ArrayList<>();
+            Double deductPrice = 0D;
             if (null != cartWithoutUser) {
                 for (Slot slot : cartWithoutUser.getSelectedSlots()) {
                     if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getSlotNumber().equals(removeCartRequest.getRemoveSlot().getSlotNumber())) {
                         removeSlotFromCart.add(slot);
+                        deductPrice += slot.getPrice();
                     }
                 }
+                cartWithoutUser.setCartTotal(cartWithoutUser.getCartTotal()-deductPrice);
                 cartWithoutUser.getSelectedSlots().removeAll(removeSlotFromCart);
                 Cart savedCart = cartRepository.save(cartWithoutUser);
                 CartResponse cartResponse = new CartResponse(savedCart);
