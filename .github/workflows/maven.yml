@@ -43,3 +43,14 @@ jobs:
           fuser -k -n tcp 7070
           java -jar /home/ec2-user/builds/target/*.jar > /home/ec2-user/builds/target/turf-server-logs.txt 2>&1 &
           
+    - name: Message for success to Teams
+      if: success()
+      run: |
+        curl -H 'Content-Type: application/json' -d '{"text":"Backend-Server : ${{github.actor}} made commit to master -- SERVER BUILD SUCCESSFULLY"}' https://outlook.office.com/webhook/133b7a6e-0e17-4de1-a95c-29e7e52230c9@cba5068b-6ede-41be-a53e-6bbfa0f2cf2f/IncomingWebhook/1dd63c9dcc2a43c7bf1fbfea4f52e324/0cc5c37b-bf43-4b59-8697-95d2287616cc
+        
+    - name: Message for success to Teams
+      if: failure()
+      run: |
+        curl -H 'Content-Type: application/json' -d '{"text":"Backend-Server : ${{github.actor}} made commit to master -- SERVER BUILD UN-SUCCESSFULLY"}' https://outlook.office.com/webhook/133b7a6e-0e17-4de1-a95c-29e7e52230c9@cba5068b-6ede-41be-a53e-6bbfa0f2cf2f/IncomingWebhook/1dd63c9dcc2a43c7bf1fbfea4f52e324/0cc5c37b-bf43-4b59-8697-95d2287616cc
+        
+        
