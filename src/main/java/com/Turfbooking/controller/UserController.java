@@ -81,8 +81,8 @@ public class UserController {
 
     //view user booking history
     @GetMapping("/booking-history")
-    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId) {
-        CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userId));
+    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userPhoneNumber) {
+        CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userPhoneNumber));
         return ResponseUtilities.createSuccessResponse(response);
     }
 

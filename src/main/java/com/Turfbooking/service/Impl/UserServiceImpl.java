@@ -9,6 +9,7 @@ import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.common.Slot;
 import com.Turfbooking.models.enums.BookingStatus;
+import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.mics.CustomUserDetails;
 import com.Turfbooking.models.request.*;
 import com.Turfbooking.models.response.*;
@@ -29,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -239,6 +241,8 @@ public class UserServiceImpl implements UserService {
         //get all turfs which requested for slots
         List<String> turfs = getAllSlotsRequest.getTurfIds();
 
+        GetAllSlotsResponse finalResponse = new GetAllSlotsResponse();
+
         if (days >= 0) { //means today or in future
             List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
@@ -261,9 +265,14 @@ public class UserServiceImpl implements UserService {
                                 });
                             }
                         });
-                responseList.add(allSlotList);
+                if(allSlotList.get(0).getTurfId().equals(Turfs.TURF01.getValue())){
+                    finalResponse.setTurf01(allSlotList);
+                }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF02.getValue())){
+                    finalResponse.setTurf02(allSlotList);
+                }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF03.getValue())){
+                    finalResponse.setTurf03(allSlotList);
+                }
             }
-            GetAllSlotsResponse finalResponse = new GetAllSlotsResponse(responseList);
             return finalResponse;
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);

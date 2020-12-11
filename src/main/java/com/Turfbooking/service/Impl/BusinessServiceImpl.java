@@ -4,6 +4,7 @@ import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Business;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
+import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.mics.CustomBusinessUserDetails;
 import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
@@ -179,6 +180,8 @@ public class BusinessServiceImpl implements BusinessService {
         //get all turfs which requested for slots
         List<String> turfs = getAllSlotsBusinessRequest.getTurfIds();
 
+        GetAllSlotsResponse finalResponse = new GetAllSlotsResponse();
+
         if (days >= 0) { //means today or in future
             List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
@@ -202,9 +205,14 @@ public class BusinessServiceImpl implements BusinessService {
                                 });
                             }
                         });
-                responseList.add(allSlotList);
+                if(allSlotList.get(0).getTurfId().equals(Turfs.TURF01.getValue())){
+                    finalResponse.setTurf01(allSlotList);
+                }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF02.getValue())){
+                    finalResponse.setTurf02(allSlotList);
+                }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF03.getValue())){
+                    finalResponse.setTurf03(allSlotList);
+                }
             }
-            GetAllSlotsResponse finalResponse = new GetAllSlotsResponse(responseList);
             return finalResponse;
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);

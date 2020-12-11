@@ -9,15 +9,13 @@ import java.util.List;
 
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 public class GetAllSlotsResponse {
 
-    List<List<TimeSlotResponse>> responseList;
+    private List<TimeSlotResponse> turf01;
+    private List<TimeSlotResponse> turf02;
+    private List<TimeSlotResponse> turf03;
 
-    public GetAllSlotsResponse(List<List<TimeSlotResponse>> responseList) {
-        this.responseList = responseList;
-    }
 }
 
 
