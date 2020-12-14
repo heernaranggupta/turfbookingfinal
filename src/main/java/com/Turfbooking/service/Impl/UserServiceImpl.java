@@ -219,7 +219,7 @@ public class UserServiceImpl implements UserService {
                     .slotNumber(updateRequest.getSlotNumber())
                     .turfId(updateRequest.getTurfId())
                     .price(updateRequest.getPrice())
-                    .date(LocalDateTime.of(updateRequest.getDate(), LocalTime.of(00, 00)))
+                    .date(updateRequest.getDate())
                     .status(BookingStatus.RESCHEDULED_BY_USER.name())
                     .startTime(updateRequest.getStartTime())
                     .endTime(updateRequest.getEndTime())

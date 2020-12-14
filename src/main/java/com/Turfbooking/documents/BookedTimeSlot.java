@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -22,7 +23,7 @@ public class BookedTimeSlot {
     private Integer slotNumber;
     private Double price;
     private String status;
-    private LocalDateTime date;
+    private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private LocalDateTime timeStamp;//add timestamp
