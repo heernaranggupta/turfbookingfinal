@@ -41,7 +41,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -240,7 +239,7 @@ public class CommonServiceImpl implements CommonService {
 
         List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
         for (TimeSlotRequest request : orderRequest.getTimeSlots()) {
-            BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumberAndTurfId(request.getSlotNumber(), request.getDate(), request.getTurfId());
+            BookedTimeSlot slot = bookedTimeSlotRepository.findByTurfIdAndStartTime(request.getTurfId(),request.getStartTime());
             if (null == slot) {
                 timeSlotRequests.add(request);
             } else {
@@ -272,7 +271,7 @@ public class CommonServiceImpl implements CommonService {
             BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
                     .userId(userId)
                     .bookingId(CommonUtilities.getAlphaNumericString(5))
-                    .date(LocalDateTime.of(timeSlotRequest.getDate(), LocalTime.of(00, 00)))
+                    .date(timeSlotRequest.getDate())
                     .slotNumber(timeSlotRequest.getSlotNumber())
                     .price(timeSlotRequest.getPrice())
                     .turfId(timeSlotRequest.getTurfId())
