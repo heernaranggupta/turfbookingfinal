@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
@@ -16,6 +17,7 @@ public class Business {
     private String _id;
     private String username;
     private String password;
+    @Indexed
     private String phoneNumber;
     private String companyName;
     private String role;

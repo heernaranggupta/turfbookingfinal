@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 public class Slot {
 
     private String turfId;
-    private Integer slotNumber;
     private Double price;
     private LocalDate date;
     private LocalDateTime startTime;
