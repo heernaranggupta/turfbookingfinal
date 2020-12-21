@@ -42,7 +42,7 @@ public class TimeSlotResponse {
         this.timestamp = cancelledSlot.getTimeStamp();
     }
 
-    public TimeSlotResponse(String userId, String turfId, Integer slotNumber, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
+    public TimeSlotResponse(String userId, String turfId, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
         this.userId = userId;
         this.turfId = turfId;
         this.status = status;
@@ -52,7 +52,7 @@ public class TimeSlotResponse {
         this.timestamp = timestamp;
     }
 
-    public TimeSlotResponse(String turfId, Integer slotNumber, Double price, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime) {
+    public TimeSlotResponse(String turfId, Double price, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime) {
         this.turfId = turfId;
         this.price = price;
         this.status = status;

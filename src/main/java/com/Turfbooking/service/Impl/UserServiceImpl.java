@@ -254,8 +254,6 @@ public class UserServiceImpl implements UserService {
                     }
                 }
 
-
-
                 if(allSlotList.get(0).getTurfId().equals(Turfs.TURF01.getValue())){
                     finalResponse.setTurf01(allSlotList);
                 }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF02.getValue())){
@@ -274,14 +272,12 @@ public class UserServiceImpl implements UserService {
         List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime.plusSeconds(1);
         LocalDateTime slotEndTime;
-        int count = 1;
 
         //slot end time should be before close time.
         while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new TimeSlotResponse(turfId, count, 200.00, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            timeSlotsList.add(new TimeSlotResponse(turfId, 200.00, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
-            count++;
         }
         return timeSlotsList;
     }
