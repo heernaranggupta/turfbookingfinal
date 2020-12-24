@@ -15,8 +15,6 @@ public class CancelOrUnavailableSlotRequest {
     private String turfId;
     @NotNull
     private LocalDate date;
-    @NotNull
-    private Integer slotNumber;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 

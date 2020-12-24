@@ -16,8 +16,6 @@ public class CreateRescheduleBookingRequest {
     @NotNull
     private String bookingId;
     @NotNull
-    private Integer slotNumber;
-    @NotNull
     private String turfId;
     @NotNull
     private String userId; // for business phone number (unique id) to know who booked this slot

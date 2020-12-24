@@ -1,6 +1,5 @@
 package com.Turfbooking.documents;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -11,9 +10,8 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@Builder
 @Document
-public class BookedTimeSlot {
+public class CancelledSlot {
 
     @Id
     private String _id;
@@ -27,4 +25,14 @@ public class BookedTimeSlot {
     private LocalDateTime endTime;
     private LocalDateTime timeStamp;
 
+    public CancelledSlot(BookedTimeSlot bookedTimeSlot) {
+        this.bookingId = bookedTimeSlot.getBookingId();
+        this.userId = bookedTimeSlot.getUserId();
+        this.turfId = bookedTimeSlot.getTurfId();
+        this.price = bookedTimeSlot.getPrice();
+        this.date = bookedTimeSlot.getDate();
+        this.startTime = bookedTimeSlot.getStartTime();
+        this.endTime = bookedTimeSlot.getEndTime();
+        this.timeStamp = bookedTimeSlot.getTimeStamp();
+    }
 }

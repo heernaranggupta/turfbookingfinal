@@ -12,12 +12,6 @@ import java.util.List;
 @Repository
 public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot, String> {
 
-    @Query("{'slotNumber':?0 ,'date':{ $eq: ?1}}")
-    BookedTimeSlot findByDateAndSlotNumber(Integer slotNumber, LocalDate date);
-
-    @Query("{'date':{ $eq: ?0},'slotNumber':?1 ,'turfId':?3}")
-    BookedTimeSlot findByDateAndSlotNumberAndTurfId(LocalDate date, Integer slotNumber, String turfId);
-
     @Query("{'turfId':?0,'startTime':?1}")
     BookedTimeSlot findByTurfIdAndStartTime(String turfId, LocalDateTime startTime);
 
@@ -41,5 +35,8 @@ public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot
 
     @Query("{'status':?0 ,'date':{ $gte: ?1}}")
     List<BookedTimeSlot> findByDateAndBookingStatus(String status, LocalDate date);
+
+    @Query("{'_id':0?}")
+    BookedTimeSlot deleteBySlotId(String slotId);
 
 }

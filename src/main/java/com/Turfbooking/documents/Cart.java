@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ public class Cart {
 
     @Id
     private String _cartId;
+    @Indexed
     private String userPhoneNumber;
     private List<Slot> selectedSlots;
     private Double cartTotal;
