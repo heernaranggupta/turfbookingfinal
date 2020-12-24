@@ -1,15 +1,18 @@
 package com.Turfbooking.service;
 
-import com.Turfbooking.documents.StartEndTime;
-import com.Turfbooking.models.request.OpenCloseTimeRequest;
-import com.Turfbooking.models.request.StartEndTimeRequest;
-import com.Turfbooking.models.response.OpenCloseTimeResponse;
-import com.Turfbooking.models.response.StartEndTimeResponse;
+import com.Turfbooking.models.request.ConfigRequest;
+import com.Turfbooking.models.request.ConfigRequests;
+import com.Turfbooking.models.response.ConfigResponse;
+
+import java.time.LocalDate;
+import java.util.List;
 
 public interface ConfigService {
 
-    OpenCloseTimeResponse addOpenCloseTimeConfig(OpenCloseTimeRequest openCloseTimeRequest);
+    List<ConfigResponse> addConfig(ConfigRequests configRequest);
 
-    StartEndTimeResponse addStartEndTimeConfig(StartEndTimeRequest startEndTimeRequest);
+    ConfigResponse getConfig(String day, LocalDate date);
+
+    ConfigResponse updateConfigByDate(ConfigRequest configRequest);
 
 }

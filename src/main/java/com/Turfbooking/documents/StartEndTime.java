@@ -1,5 +1,6 @@
 package com.Turfbooking.documents;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Builder
 @Document
 public class StartEndTime {
 
@@ -17,6 +19,7 @@ public class StartEndTime {
     private String _id;
     private String day;
     private LocalDate date;
+    private String turfId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Double price;
