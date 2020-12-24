@@ -14,8 +14,6 @@ public class UpdateBookedTimeSlotRequest {
 
     @NotBlank
     private String bookingId;
-    @NotBlank
-    private Integer slotNumber;
     @NotNull
     private Double price;
     @NotBlank

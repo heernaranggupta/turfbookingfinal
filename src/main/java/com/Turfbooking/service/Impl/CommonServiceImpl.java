@@ -243,7 +243,7 @@ public class CommonServiceImpl implements CommonService {
             if (null == slot) {
                 timeSlotRequests.add(request);
             } else {
-                throw new GeneralException("slot with slot number " + slot.getSlotNumber() + " on date " + slot.getDate() + " is alredy booked.", HttpStatus.OK);
+                throw new GeneralException("slot with start time " + slot.getStartTime() + " on date " + slot.getDate() + " is already booked.", HttpStatus.OK);
             }
         }
 
@@ -272,7 +272,6 @@ public class CommonServiceImpl implements CommonService {
                     .userId(userId)
                     .bookingId(CommonUtilities.getAlphaNumericString(5))
                     .date(timeSlotRequest.getDate())
-                    .slotNumber(timeSlotRequest.getSlotNumber())
                     .price(timeSlotRequest.getPrice())
                     .turfId(timeSlotRequest.getTurfId())
                     .status(BookingStatus.BOOKED_BY_USER.name())
