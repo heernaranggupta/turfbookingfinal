@@ -38,12 +38,14 @@ public class BusinessController {
 
     private BusinessService businessService;
 
+
     @Autowired
     public BusinessController(BusinessService businessService) {
         this.businessService = businessService;
     }
 
 
+    
     @PostMapping("/signup")
     public CommonResponse<CreateBusinessResponse> createNewBusinessUser(@Valid @RequestBody CreateBusinessRequest createBusinessRequest){
         CommonResponse response = new CommonResponse(businessService.createBusinessUser(createBusinessRequest));
