@@ -1,9 +1,6 @@
 package com.Turfbooking.service.Impl;
 
-import com.Turfbooking.documents.BookedTimeSlot;
-import com.Turfbooking.documents.Order;
-import com.Turfbooking.documents.Otp;
-import com.Turfbooking.documents.User;
+import com.Turfbooking.documents.*;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.miscellaneous.StringConstants;
 import com.Turfbooking.models.enums.BookingStatus;
@@ -20,10 +17,7 @@ import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
-import com.Turfbooking.repository.BookedTimeSlotRepository;
-import com.Turfbooking.repository.OrderRepository;
-import com.Turfbooking.repository.OtpRepository;
-import com.Turfbooking.repository.UserRepository;
+import com.Turfbooking.repository.*;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
@@ -37,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -58,6 +53,7 @@ public class CommonServiceImpl implements CommonService {
     private UserRepository userRepository;
     private OrderRepository orderRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
+    private CartRepository cartRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -81,14 +77,14 @@ public class CommonServiceImpl implements CommonService {
     private JavaMailSender javaMailSender;
 
     @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository) {
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository,CartRepository cartRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.otpRepository = otpRepository;
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;
         this.orderRepository = orderRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
-
+        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -231,6 +227,7 @@ public class CommonServiceImpl implements CommonService {
     }
 
     @Override
+    @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) throws GeneralException {
         User isUserExist = userRepository.findByPhoneNumber(orderRequest.getUserId());
         if (null == isUserExist) {
@@ -259,6 +256,10 @@ public class CommonServiceImpl implements CommonService {
                 .build();
 
         Order savedOrder = orderRepository.save(saveOrder);
+        List<Cart> isDeleted = cartRepository.deleteByUserPhoneNumber(orderRequest.getUserId());
+        if(null == isDeleted){
+            throw new GeneralException("Error while deleting cart",HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         OrderResponse response = new OrderResponse(savedOrder);
         response.setTimeSlots(bookedTimeSlotList);
         return response;

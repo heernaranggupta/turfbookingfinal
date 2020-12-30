@@ -1,6 +1,7 @@
 package com.Turfbooking.models.request;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Valid
 @Getter
+@Setter
 public class CancelOrUnavailableSlotRequest {
 
     @NotNull
