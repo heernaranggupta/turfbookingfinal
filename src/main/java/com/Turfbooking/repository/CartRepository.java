@@ -19,4 +19,6 @@ public interface CartRepository extends MongoRepository<Cart, String> {
     @Query("DELETE FROM cart AS c WHERE c.userPhoneNumber = null AND  timeStamp > :date")
     List<Cart> deleteNonUsedCarts(@Param("date")LocalDateTime dateTime);
 
+    List<Cart> deleteByUserPhoneNumber(String phoneNumber);
+
 }

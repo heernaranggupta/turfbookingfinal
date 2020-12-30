@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -169,14 +170,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
         BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTime(cancelRequest.getTurfId(), cancelRequest.getStartTime());
         if (null != timeSlot) {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
+            bookedTimeSlotRepository.deleteById(timeSlot.get_id());
             CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
-            BookedTimeSlot cancelled = bookedTimeSlotRepository.deleteBySlotId(timeSlot.get_id());
-            if (null != cancelled && null != savedInDB) {
+            if (null != savedInDB) {
                 TimeSlotResponse response = new TimeSlotResponse(savedInDB);
                 return response;
             } else {

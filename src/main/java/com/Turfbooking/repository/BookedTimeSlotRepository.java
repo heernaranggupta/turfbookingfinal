@@ -4,6 +4,7 @@ import com.Turfbooking.documents.BookedTimeSlot;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,8 +36,5 @@ public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot
 
     @Query("{'status':?0 ,'date':{ $gte: ?1}}")
     List<BookedTimeSlot> findByDateAndBookingStatus(String status, LocalDate date);
-
-    @Query("{'_id':0?}")
-    BookedTimeSlot deleteBySlotId(String slotId);
 
 }
