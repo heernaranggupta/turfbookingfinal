@@ -13,7 +13,7 @@ public interface OpenCloseTimeRepository extends MongoRepository<OpenCloseTime ,
     @Query("{'day':?0}")
     OpenCloseTime findByDay(String day);
 
-    @Query("{'date':?0}")
+    @Query("{'date':{$gte: ?0}}")
     OpenCloseTime findByDate(LocalDate date);
 
 }

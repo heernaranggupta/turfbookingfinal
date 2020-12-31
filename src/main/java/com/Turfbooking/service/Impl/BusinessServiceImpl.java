@@ -256,8 +256,8 @@ public class BusinessServiceImpl implements BusinessService {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
             CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
-            BookedTimeSlot cancelled = bookedTimeSlotRepository.deleteBySlotId(timeSlot.get_id());
-            if (null != cancelled && null != savedInDB) {
+            bookedTimeSlotRepository.deleteById(timeSlot.get_id());
+            if (null != savedInDB) {
                 TimeSlotResponse response = new TimeSlotResponse(savedInDB);
                 return response;
             } else {
