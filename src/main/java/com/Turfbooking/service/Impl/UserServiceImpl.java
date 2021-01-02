@@ -297,21 +297,22 @@ public class UserServiceImpl implements UserService {
 
         List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
-        LocalDateTime slotEndTime;
+        LocalDateTime slotEndTime = null;
 
         Double price = null;
         for (StartEndTime startEndTime : startEndTimeList) {
-
-            //slot end time should be before close time.
-            while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
-                slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-                if ((startEndTime.getStartTime().isEqual(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && turfId.equalsIgnoreCase(startEndTime.getTurfId())) {
-                    if (null != startEndTime.getPrice()) {
-                        price = startEndTime.getPrice();
+            if (startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
+                //slot end time should be before close time.
+                while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
+                    slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+                    if ((startEndTime.getStartTime().isEqual(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && turfId.equalsIgnoreCase(startEndTime.getTurfId())) {
+                        if (null != startEndTime.getPrice()) {
+                            price = startEndTime.getPrice();
+                        }
                     }
+                    timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+                    slotStartTime = slotEndTime;
                 }
-                timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
-                slotStartTime = slotEndTime;
             }
         }
         return timeSlotsList;
