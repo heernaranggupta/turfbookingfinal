@@ -1,12 +1,19 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.*;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CartRequest;
+import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.RemoveCartRequest;
+import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
+import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;

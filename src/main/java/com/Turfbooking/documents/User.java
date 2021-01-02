@@ -2,7 +2,10 @@ package com.Turfbooking.documents;
 
 import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.IndexDirection;
 import org.springframework.data.mongodb.core.index.Indexed;

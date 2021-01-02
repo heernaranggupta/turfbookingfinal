@@ -3,6 +3,8 @@ package com.Turfbooking.service.Impl;
 import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.CancelledSlot;
 import com.Turfbooking.documents.Cart;
+import com.Turfbooking.documents.OpenCloseTime;
+import com.Turfbooking.documents.StartEndTime;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
@@ -12,11 +14,27 @@ import com.Turfbooking.models.common.Slot;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.mics.CustomUserDetails;
-import com.Turfbooking.models.request.*;
-import com.Turfbooking.models.response.*;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CartRequest;
+import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.RemoveCartRequest;
+import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
+import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
+import com.Turfbooking.models.response.CartResponse;
+import com.Turfbooking.models.response.CreateUserLoginResponse;
+import com.Turfbooking.models.response.CreateUserResponse;
+import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
+import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
+import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.CancelledSlotRepository;
 import com.Turfbooking.repository.CartRepository;
+import com.Turfbooking.repository.OpenCloseTimeRepository;
+import com.Turfbooking.repository.StartEndTimeRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
@@ -28,7 +46,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -45,6 +65,8 @@ public class UserServiceImpl implements UserService {
     private BookedTimeSlotRepository bookedTimeSlotRepository;
     private CartRepository cartRepository;
     private CancelledSlotRepository cancelledSlotRepository;
+    private OpenCloseTimeRepository openCloseTimeRepository;
+    private StartEndTimeRepository startEndTimeRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -56,12 +78,14 @@ public class UserServiceImpl implements UserService {
     private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, CancelledSlotRepository cancelledSlotRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, CancelledSlotRepository cancelledSlotRepository, OpenCloseTimeRepository openCloseTimeRepository, StartEndTimeRepository startEndTimeRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.cartRepository = cartRepository;
         this.cancelledSlotRepository = cancelledSlotRepository;
+        this.openCloseTimeRepository = openCloseTimeRepository;
+        this.startEndTimeRepository = startEndTimeRepository;
     }
 
     @Override
@@ -169,14 +193,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
         BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTime(cancelRequest.getTurfId(), cancelRequest.getStartTime());
         if (null != timeSlot) {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
+            bookedTimeSlotRepository.deleteById(timeSlot.get_id());
             CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
-            BookedTimeSlot cancelled = bookedTimeSlotRepository.deleteBySlotId(timeSlot.get_id());
-            if (null != cancelled && null != savedInDB) {
+            if (null != savedInDB) {
                 TimeSlotResponse response = new TimeSlotResponse(savedInDB);
                 return response;
             } else {
@@ -219,6 +244,13 @@ public class UserServiceImpl implements UserService {
     public GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         int days = getAllSlotsRequest.getDate().compareTo(today);
+
+        OpenCloseTime openCloseTime = openCloseTimeRepository.findByDate(getAllSlotsRequest.getDate());
+        if (null == openCloseTime) {
+            DayOfWeek day = getAllSlotsRequest.getDate().getDayOfWeek();
+            openCloseTime = openCloseTimeRepository.findByDay(day.toString());
+        }
+
         //get all turfs which requested for slots
         List<String> turfs = getAllSlotsRequest.getTurfIds();
         GetAllSlotsResponse finalResponse = new GetAllSlotsResponse();
@@ -226,22 +258,10 @@ public class UserServiceImpl implements UserService {
             List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
-                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
+                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, openCloseTime.getDate(), openCloseTime.getOpenTime(), openCloseTime.getCloseTime(), getAllSlotsRequest.getSlotDuration());
                 List<LocalDateTime> startDateTimeList = slotFromDB.stream()
                         .map(x -> x.getStartTime())
                         .collect(Collectors.toList());
-
-//                allSlotList.stream().
-//                        forEach((response) -> {
-//                            if (startDateTimeList.contains(response.getStartTime())) {
-//                                slotFromDB.stream().forEach((bookedSlot) -> {
-//                                    if (response.getStartTime() == bookedSlot.getStartTime()) {
-//                                        TimeSlotResponse bookedResponse = new TimeSlotResponse(bookedSlot);
-//
-//                                    }
-//                                });
-//                            }
-//                        });
 
                 for( int i=0;i<allSlotList.size();i++){
                     if (startDateTimeList.contains(allSlotList.get(i).getStartTime())) {
@@ -254,11 +274,11 @@ public class UserServiceImpl implements UserService {
                     }
                 }
 
-                if(allSlotList.get(0).getTurfId().equals(Turfs.TURF01.getValue())){
+                if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF01.getValue())) {
                     finalResponse.setTurf01(allSlotList);
-                }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF02.getValue())){
+                } else if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF02.getValue())) {
                     finalResponse.setTurf02(allSlotList);
-                }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF03.getValue())){
+                } else if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF03.getValue())) {
                     finalResponse.setTurf03(allSlotList);
                 }
             }
@@ -269,14 +289,28 @@ public class UserServiceImpl implements UserService {
     }
 
     private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+        List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDate(date);
+        if (null == startEndTimeList) {
+            DayOfWeek day = date.getDayOfWeek();
+            startEndTimeList = startEndTimeRepository.findByDay(day.toString());
+        }
+
         List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
-        LocalDateTime slotStartTime = openTime.plusSeconds(1);
+        LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
 
         //slot end time should be before close time.
-        while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
+        while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
             slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new TimeSlotResponse(turfId, 200.00, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+            Double price = null;
+            for (StartEndTime startEndTime : startEndTimeList) {
+                if ((startEndTime.getStartTime().isEqual(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && turfId.equalsIgnoreCase(startEndTime.getTurfId())) {
+                    if (null != startEndTime.getPrice()) {
+                        price = startEndTime.getPrice();
+                    }
+                }
+            }
+            timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
             slotStartTime = slotEndTime;
         }
         return timeSlotsList;
