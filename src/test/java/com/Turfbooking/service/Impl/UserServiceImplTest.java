@@ -1,17 +1,13 @@
 package com.Turfbooking.service.Impl;
 
-import com.Turfbooking.documents.User;
 import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UserServiceImplTest {
 

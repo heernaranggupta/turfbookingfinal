@@ -1,6 +1,11 @@
 package com.Turfbooking.service.Impl;
 
-import com.Turfbooking.documents.*;
+import com.Turfbooking.documents.BookedTimeSlot;
+import com.Turfbooking.documents.CancelledSlot;
+import com.Turfbooking.documents.Cart;
+import com.Turfbooking.documents.OpenCloseTime;
+import com.Turfbooking.documents.StartEndTime;
+import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Address;
@@ -9,9 +14,28 @@ import com.Turfbooking.models.common.Slot;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.mics.CustomUserDetails;
-import com.Turfbooking.models.request.*;
-import com.Turfbooking.models.response.*;
-import com.Turfbooking.repository.*;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CartRequest;
+import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.RemoveCartRequest;
+import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
+import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
+import com.Turfbooking.models.response.CartResponse;
+import com.Turfbooking.models.response.CreateUserLoginResponse;
+import com.Turfbooking.models.response.CreateUserResponse;
+import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
+import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
+import com.Turfbooking.models.response.UserResponse;
+import com.Turfbooking.repository.BookedTimeSlotRepository;
+import com.Turfbooking.repository.CancelledSlotRepository;
+import com.Turfbooking.repository.CartRepository;
+import com.Turfbooking.repository.OpenCloseTimeRepository;
+import com.Turfbooking.repository.StartEndTimeRepository;
+import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
@@ -238,18 +262,6 @@ public class UserServiceImpl implements UserService {
                 List<LocalDateTime> startDateTimeList = slotFromDB.stream()
                         .map(x -> x.getStartTime())
                         .collect(Collectors.toList());
-
-//                allSlotList.stream().
-//                        forEach((response) -> {
-//                            if (startDateTimeList.contains(response.getStartTime())) {
-//                                slotFromDB.stream().forEach((bookedSlot) -> {
-//                                    if (response.getStartTime() == bookedSlot.getStartTime()) {
-//                                        TimeSlotResponse bookedResponse = new TimeSlotResponse(bookedSlot);
-//
-//                                    }
-//                                });
-//                            }
-//                        });
 
                 for( int i=0;i<allSlotList.size();i++){
                     if (startDateTimeList.contains(allSlotList.get(i).getStartTime())) {

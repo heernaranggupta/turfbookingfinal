@@ -1,7 +1,20 @@
 package com.Turfbooking.service;
 
-import com.Turfbooking.models.request.*;
-import com.Turfbooking.models.response.*;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CartRequest;
+import com.Turfbooking.models.request.CreateUserRequest;
+import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
+import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.RemoveCartRequest;
+import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
+import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
+import com.Turfbooking.models.response.CartResponse;
+import com.Turfbooking.models.response.CreateUserLoginResponse;
+import com.Turfbooking.models.response.CreateUserResponse;
+import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
+import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
 
 public interface UserService {
 
