@@ -7,8 +7,22 @@ import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.mics.CustomBusinessUserDetails;
-import com.Turfbooking.models.request.*;
-import com.Turfbooking.models.response.*;
+import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CreateBusinessLoginRequest;
+import com.Turfbooking.models.request.CreateBusinessRequest;
+import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
+import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
+import com.Turfbooking.models.request.UpdateBusinessRequest;
+import com.Turfbooking.models.response.BusinessResponse;
+import com.Turfbooking.models.response.CreateBusinessLoginResponse;
+import com.Turfbooking.models.response.CreateBusinessResponse;
+import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
+import com.Turfbooking.models.response.CreatePasswordResponse;
+import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.RescheduleBookingResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.repository.CancelledSlotRepository;
@@ -256,8 +270,8 @@ public class BusinessServiceImpl implements BusinessService {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
             CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
-            BookedTimeSlot cancelled = bookedTimeSlotRepository.deleteBySlotId(timeSlot.get_id());
-            if (null != cancelled && null != savedInDB) {
+            bookedTimeSlotRepository.deleteById(timeSlot.get_id());
+            if (null != savedInDB) {
                 TimeSlotResponse response = new TimeSlotResponse(savedInDB);
                 return response;
             } else {

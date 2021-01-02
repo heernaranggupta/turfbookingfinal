@@ -1,13 +1,17 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.ConfigRequest;
 import com.Turfbooking.models.request.ConfigRequests;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.ConfigResponse;
 import com.Turfbooking.service.ConfigService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;

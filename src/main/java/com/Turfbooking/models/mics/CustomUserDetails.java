@@ -1,6 +1,5 @@
 package com.Turfbooking.models.mics;
 
-import com.Turfbooking.documents.Business;
 import com.Turfbooking.documents.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

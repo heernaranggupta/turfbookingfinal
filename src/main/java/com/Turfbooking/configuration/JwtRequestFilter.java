@@ -1,7 +1,5 @@
 package com.Turfbooking.configuration;
 
-import com.Turfbooking.documents.Business;
-import com.Turfbooking.documents.User;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.utils.JwtTokenUtil;
