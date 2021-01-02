@@ -25,15 +25,21 @@ public class ConfigController {
 
 
     @PostMapping("/add")
-    public CommonResponse<List<ConfigResponse>> addConfig(@RequestBody ConfigRequests configRequests){
+    public CommonResponse<List<ConfigResponse>> addConfig(@RequestBody ConfigRequests configRequests) {
+        CommonResponse response = new CommonResponse(configService.addConfig(configRequests));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @PostMapping("/add")
+    public CommonResponse<List<ConfigResponse>> addConfigForDay(@RequestBody ConfigRequests configRequests) {
         CommonResponse response = new CommonResponse(configService.addConfig(configRequests));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
     @GetMapping("/get")
     public CommonResponse getConfig(@RequestParam(required = false) String day,
-                                    @RequestParam(required = false)LocalDate date){
-        CommonResponse response = new CommonResponse(configService.getConfig(day,date));
+                                    @RequestParam(required = false) LocalDate date) {
+        CommonResponse response = new CommonResponse(configService.getConfig(day, date));
         return ResponseUtilities.createSuccessResponse(response);
     }
 }

@@ -4,6 +4,7 @@ import com.Turfbooking.documents.OpenCloseTime;
 import com.Turfbooking.documents.StartEndTime;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.common.StartEndTimeRequest;
+import com.Turfbooking.models.request.ConfigByDayRequests;
 import com.Turfbooking.models.request.ConfigRequest;
 import com.Turfbooking.models.request.ConfigRequests;
 import com.Turfbooking.models.response.ConfigResponse;
@@ -164,9 +165,14 @@ public class ConfigServiceImpl implements ConfigService {
         }
         OpenCloseTime savedOpenCloseTime = openCloseTimeRepository.save(saveOpenCloseTime);
         List<StartEndTime> savedStartEndTime = startEndTimeRepository.saveAll(saveStartEndTimeList);
-        ConfigResponse configResponse = new ConfigResponse(savedOpenCloseTime,savedStartEndTime,"Config successfully saved");
+        ConfigResponse configResponse = new ConfigResponse(savedOpenCloseTime, savedStartEndTime, "Config successfully saved");
 
         return configResponse;
     }
 
+
+    ////////////////
+    public List<ConfigResponse> addConfigByDay(ConfigByDayRequests configRequests) throws GeneralException {
+        return null;
+    }
 }
