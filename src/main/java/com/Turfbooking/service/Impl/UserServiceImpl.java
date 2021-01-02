@@ -215,7 +215,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
-        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTime(updateRequest.getTurfId(),updateRequest.getStartTime());
+        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTime(updateRequest.getTurfId(), updateRequest.getStartTime());
         if (null != isSlotBooked) {
             throw new GeneralException("Slot which you want to book is already booked.", HttpStatus.OK);
         }
@@ -263,12 +263,12 @@ public class UserServiceImpl implements UserService {
                         .map(x -> x.getStartTime())
                         .collect(Collectors.toList());
 
-                for( int i=0;i<allSlotList.size();i++){
+                for (int i = 0; i < allSlotList.size(); i++) {
                     if (startDateTimeList.contains(allSlotList.get(i).getStartTime())) {
-                        for (int j=0; j<slotFromDB.size();j++){
+                        for (int j = 0; j < slotFromDB.size(); j++) {
                             if (allSlotList.get(i).getStartTime() == slotFromDB.get(j).getStartTime()) {
                                 TimeSlotResponse bookedResponse = new TimeSlotResponse(slotFromDB.get(j));
-                                allSlotList.set(i,bookedResponse);
+                                allSlotList.set(i, bookedResponse);
                             }
                         }
                     }
@@ -299,19 +299,20 @@ public class UserServiceImpl implements UserService {
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime;
 
-        //slot end time should be before close time.
-        while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
-            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            Double price = null;
-            for (StartEndTime startEndTime : startEndTimeList) {
+        Double price = null;
+        for (StartEndTime startEndTime : startEndTimeList) {
+
+            //slot end time should be before close time.
+            while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
+                slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
                 if ((startEndTime.getStartTime().isEqual(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && turfId.equalsIgnoreCase(startEndTime.getTurfId())) {
                     if (null != startEndTime.getPrice()) {
                         price = startEndTime.getPrice();
                     }
                 }
+                timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+                slotStartTime = slotEndTime;
             }
-            timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
-            slotStartTime = slotEndTime;
         }
         return timeSlotsList;
     }
