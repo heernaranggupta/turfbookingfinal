@@ -6,7 +6,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Valid
 @Getter
@@ -22,6 +22,6 @@ public class UpdateBookedTimeSlotRequest {
     private String userId; // phone number (unique id) to know who booked this slot
     @NotBlank
     private LocalDate date;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
 }

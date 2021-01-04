@@ -7,12 +7,13 @@ import com.Turfbooking.models.common.StartEndTimeRequest;
 import com.Turfbooking.models.request.ConfigRequest;
 import com.Turfbooking.models.request.ConfigRequests;
 import com.Turfbooking.models.response.ConfigResponse;
+import com.Turfbooking.models.response.StartEndTimeResponse;
 import com.Turfbooking.repository.OpenCloseTimeRepository;
 import com.Turfbooking.repository.StartEndTimeRepository;
 import com.Turfbooking.service.ConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,26 +34,32 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public ConfigResponse getConfig(String day, LocalDate date) throws GeneralException{
-
+    public ConfigResponse getConfig(String day, String strDate) throws GeneralException {
+        LocalDate date = LocalDate.parse(strDate);
         OpenCloseTime openCloseTime = null;
         List<StartEndTime> startEndTimeList = new ArrayList<>();
-
         if (null != date) {
             openCloseTime = openCloseTimeRepository.findByDate(date);
-            if(null != openCloseTime) {
+            if (null != openCloseTime) {
                 startEndTimeList = startEndTimeRepository.findByDate(date);
             }
         } else {
             openCloseTime = openCloseTimeRepository.findByDay(day);
-            if(null != openCloseTime){
+            if (null != openCloseTime) {
                 startEndTimeList = startEndTimeRepository.findByDay(day);
             }
         }
-
         ConfigResponse response;
         if (null != openCloseTime && null != startEndTimeList) {
-            response = new ConfigResponse(openCloseTime, startEndTimeList, "successfully loaded");
+            List<StartEndTimeResponse> startEndTimeResponseList = new ArrayList<>();
+            startEndTimeList.stream().forEach(startEndTimeResponse ->
+                    {
+                        StartEndTimeResponse timeResponse = new StartEndTimeResponse(startEndTimeResponse);
+                        startEndTimeResponseList.add(timeResponse);
+                    }
+            );
+
+            response = new ConfigResponse(openCloseTime, startEndTimeResponseList, "successfully loaded");
         } else {
             response = new ConfigResponse(null, null, "no data found");
         }
@@ -60,40 +67,19 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public List<ConfigResponse> addConfig(ConfigRequests configRequests) throws GeneralException {
-
+    @Transactional
+    public List<ConfigResponse> addOrUpdateConfig(ConfigRequests configRequests) throws GeneralException {
         List<ConfigResponse> configResponses = new ArrayList<>();
         for (ConfigRequest configRequest : configRequests.getConfigRequests()) {
-            OpenCloseTime openCloseTime = null;
-            List<StartEndTime> startEndTimeList = null;
             boolean flag = true;
-            if (null != configRequest.getDate()) {
-                openCloseTime = openCloseTimeRepository.findByDate(configRequest.getDate());
-                if(null != openCloseTime){
-                    startEndTimeList = startEndTimeRepository.findByDate(configRequest.getDate());
-                }
-            } else if (null != configRequest.getDay()){
-                openCloseTime = openCloseTimeRepository.findByDay(configRequest.getDay());
-                if(null != openCloseTime){
-                    startEndTimeList = startEndTimeRepository.findByDay(configRequest.getDay());
-                }
-            } else {
-                throw new GeneralException("Provide day or date to save config", HttpStatus.BAD_REQUEST);
+            OpenCloseTime openCloseTime = openCloseTimeRepository.findByDate(configRequest.getDate());
+            List<StartEndTime> startEndTimeList = startEndTimeRepository.deleteByDate(configRequest.getDate());
+            if (null != openCloseTime && null != startEndTimeList) {
+                openCloseTimeRepository.deleteByDate(configRequest.getDate());
+                startEndTimeRepository.deleteByDate(configRequest.getDate());
+                flag = true;
             }
-
-            if(null != openCloseTime && null != startEndTimeList){
-                for (StartEndTimeRequest startEndTimeRequest : configRequest.getStartEndTimeRequestList()) {
-                    for (StartEndTime startEndTime : startEndTimeList) {
-                        if ((startEndTimeRequest.getStartTime().isBefore(startEndTime.getStartTime()) && (startEndTimeRequest.getEndTime().isBefore(startEndTime.getStartTime()) || startEndTimeRequest.getEndTime().isEqual(startEndTime.getStartTime())))
-                                || ((startEndTimeRequest.getStartTime().isAfter(startEndTime.getStartTime()) || startEndTimeRequest.getStartTime().isEqual(startEndTime.getStartTime())) && startEndTimeRequest.getEndTime().isAfter(startEndTime.getEndTime())) && startEndTimeRequest.getTurfId().equals(startEndTime.getTurfId())) {
-                            flag = true;
-                        } else {
-                            flag = false;
-                        }
-                    }
-                }
-            }
-            ConfigResponse configResponse;
+            ConfigResponse configResponse = null;
             if (flag) {
                 OpenCloseTime saveOpenCloseTime = OpenCloseTime.builder()
                         .date(configRequest.getDate())
@@ -102,9 +88,7 @@ public class ConfigServiceImpl implements ConfigService {
                         .closeTime(configRequest.getCloseTime())
                         .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                         .build();
-                if(null != openCloseTime && null != openCloseTime.get_id()){
-                    saveOpenCloseTime.set_id(openCloseTime.get_id());
-                }
+
                 List<StartEndTime> saveStartEndTimeList = new ArrayList<>();
                 for ( StartEndTimeRequest startEndTimeRequest : configRequest.getStartEndTimeRequestList()) {
                     StartEndTime startEndTime = StartEndTime.builder()
@@ -120,53 +104,29 @@ public class ConfigServiceImpl implements ConfigService {
                 }
                 OpenCloseTime savedOpenCloseTime = openCloseTimeRepository.save(saveOpenCloseTime);
                 List<StartEndTime> savedStartEndTime = startEndTimeRepository.saveAll(saveStartEndTimeList);
-                configResponse = new ConfigResponse(savedOpenCloseTime,savedStartEndTime,"Config successfully saved");
-            } else {
-                configResponse = new ConfigResponse(openCloseTime,startEndTimeList,"Conflict while saving config");
+                List<StartEndTimeResponse> startEndTimeResponseList = new ArrayList<>();
+                savedStartEndTime.stream().forEach(response ->
+                        {
+                            StartEndTimeResponse timeResponse = new StartEndTimeResponse(response);
+                            startEndTimeResponseList.add(timeResponse);
+                        }
+                );
+                configResponse = new ConfigResponse(savedOpenCloseTime, startEndTimeResponseList, "Config successfully saved");
             }
             configResponses.add(configResponse);
         }
-
         return configResponses;
     }
 
-    public String deleteConfigByDate(LocalDate date) throws GeneralException {
+    @Override
+    @Transactional
+    public String deleteConfigByDate(String strDate) {
+        LocalDate date = LocalDate.parse(strDate);
         List<StartEndTime> deletedConfig = startEndTimeRepository.deleteByDate(date);
-        if(null != deletedConfig){
+        if (null != deletedConfig) {
             return "deleted successfully";
         }
         return "error in deletion";
-    }
-
-
-    @Override
-    public ConfigResponse updateConfigByDate(ConfigRequest configRequest) throws GeneralException {
-
-        OpenCloseTime saveOpenCloseTime = OpenCloseTime.builder()
-                .date(configRequest.getDate())
-                .day(configRequest.getDay())
-                .openTime(configRequest.getOpenTime())
-                .closeTime(configRequest.getCloseTime())
-                .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                .build();
-        List<StartEndTime> saveStartEndTimeList = new ArrayList<>();
-        for ( StartEndTimeRequest startEndTimeRequest : configRequest.getStartEndTimeRequestList()) {
-            StartEndTime startEndTime = StartEndTime.builder()
-                    .date(configRequest.getDate())
-                    .day(configRequest.getDay())
-                    .turfId(startEndTimeRequest.getTurfId())
-                    .startTime(startEndTimeRequest.getStartTime())
-                    .endTime(startEndTimeRequest.getEndTime())
-                    .price(startEndTimeRequest.getPrice())
-                    .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .build();
-            saveStartEndTimeList.add(startEndTime);
-        }
-        OpenCloseTime savedOpenCloseTime = openCloseTimeRepository.save(saveOpenCloseTime);
-        List<StartEndTime> savedStartEndTime = startEndTimeRepository.saveAll(saveStartEndTimeList);
-        ConfigResponse configResponse = new ConfigResponse(savedOpenCloseTime,savedStartEndTime,"Config successfully saved");
-
-        return configResponse;
     }
 
 }

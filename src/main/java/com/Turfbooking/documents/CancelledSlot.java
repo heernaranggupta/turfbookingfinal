@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -21,8 +22,8 @@ public class CancelledSlot {
     private Double price;
     private String status;
     private LocalDate date;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private LocalDateTime timeStamp;
 
     public CancelledSlot(BookedTimeSlot bookedTimeSlot) {

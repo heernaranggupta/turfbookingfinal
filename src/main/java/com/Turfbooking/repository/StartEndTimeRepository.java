@@ -4,6 +4,7 @@ import com.Turfbooking.documents.StartEndTime;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,6 +18,8 @@ public interface StartEndTimeRepository extends MongoRepository<StartEndTime, St
     @Query("{'day':{$eq: ?0}}")
     List<StartEndTime> findByDay(String day);
 
+    @Transactional
+    @Query("{'date':{$gte: ?0}}")
     List<StartEndTime> deleteByDate(LocalDate date);
 
 }

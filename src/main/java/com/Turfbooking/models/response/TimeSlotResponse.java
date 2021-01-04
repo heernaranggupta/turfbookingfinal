@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 public class TimeSlotResponse {
@@ -16,8 +17,8 @@ public class TimeSlotResponse {
     private Double price;
     private String status;
     private LocalDate date;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private LocalDateTime timestamp;
 
     public TimeSlotResponse(BookedTimeSlot bookedTimeSlot) {
@@ -42,7 +43,7 @@ public class TimeSlotResponse {
         this.timestamp = cancelledSlot.getTimeStamp();
     }
 
-    public TimeSlotResponse(String userId, String turfId, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
+    public TimeSlotResponse(String userId, String turfId, String status, LocalDate date, LocalTime startTime, LocalTime endTime, LocalDateTime timestamp) {
         this.userId = userId;
         this.turfId = turfId;
         this.status = status;
@@ -52,7 +53,7 @@ public class TimeSlotResponse {
         this.timestamp = timestamp;
     }
 
-    public TimeSlotResponse(String turfId, Double price, String status, LocalDate date, LocalDateTime startTime, LocalDateTime endTime) {
+    public TimeSlotResponse(String turfId, Double price, String status, LocalDate date, LocalTime startTime, LocalTime endTime) {
         this.turfId = turfId;
         this.price = price;
         this.status = status;

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Repository
@@ -14,6 +15,9 @@ public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot
 
     @Query("{'turfId':?0,'startTime':?1}")
     BookedTimeSlot findByTurfIdAndStartTime(String turfId, LocalDateTime startTime);
+
+    @Query("{'turfId':?0,'startTime':?1,'date':{$eq :?2}}")
+    BookedTimeSlot findByTurfIdAndStartTimeAndDate(String turfId, LocalTime startTime, LocalDate date);
 
     @Query("{'date':{ $eq: ?0}, 'turfId':?1}")
     List<BookedTimeSlot> findByDateAndTurfId(LocalDate date, String turfId);
