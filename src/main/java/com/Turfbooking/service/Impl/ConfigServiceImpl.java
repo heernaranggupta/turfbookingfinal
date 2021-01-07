@@ -82,24 +82,32 @@ public class ConfigServiceImpl implements ConfigService {
             ConfigResponse configResponse = null;
             if (flag) {
                 OpenCloseTime saveOpenCloseTime = OpenCloseTime.builder()
-                        .date(configRequest.getDate())
-                        .day(configRequest.getDay())
                         .openTime(configRequest.getOpenTime())
                         .closeTime(configRequest.getCloseTime())
                         .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                         .build();
 
+                if (null != configRequest.getDate()) {
+                    saveOpenCloseTime.setDate(configRequest.getDate());
+                } else if (null != configRequest.getDay()) {
+                    saveOpenCloseTime.setDay(configRequest.getDay());
+                }
+
                 List<StartEndTime> saveStartEndTimeList = new ArrayList<>();
-                for ( StartEndTimeRequest startEndTimeRequest : configRequest.getStartEndTimeRequestList()) {
+                for (StartEndTimeRequest startEndTimeRequest : configRequest.getStartEndTimeRequestList()) {
                     StartEndTime startEndTime = StartEndTime.builder()
-                            .date(configRequest.getDate())
-                            .day(configRequest.getDay())
                             .turfId(startEndTimeRequest.getTurfId())
                             .startTime(startEndTimeRequest.getStartTime())
                             .endTime(startEndTimeRequest.getEndTime())
                             .price(startEndTimeRequest.getPrice())
                             .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                             .build();
+                    if (null != configRequest.getDate()) {
+                        startEndTime.setDate(configRequest.getDate());
+                    } else if (null != configRequest.getDay()) {
+                        startEndTime.setDay(configRequest.getDay());
+                    }
+
                     saveStartEndTimeList.add(startEndTime);
                 }
                 OpenCloseTime savedOpenCloseTime = openCloseTimeRepository.save(saveOpenCloseTime);
