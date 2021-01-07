@@ -3,6 +3,8 @@ package com.Turfbooking.service.Impl;
 import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Business;
 import com.Turfbooking.documents.CancelledSlot;
+import com.Turfbooking.documents.OpenCloseTime;
+import com.Turfbooking.documents.StartEndTime;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.Turfs;
@@ -26,6 +28,8 @@ import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.repository.CancelledSlotRepository;
+import com.Turfbooking.repository.OpenCloseTimeRepository;
+import com.Turfbooking.repository.StartEndTimeRepository;
 import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
@@ -34,6 +38,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -49,6 +54,8 @@ public class BusinessServiceImpl implements BusinessService {
     private JwtTokenUtil jwtTokenUtil;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
     private CancelledSlotRepository cancelledSlotRepository;
+    private OpenCloseTimeRepository openCloseTimeRepository;
+    private StartEndTimeRepository startEndTimeRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -60,32 +67,34 @@ public class BusinessServiceImpl implements BusinessService {
     private long refreshTokenValidity;
 
     @Autowired
-    public BusinessServiceImpl(BusinessRepository businessRepository, JwtTokenUtil jwtTokenUtil, BookedTimeSlotRepository bookedTimeSlotRepository, CancelledSlotRepository cancelledSlotRepository) {
+    public BusinessServiceImpl(BusinessRepository businessRepository, JwtTokenUtil jwtTokenUtil, BookedTimeSlotRepository bookedTimeSlotRepository, CancelledSlotRepository cancelledSlotRepository, OpenCloseTimeRepository openCloseTimeRepository, StartEndTimeRepository startEndTimeRepository) {
         this.businessRepository = businessRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.cancelledSlotRepository = cancelledSlotRepository;
+        this.openCloseTimeRepository = openCloseTimeRepository;
+        this.startEndTimeRepository = startEndTimeRepository;
     }
 
     @Override
     public CreateBusinessResponse createBusinessUser(CreateBusinessRequest createBusinessRequest) {
         Business isBusinessExist = businessRepository.findByUsername(createBusinessRequest.getUsername());
-        if(null == isBusinessExist){
-            Business saveBusiness = new Business( createBusinessRequest.getUsername(),
+        if (null == isBusinessExist) {
+            Business saveBusiness = new Business(createBusinessRequest.getUsername(),
                     createBusinessRequest.getPassword(),
                     createBusinessRequest.getPhoneNumber(),
                     createBusinessRequest.getCompanyName(),
-                    createBusinessRequest.getRole() );
+                    createBusinessRequest.getRole());
 
             Business savedBusiness = businessRepository.save(saveBusiness);
             CustomBusinessUserDetails customBusinessUserDetails = new CustomBusinessUserDetails(savedBusiness);
-            String token = jwtTokenUtil.generateToken(createBusinessRequest.getUsername(),customBusinessUserDetails,accessSecret,accessTokenValidity);
-            String refreshToken = jwtTokenUtil.generateToken(createBusinessRequest.getUsername(),customBusinessUserDetails,refreshSecret,refreshTokenValidity);
-            CreateBusinessResponse response = new CreateBusinessResponse(new BusinessResponse(savedBusiness),token,refreshToken);
+            String token = jwtTokenUtil.generateToken(createBusinessRequest.getUsername(), customBusinessUserDetails, accessSecret, accessTokenValidity);
+            String refreshToken = jwtTokenUtil.generateToken(createBusinessRequest.getUsername(), customBusinessUserDetails, refreshSecret, refreshTokenValidity);
+            CreateBusinessResponse response = new CreateBusinessResponse(new BusinessResponse(savedBusiness), token, refreshToken);
             return response;
 
         } else {
-            throw new GeneralException("Username already exist",HttpStatus.OK);
+            throw new GeneralException("Username already exist", HttpStatus.OK);
         }
 
     }
@@ -151,9 +160,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest) throws GeneralException {
-
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(createRescheduleBookingRequest.getTurfId(), createRescheduleBookingRequest.getStartTime(), createRescheduleBookingRequest.getDate());
-
         if (null != bookedTimeSlot) {
             bookedTimeSlot = BookedTimeSlot.builder()
                     ._id(bookedTimeSlot.get_id())
@@ -179,53 +186,41 @@ public class BusinessServiceImpl implements BusinessService {
     public GetAllSlotsResponse getAllSlots(GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         int days = getAllSlotsBusinessRequest.getDate().compareTo(today);
+
+        OpenCloseTime openCloseTime = openCloseTimeRepository.findByDate(getAllSlotsBusinessRequest.getDate());
+        if (null == openCloseTime) {
+            DayOfWeek day = getAllSlotsBusinessRequest.getDate().getDayOfWeek();
+            openCloseTime = openCloseTimeRepository.findByDay(day.toString());
+        }
+
         //get all turfs which requested for slots
         List<String> turfs = getAllSlotsBusinessRequest.getTurfIds();
-
         GetAllSlotsResponse finalResponse = new GetAllSlotsResponse();
-
         if (days >= 0) { //means today or in future
             List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
-
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsBusinessRequest.getDate(), turf);
-                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsBusinessRequest.getDate(), getAllSlotsBusinessRequest.getOpenTime().toLocalTime(), getAllSlotsBusinessRequest.getCloseTime().toLocalTime(), getAllSlotsBusinessRequest.getSlotDuration());
-
+                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsBusinessRequest.getDate(), openCloseTime.getOpenTime(), openCloseTime.getCloseTime(), getAllSlotsBusinessRequest.getSlotDuration());
                 List<LocalTime> startDateTimeList = slotFromDB.stream()
                         .map(x -> x.getStartTime())
                         .collect(Collectors.toList());
 
-
-//                allSlotList.stream().
-//                        forEach((response) -> {
-//                            if (integerList.contains(response.getSlotNumber())) {
-//                                slotFromDB.stream().forEach((bookedSlot) -> {
-//                                    if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
-//                                        TimeSlotResponse bookedResponse = new TimeSlotResponse(bookedSlot);
-//                                        allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
-//                                    }
-//                                });
-//                            }
-//                        });
-
-
-                for( int i=0;i<allSlotList.size();i++){
+                for (int i = 0; i < allSlotList.size(); i++) {
                     if (startDateTimeList.contains(allSlotList.get(i).getStartTime())) {
-                        for (int j=0; j<slotFromDB.size();j++){
+                        for (int j = 0; j < slotFromDB.size(); j++) {
                             if (allSlotList.get(i).getStartTime() == slotFromDB.get(j).getStartTime()) {
                                 TimeSlotResponse bookedResponse = new TimeSlotResponse(slotFromDB.get(j));
-                                allSlotList.set(i,bookedResponse);
+                                allSlotList.set(i, bookedResponse);
                             }
                         }
                     }
                 }
 
-
-                if(allSlotList.get(0).getTurfId().equals(Turfs.TURF01.getValue())){
+                if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF01.getValue())) {
                     finalResponse.setTurf01(allSlotList);
-                }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF02.getValue())){
+                } else if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF02.getValue())) {
                     finalResponse.setTurf02(allSlotList);
-                }else if(allSlotList.get(0).getTurfId().equals(Turfs.TURF03.getValue())){
+                } else if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF03.getValue())) {
                     finalResponse.setTurf03(allSlotList);
                 }
             }
@@ -269,7 +264,7 @@ public class BusinessServiceImpl implements BusinessService {
         BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), cancelRequest.getStartTime(), cancelRequest.getDate());
         if (null != timeSlot) {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
-            cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
+            cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_BUSINESS.name());
             CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
             bookedTimeSlotRepository.deleteById(timeSlot.get_id());
             if (null != savedInDB) {
@@ -284,17 +279,32 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalTime openTime, LocalTime closeTime, int durationInMinutes) {
-        List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
-        LocalTime slotStartTime = openTime;
-        LocalTime slotEndTime;
-
-        //slot end time should be before close time.
-        while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
-            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new TimeSlotResponse(turfId, 200.00, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
-            slotStartTime = slotEndTime;
+        List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDate(date);
+        if (startEndTimeList.size() == 0) {
+            DayOfWeek day = date.getDayOfWeek();
+            startEndTimeList = startEndTimeRepository.findByDay(day.toString());
         }
 
+        List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
+        LocalTime slotStartTime = openTime;
+        LocalTime slotEndTime = null;
+
+        Double price = null;
+        for (StartEndTime startEndTime : startEndTimeList) {
+            if (startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
+                //slot end time should be before close time.
+                while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
+                    slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+                    if ((startEndTime.getStartTime().equals(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
+                        if (null != startEndTime.getPrice()) {
+                            price = startEndTime.getPrice();
+                        }
+                    }
+                    timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+                    slotStartTime = slotEndTime;
+                }
+            }
+        }
         return timeSlotsList;
     }
 
