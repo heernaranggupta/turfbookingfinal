@@ -81,8 +81,8 @@ public class ConfigServiceImpl implements ConfigService {
                 }
                 flag = true;
             } else if (null != configRequest.getDay()) {
-                OpenCloseTime openCloseTime = openCloseTimeRepository.findByDay(configRequest.getDay());
-                List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDay(configRequest.getDay());
+                OpenCloseTime openCloseTime = openCloseTimeRepository.findByDay(configRequest.getDay().toUpperCase());
+                List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDay(configRequest.getDay().toUpperCase());
                 if (null != openCloseTime && null != startEndTimeList) {
                     openCloseTimeRepository.delete(openCloseTime);
                     startEndTimeRepository.deleteAll(startEndTimeList);

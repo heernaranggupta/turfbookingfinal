@@ -56,7 +56,6 @@ public class BusinessController {
 //            condition = "#getAllSlotsBusinessRequest.date != null")
 @PostMapping("/all-slots")
 public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
-    log.info("Get all slots method executed. : " + getAllSlotsBusinessRequest.getTurfIds() + "--" + getAllSlotsBusinessRequest.getDate());
     CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
     return ResponseUtilities.createSuccessResponse(commonResponse);
 }
