@@ -35,10 +35,11 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public ConfigResponse getConfig(String day, String strDate) throws GeneralException {
-        LocalDate date = LocalDate.parse(strDate);
+
         OpenCloseTime openCloseTime = null;
         List<StartEndTime> startEndTimeList = new ArrayList<>();
-        if (null != date) {
+        if (null != strDate) {
+            LocalDate date = LocalDate.parse(strDate);
             openCloseTime = openCloseTimeRepository.findByDate(date);
             if (null != openCloseTime) {
                 startEndTimeList = startEndTimeRepository.findByDate(date);
@@ -58,7 +59,6 @@ public class ConfigServiceImpl implements ConfigService {
                         startEndTimeResponseList.add(timeResponse);
                     }
             );
-
             response = new ConfigResponse(openCloseTime, startEndTimeResponseList, "successfully loaded");
         } else {
             response = new ConfigResponse(null, null, "no data found");
