@@ -71,12 +71,22 @@ public class ConfigServiceImpl implements ConfigService {
     public List<ConfigResponse> addOrUpdateConfig(ConfigRequests configRequests) throws GeneralException {
         List<ConfigResponse> configResponses = new ArrayList<>();
         for (ConfigRequest configRequest : configRequests.getConfigRequests()) {
-            boolean flag = true;
-            OpenCloseTime openCloseTime = openCloseTimeRepository.findByDate(configRequest.getDate());
-            List<StartEndTime> startEndTimeList = startEndTimeRepository.deleteByDate(configRequest.getDate());
-            if (null != openCloseTime && null != startEndTimeList) {
-                openCloseTimeRepository.deleteByDate(configRequest.getDate());
-                startEndTimeRepository.deleteByDate(configRequest.getDate());
+            boolean flag = false;
+            if (null != configRequest.getDate()) {
+                OpenCloseTime openCloseTime = openCloseTimeRepository.findByDate(configRequest.getDate());
+                List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDate(configRequest.getDate());
+                if (null != openCloseTime && null != startEndTimeList) {
+                    openCloseTimeRepository.delete(openCloseTime);
+                    startEndTimeRepository.deleteAll(startEndTimeList);
+                }
+                flag = true;
+            } else if (null != configRequest.getDay()) {
+                OpenCloseTime openCloseTime = openCloseTimeRepository.findByDay(configRequest.getDay());
+                List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDay(configRequest.getDay());
+                if (null != openCloseTime && null != startEndTimeList) {
+                    openCloseTimeRepository.delete(openCloseTime);
+                    startEndTimeRepository.deleteAll(startEndTimeList);
+                }
                 flag = true;
             }
             ConfigResponse configResponse = null;
@@ -90,7 +100,7 @@ public class ConfigServiceImpl implements ConfigService {
                 if (null != configRequest.getDate()) {
                     saveOpenCloseTime.setDate(configRequest.getDate());
                 } else if (null != configRequest.getDay()) {
-                    saveOpenCloseTime.setDay(configRequest.getDay());
+                    saveOpenCloseTime.setDay(configRequest.getDay().toUpperCase());
                 }
 
                 List<StartEndTime> saveStartEndTimeList = new ArrayList<>();
@@ -105,7 +115,7 @@ public class ConfigServiceImpl implements ConfigService {
                     if (null != configRequest.getDate()) {
                         startEndTime.setDate(configRequest.getDate());
                     } else if (null != configRequest.getDay()) {
-                        startEndTime.setDay(configRequest.getDay());
+                        startEndTime.setDay(configRequest.getDay().toUpperCase());
                     }
 
                     saveStartEndTimeList.add(startEndTime);
@@ -133,7 +143,7 @@ public class ConfigServiceImpl implements ConfigService {
         List<StartEndTime> deletedConfig = null;
         deletedConfig = startEndTimeRepository.deleteByDate(date);
         if (null != deletedConfig) {
-            deletedConfig = startEndTimeRepository.deleteByDay(date);
+            deletedConfig = startEndTimeRepository.deleteByDay(day);
         }
 
         if (null != deletedConfig) {

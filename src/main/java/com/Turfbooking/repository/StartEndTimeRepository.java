@@ -21,7 +21,7 @@ public interface StartEndTimeRepository extends MongoRepository<StartEndTime, St
     List<StartEndTime> deleteByDate(LocalDate date);
 
     @Query("{'day': ?0}")
-    List<StartEndTime> deleteByDay(LocalDate date);
+    List<StartEndTime> deleteByDay(String day);
 
 
 }
