@@ -306,7 +306,7 @@ public class UserServiceImpl implements UserService {
                 //slot end time should be before close time.
                 while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
                     slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-                    if ((startEndTime.getStartTime().equals(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime))) {
+                    if ((startEndTime.getStartTime().equals(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
                         if (null != startEndTime.getPrice()) {
                             price = startEndTime.getPrice();
                         }

@@ -19,7 +19,6 @@ import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -51,16 +50,16 @@ public class BusinessController {
     }
 
 
-    @Cacheable(
-            value = "listOfSlotsByTurfIdAndDate",
-            key = "#getAllSlotsBusinessRequest.date.toString()",
-            condition = "#getAllSlotsBusinessRequest.date != null")
-    @PostMapping("/all-slots")
-    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
-        log.info("Get all slots method executed. : " + getAllSlotsBusinessRequest.getTurfIds() + "--" + getAllSlotsBusinessRequest.getDate());
-        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
-        return ResponseUtilities.createSuccessResponse(commonResponse);
-    }
+//    @Cacheable(
+//            value = "listOfSlotsByTurfIdAndDate",
+//            key = "#getAllSlotsBusinessRequest.date.toString()",
+//            condition = "#getAllSlotsBusinessRequest.date != null")
+@PostMapping("/all-slots")
+public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
+    log.info("Get all slots method executed. : " + getAllSlotsBusinessRequest.getTurfIds() + "--" + getAllSlotsBusinessRequest.getDate());
+    CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
+    return ResponseUtilities.createSuccessResponse(commonResponse);
+}
 
 
     @PostMapping("/login")

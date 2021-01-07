@@ -6,6 +6,7 @@ import com.Turfbooking.models.response.ConfigResponse;
 import com.Turfbooking.service.ConfigService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +25,7 @@ public class ConfigController {
 
 
     @PostMapping("/add")
-    public CommonResponse<List<ConfigResponse>> addConfig(@RequestBody ConfigRequests configRequests){
+    public CommonResponse<List<ConfigResponse>> addConfig(@RequestBody ConfigRequests configRequests) {
         CommonResponse response = new CommonResponse(configService.addOrUpdateConfig(configRequests));
         return ResponseUtilities.createSuccessResponse(response);
     }
@@ -34,5 +35,13 @@ public class ConfigController {
                                     @RequestParam(required = false) String date) {
         CommonResponse response = new CommonResponse(configService.getConfig(day, date));
         return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @DeleteMapping("/delete")
+    public CommonResponse deleteConfig(@RequestParam(required = false) String day,
+                                       @RequestParam(required = false) String date) {
+        CommonResponse response = new CommonResponse(configService.deleteConfigByDate(day, date));
+        return ResponseUtilities.createSuccessResponse(response);
+
     }
 }

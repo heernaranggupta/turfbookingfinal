@@ -120,9 +120,14 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     @Transactional
-    public String deleteConfigByDate(String strDate) {
+    public String deleteConfigByDate(String day, String strDate) {
         LocalDate date = LocalDate.parse(strDate);
-        List<StartEndTime> deletedConfig = startEndTimeRepository.deleteByDate(date);
+        List<StartEndTime> deletedConfig = null;
+        deletedConfig = startEndTimeRepository.deleteByDate(date);
+        if (null != deletedConfig) {
+            deletedConfig = startEndTimeRepository.deleteByDay(date);
+        }
+
         if (null != deletedConfig) {
             return "deleted successfully";
         }

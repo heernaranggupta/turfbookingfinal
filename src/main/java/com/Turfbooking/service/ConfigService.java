@@ -11,6 +11,6 @@ public interface ConfigService {
 
     ConfigResponse getConfig(String day, String date);
 
-    String deleteConfigByDate(String date);
+    String deleteConfigByDate(String day, String date);
 
 }
