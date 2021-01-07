@@ -51,6 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -195,7 +196,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
-        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTime(cancelRequest.getTurfId(), cancelRequest.getStartTime());
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), cancelRequest.getStartTime(), cancelRequest.getDate());
         if (null != timeSlot) {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
@@ -215,7 +216,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
-        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTime(updateRequest.getTurfId(), updateRequest.getStartTime());
+        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(updateRequest.getTurfId(), updateRequest.getStartTime(), updateRequest.getDate());
         if (null != isSlotBooked) {
             throw new GeneralException("Slot which you want to book is already booked.", HttpStatus.OK);
         }
@@ -259,7 +260,7 @@ public class UserServiceImpl implements UserService {
             for (String turf : turfs) {
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
                 List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, openCloseTime.getDate(), openCloseTime.getOpenTime(), openCloseTime.getCloseTime(), getAllSlotsRequest.getSlotDuration());
-                List<LocalDateTime> startDateTimeList = slotFromDB.stream()
+                List<LocalTime> startDateTimeList = slotFromDB.stream()
                         .map(x -> x.getStartTime())
                         .collect(Collectors.toList());
 
@@ -288,7 +289,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+    private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalTime openTime, LocalTime closeTime, int durationInMinutes) {
         List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDate(date);
         if (null == startEndTimeList) {
             DayOfWeek day = date.getDayOfWeek();
@@ -296,8 +297,8 @@ public class UserServiceImpl implements UserService {
         }
 
         List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
-        LocalDateTime slotStartTime = openTime;
-        LocalDateTime slotEndTime = null;
+        LocalTime slotStartTime = openTime;
+        LocalTime slotEndTime = null;
 
         Double price = null;
         for (StartEndTime startEndTime : startEndTimeList) {
@@ -305,7 +306,7 @@ public class UserServiceImpl implements UserService {
                 //slot end time should be before close time.
                 while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
                     slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-                    if ((startEndTime.getStartTime().isEqual(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && turfId.equalsIgnoreCase(startEndTime.getTurfId())) {
+                    if ((startEndTime.getStartTime().equals(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
                         if (null != startEndTime.getPrice()) {
                             price = startEndTime.getPrice();
                         }

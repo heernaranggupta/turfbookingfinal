@@ -1,12 +1,11 @@
 package com.Turfbooking.models.response;
 
 import com.Turfbooking.documents.OpenCloseTime;
-import com.Turfbooking.documents.StartEndTime;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -15,17 +14,17 @@ public class ConfigResponse {
 
     private String day;
     private LocalDate date;
-    private LocalDateTime openTime;
-    private LocalDateTime closeTime;
-    private List<StartEndTime> startEndTimeList;
+    private LocalTime openTime;
+    private LocalTime closeTime;
+    private List<StartEndTimeResponse> startEndTimeResponseList;
     private String message;
 
-    public ConfigResponse(OpenCloseTime openCloseTime, List<StartEndTime> startEndTimeList, String message) {
+    public ConfigResponse(OpenCloseTime openCloseTime, List<StartEndTimeResponse> startEndTimeResponseList, String message) {
         this.day = openCloseTime.getDay();
         this.date = openCloseTime.getDate();
         this.openTime = openCloseTime.getOpenTime();
         this.closeTime = openCloseTime.getCloseTime();
-        this.startEndTimeList = startEndTimeList;
+        this.startEndTimeResponseList = startEndTimeResponseList;
         this.message = message;
     }
 }

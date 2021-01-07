@@ -5,7 +5,7 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @Valid
@@ -16,7 +16,7 @@ public class TimeSlotRequest {
     private Double price;
     private LocalDate date;
     @NotEmpty
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
 
 }

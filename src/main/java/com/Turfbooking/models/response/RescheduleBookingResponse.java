@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 public class RescheduleBookingResponse {
@@ -14,8 +15,8 @@ public class RescheduleBookingResponse {
     private String turfId;
     private String status;
     private LocalDate date;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private LocalDateTime timestamp;
 
     public RescheduleBookingResponse(BookedTimeSlot bookedTimeSlot) {

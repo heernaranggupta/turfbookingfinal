@@ -3,14 +3,14 @@ package com.Turfbooking.models.common;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Setter
 public class StartEndTimeRequest {
 
     private String turfId;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private Double price;
 }
