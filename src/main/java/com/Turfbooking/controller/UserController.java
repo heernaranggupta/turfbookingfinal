@@ -18,7 +18,6 @@ import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,21 +63,21 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            allEntries = true,
-            condition = "#cancelOrUnavailableSlotRequest.turfId != null")
-    @PostMapping("cancel-booking")
-    public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
-        TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
-        CommonResponse response = new CommonResponse(timeSlotResponse);
-        return response;
-    }
+//    @CacheEvict(
+//            value = "listOfSlotsByTurfIdAndDate",
+//            allEntries = true,
+//            condition = "#cancelOrUnavailableSlotRequest.turfId != null")
+@PostMapping("cancel-booking")
+public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+    TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
+    CommonResponse response = new CommonResponse(timeSlotResponse);
+    return response;
+}
 
-    @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            allEntries = true,
-            condition = "#updateBookedTimeSlotRequest.turfId != null")
+    //    @CacheEvict(
+//            value = "listOfSlotsByTurfIdAndDate",
+//            allEntries = true,
+//            condition = "#updateBookedTimeSlotRequest.turfId != null")
     @PostMapping("update-booking")
     public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest) {
         TimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);

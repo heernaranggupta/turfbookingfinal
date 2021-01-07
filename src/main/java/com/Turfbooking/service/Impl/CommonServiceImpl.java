@@ -244,7 +244,7 @@ public class CommonServiceImpl implements CommonService {
 
         List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
         for (TimeSlotRequest request : orderRequest.getTimeSlots()) {
-            BookedTimeSlot slot = bookedTimeSlotRepository.findByTurfIdAndStartTime(request.getTurfId(),request.getStartTime());
+            BookedTimeSlot slot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(request.getTurfId(), request.getStartTime(), request.getDate());
             if (null == slot) {
                 timeSlotRequests.add(request);
             } else {
