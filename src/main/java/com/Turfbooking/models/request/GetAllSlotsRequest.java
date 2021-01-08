@@ -16,5 +16,9 @@ public class GetAllSlotsRequest {
     private LocalDate date;
     private Integer slotDuration;
 
+    public GetAllSlotsRequest(GetAvailableSlotsRequest getAvailableSlotsRequest) {
+        this.setTurfIds(getAvailableSlotsRequest.getTurfIds());
+        this.setDate(getAvailableSlotsRequest.getDate());
+        this.setSlotDuration(30);
+    }
 }
-

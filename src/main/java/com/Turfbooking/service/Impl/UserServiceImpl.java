@@ -14,14 +14,7 @@ import com.Turfbooking.models.common.Slot;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.mics.CustomUserDetails;
-import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
-import com.Turfbooking.models.request.CartRequest;
-import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
-import com.Turfbooking.models.request.RemoveCartRequest;
-import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
-import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.request.*;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.CartResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
@@ -48,6 +41,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Struct;
+import java.sql.Time;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -259,6 +254,7 @@ public class UserServiceImpl implements UserService {
             List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
+//                System.out.println(slotFromDB);
                 List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), openCloseTime.getOpenTime(), openCloseTime.getCloseTime(), getAllSlotsRequest.getSlotDuration());
                 List<LocalTime> startDateTimeList = slotFromDB.stream()
                         .map(x -> x.getStartTime())
@@ -460,6 +456,279 @@ public class UserServiceImpl implements UserService {
             }
         }
         return null;
+    }
+
+    @Override
+    public GetAllSlotsResponse getAvailableSlot(GetAvailableSlotsRequest getAvailableSlotsRequest) {
+
+
+
+        List<List<String>> bookturfSlotsId= new ArrayList<>();
+        List<List<String>> allturfSlotsId= new ArrayList<>();
+//        System.out.println();
+
+        GetAllSlotsRequest getAllSlotsRequest = new GetAllSlotsRequest(getAvailableSlotsRequest);
+        GetAllSlotsResponse allSlotsByDate = this.getAllSlotsByDate(getAllSlotsRequest);
+
+        List<TimeSlotResponse> turf01 = allSlotsByDate.getTurf01();
+        List<TimeSlotResponse> turf02 = allSlotsByDate.getTurf02();
+        List<TimeSlotResponse> turf03 =  allSlotsByDate.getTurf03();
+
+        if(null!=turf01)
+            allturfSlotsId.add(this.generateSlotId(turf01));
+
+        if(null!=turf02)
+        allturfSlotsId.add(this.generateSlotId(turf02));
+
+        if(null!=turf03)
+        allturfSlotsId.add(this.generateSlotId(turf03));
+
+
+//        System.out.println("\n\tAll TurfId\n");
+//        System.out.println(allturfSlotsId);
+
+        for(String turf:getAvailableSlotsRequest.getTurfIds()) {
+//            System.out.println("HIHI");
+            List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByDateAndTurfId(getAvailableSlotsRequest.getDate(),turf);
+
+            List<TimeSlotResponse> bookingslots = new ArrayList<>();
+
+            for(BookedTimeSlot bst:bookedTimeSlots){
+                TimeSlotResponse bookedslotresponse = TimeSlotResponse.builder()
+                        .bookingId(bst.getBookingId())
+                        .userId(bst.getUserId())
+                        .turfId(bst.getTurfId())
+                        .price(bst.getPrice())
+                        .status(bst.getStatus())
+                        .date(bst.getDate())
+                        .startTime(bst.getStartTime())
+                        .endTime(bst.getEndTime())
+                        .timestamp(bst.getTimeStamp())
+                        .build();
+
+                bookingslots.add(bookedslotresponse);
+
+
+
+            }
+
+//            System.out.println();
+
+            bookturfSlotsId.add(this.generateSlotId(bookingslots));
+//            allturfSlotsId.add(this.generateSlotId())
+        }
+//        System.out.println(bookturfSlotsId);
+
+//        System.out.println("\n\tAll Slots\n");
+        List<List<String>> allCopy = new ArrayList<>(allturfSlotsId);
+        List<String> avaSlotsIds = new ArrayList<>();
+        for(List<String> alls:allturfSlotsId) {
+
+                for(List<String> books:bookturfSlotsId)
+                {
+                    for(String book:books)
+                    {
+                        if(alls.contains(book))
+                        {
+                            alls.remove(book);
+                        }
+
+                    }
+                }
+
+
+        }
+
+//        System.out.println();
+        return this.generateSlotsFromId(allturfSlotsId);
+//        return null;
+    }
+
+    private GetAllSlotsResponse generateSlotsFromId(List<List<String>> tempSlotIds)
+    {
+        List<String> turf01Ids=new ArrayList<>();
+        List<String> turf02Ids=new ArrayList<>();
+        List<String> turf03Ids=new ArrayList<>();
+
+        List<TimeSlotResponse> turf01 = new ArrayList<>();
+        List<TimeSlotResponse> turf02= new ArrayList<>();
+        List<TimeSlotResponse> turf03= new ArrayList<>();
+
+        for(List<String> tempSlotId:tempSlotIds)
+        {
+            for(String temp:tempSlotId)
+            {
+                if(temp.startsWith("01"))
+                {
+                    turf01Ids.add(temp);
+                }
+                else if(temp.startsWith("02"))
+                {
+                    turf02Ids.add(temp);
+                }
+                else if(temp.startsWith("03"))
+                {
+                    turf03Ids.add(temp);
+                }
+            }
+        }
+
+
+
+
+
+        int hrs=0,min=0,day=0,month=0,yr=0;
+
+//        String tempHrs="",tempMin="",tempDay="",tempMonth="";
+
+        for(String temp01 : turf01Ids)
+        {
+//            System.out.println("Size\t"+turf01Ids.size());
+//            tempHrs = ;
+            hrs = Integer.parseInt(""+temp01.charAt(2)+temp01.charAt(3));
+            min = Integer.parseInt(""+temp01.charAt(4)+temp01.charAt(5));
+            day = Integer.parseInt(""+temp01.charAt(6)+temp01.charAt(7));
+            month = Integer.parseInt(""+temp01.charAt(8)+temp01.charAt(9));
+            yr = Integer.parseInt(""+temp01.charAt(10)+temp01.charAt(11)+temp01.charAt(12)+temp01.charAt(13));
+
+            LocalTime time = LocalTime.of(hrs,min);
+            LocalDate date = LocalDate.of(yr,month,day);
+//            System.out.println(date+"\t"+time);
+//            System.out.println(time+""+date);
+            TimeSlotResponse build = new TimeSlotResponse();
+                    build.setBookingId("null");
+                    build.setUserId("null");
+                    build.setTurfId(Turfs.TURF01.name());
+                    build.setPrice(0D);
+                    build.setStatus(BookingStatus.AVAILABLE.name());
+                    build.setDate(date);
+                    build.setStartTime(time);
+                    build.setEndTime(time.plusMinutes(30));
+                    build.setTimestamp(LocalDateTime.now());
+
+//            System.out.println(build);
+            turf01.add(build);
+        }
+
+
+
+//        String tempHrs="",tempMin="",tempDay="",tempMonth="";
+
+        for(String temp02 : turf02Ids)
+        {
+//            tempHrs = ;
+            hrs = Integer.parseInt(""+temp02.charAt(2)+temp02.charAt(3));
+            min = Integer.parseInt(""+temp02.charAt(4)+temp02.charAt(5));
+            day = Integer.parseInt(""+temp02.charAt(6)+temp02.charAt(7));
+            month = Integer.parseInt(""+temp02.charAt(8)+temp02.charAt(9));
+            yr = Integer.parseInt(""+temp02.charAt(10)+temp02.charAt(11)+temp02.charAt(12)+temp02.charAt(13));
+
+            LocalTime time = LocalTime.of(hrs,min);
+            LocalDate date = LocalDate.of(yr,month,day);
+//            System.out.println(time+""+date);
+            TimeSlotResponse build = TimeSlotResponse.builder()
+                    .bookingId("null")
+                    .userId("null")
+                    .turfId(Turfs.TURF02.name())
+                    .price(0D)
+                    .status(BookingStatus.AVAILABLE.name())
+                    .date(date)
+                    .startTime(time)
+                    .endTime(time.plusMinutes(30))
+                    .timestamp(LocalDateTime.now())
+                    .build();
+            turf02.add(build);
+        }
+
+        for(String temp03 : turf03Ids)
+        {
+//            tempHrs = ;
+            hrs = Integer.parseInt(""+temp03.charAt(2)+temp03.charAt(3));
+            min = Integer.parseInt(""+temp03.charAt(4)+temp03.charAt(5));
+            day = Integer.parseInt(""+temp03.charAt(6)+temp03.charAt(7));
+            month = Integer.parseInt(""+temp03.charAt(8)+temp03.charAt(9));
+            yr = Integer.parseInt(""+temp03.charAt(10)+temp03.charAt(11)+temp03.charAt(12)+temp03.charAt(13));
+
+            LocalTime time = LocalTime.of(hrs,min);
+            LocalDate date = LocalDate.of(yr,month,day);
+//            System.out.println(time+""+date);
+            TimeSlotResponse build = TimeSlotResponse.builder()
+                    .bookingId("null")
+                    .userId("null")
+                    .turfId(Turfs.TURF03.name())
+                    .price(0D)
+                    .status(BookingStatus.AVAILABLE.name())
+                    .date(date)
+                    .startTime(time)
+                    .endTime(time.plusMinutes(30))
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            turf03.add(build);
+        }
+        GetAllSlotsResponse getAllSlotsResponse = new GetAllSlotsResponse();
+
+        getAllSlotsResponse.setTurf01(turf01);
+        getAllSlotsResponse.setTurf02(turf02);
+        getAllSlotsResponse.setTurf03(turf03);
+
+        return getAllSlotsResponse;
+
+
+//        return null;
+    }
+
+    private List<String> generateSlotId(List<TimeSlotResponse> timeSlotResponses)
+    {
+        List<String> slotIds = new ArrayList<>();
+        String turfId="";
+
+        for(TimeSlotResponse temp:timeSlotResponses)
+        {
+            if(temp.getTurfId().equals("turf01"))
+            {
+                turfId = "01";
+            }
+            else if(temp.getTurfId().equals("turf02"))
+            {
+                turfId = "02";
+            }
+            if(temp.getTurfId().equals("turf03"))
+            {
+                turfId = "03";
+            }
+
+            String day = ""+temp.getDate().getDayOfMonth();
+            String month = ""+temp.getDate().getMonthValue();
+            String hrs = ""+temp.getStartTime().getHour();
+            String min = ""+temp.getStartTime().getMinute();
+            String yr = ""+temp.getDate().getYear();
+            if(day.length()<2)
+            {
+                day="0"+day;
+            }
+
+
+            if(month.length()<2){
+                month = "0"+month;
+            }
+
+
+            if(hrs.length()<2){
+                hrs = "0"+hrs;
+            }
+
+
+            if(min.length()<2){
+                min = "0"+min;
+            }
+            slotIds.add(turfId+hrs+min+day+month+yr);
+//            System.out.println();
+//            System.out.println();
+//            System.out.println("Turfid :"+turfId+"\tDay :"+day+"\tMonth"+month+"\tStartTime :"+"  hrs :"+hrs+"  minutes :"+min+"\tEndTime :"+temp.getEndTime());
+        }
+
+        return slotIds;
     }
 
     @Scheduled(cron = "0 15 10 1 * ?", zone = "Asia/Kolkata")

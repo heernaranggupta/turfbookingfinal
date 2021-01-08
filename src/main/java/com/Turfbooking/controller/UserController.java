@@ -1,19 +1,8 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
-import com.Turfbooking.models.request.CartRequest;
-import com.Turfbooking.models.request.CreateUserRequest;
-import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
-import com.Turfbooking.models.request.GetAllSlotsRequest;
-import com.Turfbooking.models.request.RemoveCartRequest;
-import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
-import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.CommonResponse;
-import com.Turfbooking.models.response.CreateUserLoginResponse;
-import com.Turfbooking.models.response.CreateUserResponse;
-import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
-import com.Turfbooking.models.response.TimeSlotResponse;
+import com.Turfbooking.models.common.Slot;
+import com.Turfbooking.models.request.*;
+import com.Turfbooking.models.response.*;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -115,6 +108,20 @@ public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotReque
     public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest){
         CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
         return ResponseUtilities.createSucessResponseWithMessage(response,"Slot successfully removed");
+    }
+
+    @PostMapping("/get-avai-slots")
+    public CommonResponse<GetAllSlotsResponse> getAvailableSlots(@Valid @RequestBody GetAvailableSlotsRequest getAvailableSlotsRequest)
+    {
+        LocalTime before = LocalTime.now();
+        CommonResponse<GetAllSlotsResponse> response = new CommonResponse<>(userService.getAvailableSlot(getAvailableSlotsRequest),200,"Avaialble SLots are Here",true, LocalDateTime.now());
+
+        LocalTime after = LocalTime.now();
+
+        System.out.println("Before :"+before+"\t After :"+after);
+        System.out.println("Difference is :"+before.until(after, ChronoUnit.SECONDS));
+        System.out.println("Difference is :"+before.until(after, ChronoUnit.MILLIS));
+            return response;
     }
 
 }
