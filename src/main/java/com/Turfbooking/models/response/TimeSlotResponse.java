@@ -26,6 +26,7 @@ public class TimeSlotResponse {
         this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
+        this.price = bookedTimeSlot.getPrice();
         this.status = bookedTimeSlot.getStatus();
         this.date = bookedTimeSlot.getDate();
         this.startTime = bookedTimeSlot.getStartTime();
@@ -37,6 +38,7 @@ public class TimeSlotResponse {
         this.bookingId = cancelledSlot.getBookingId();
         this.userId = cancelledSlot.getUserId();
         this.turfId = cancelledSlot.getTurfId();
+        this.price = cancelledSlot.getPrice();
         this.status = cancelledSlot.getStatus();
         this.date = cancelledSlot.getDate();
         this.startTime = cancelledSlot.getStartTime();
