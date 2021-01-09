@@ -573,10 +573,6 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-
-
-
-
         int hrs=0,min=0,day=0,month=0,yr=0;
 
 //        String tempHrs="",tempMin="",tempDay="",tempMonth="";
