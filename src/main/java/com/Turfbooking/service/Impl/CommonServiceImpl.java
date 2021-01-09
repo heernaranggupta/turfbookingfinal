@@ -46,7 +46,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -303,22 +305,30 @@ public class CommonServiceImpl implements CommonService {
 
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
         for (TimeSlotRequest timeSlotRequest : slotValidationRequest.getTimeSlotRequestList()) {
+            Boolean flag = true;
             BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), timeSlotRequest.getStartTime(), timeSlotRequest.getDate());
             if (null != isBookedTimeSlot) {
                 TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
                 timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
                 timeSlotResponses.add(timeSlotResponse);
+                flag = false;
+            } else {
+                LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+                LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));
+                if (timeSlotRequest.getDate().isBefore(today) || timeSlotRequest.getDate().equals(today)) {
+                    if (timeSlotRequest.getStartTime().isBefore(now) || timeSlotRequest.getStartTime().equals(now)) {
+                        TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
+                        timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
+                        timeSlotResponses.add(timeSlotResponse);
+                        flag = false;
+                    }
+                }
             }
-
-//            LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
-//            LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));
-//            if(timeSlotRequest.getDate().isBefore(today) || timeSlotRequest.getDate().equals(today)){
-//                if(timeSlotRequest.getStartTime().isBefore(now) || timeSlotRequest.getStartTime().equals(now)){
-//                    TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
-//                    timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
-//                    timeSlotResponses.add(timeSlotResponse);
-//                }
-//            }
+            if (flag) {
+                TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
+                timeSlotResponse.setStatus(BookingStatus.AVAILABLE.name());
+                timeSlotResponses.add(timeSlotResponse);
+            }
         }
 
         SlotValidationResponse slotValidationResponse = new SlotValidationResponse();
