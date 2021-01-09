@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -43,13 +44,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Struct;
 import java.sql.Time;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -246,7 +247,18 @@ public class UserServiceImpl implements UserService {
             DayOfWeek day = getAllSlotsRequest.getDate().getDayOfWeek();
             openCloseTime = openCloseTimeRepository.findByDay(day.toString());
         }
+        System.out.println("Open Time :"+openCloseTime.getOpenTime()+"\tClose Time :"+openCloseTime.getCloseTime()
+                +"\tDate :"+openCloseTime.getDate());
 
+        LocalDateTime ldt  = openCloseTime.getOpenTime().atDate(getAllSlotsRequest.getDate());
+        ZoneId zoneId = ZoneId.of("Asia/Kolkata");
+        Instant instant = ldt.atZone(zoneId).toInstant();
+        System.out.println("Instant- " + instant);
+//        LocalTime time = LocalTime.ofInstant(instant,zoneId);
+        LocalTime time = instant.atZone(ZoneOffset.UTC).toLocalTime();
+        System.out.println("Time is :"+time);
+
+//        System.out.println(LocalDateTime.now());
         //get all turfs which requested for slots
         List<String> turfs = getAllSlotsRequest.getTurfIds();
         GetAllSlotsResponse finalResponse = new GetAllSlotsResponse();
