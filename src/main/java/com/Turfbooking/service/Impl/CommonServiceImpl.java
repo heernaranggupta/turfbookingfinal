@@ -1,10 +1,6 @@
 package com.Turfbooking.service.Impl;
 
-import com.Turfbooking.documents.BookedTimeSlot;
-import com.Turfbooking.documents.Cart;
-import com.Turfbooking.documents.Order;
-import com.Turfbooking.documents.Otp;
-import com.Turfbooking.documents.User;
+import com.Turfbooking.documents.*;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.miscellaneous.StringConstants;
 import com.Turfbooking.models.enums.BookingStatus;
@@ -13,19 +9,9 @@ import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
 import com.Turfbooking.models.mics.CustomUserDetails;
-import com.Turfbooking.models.request.GenerateOtpRequest;
-import com.Turfbooking.models.request.OrderRequest;
-import com.Turfbooking.models.request.TimeSlotRequest;
-import com.Turfbooking.models.request.ValidateOtpRequest;
-import com.Turfbooking.models.response.CreateResponse;
-import com.Turfbooking.models.response.OrderResponse;
-import com.Turfbooking.models.response.UserResponse;
-import com.Turfbooking.models.response.ValidateOtpResponse;
-import com.Turfbooking.repository.BookedTimeSlotRepository;
-import com.Turfbooking.repository.CartRepository;
-import com.Turfbooking.repository.OrderRepository;
-import com.Turfbooking.repository.OtpRepository;
-import com.Turfbooking.repository.UserRepository;
+import com.Turfbooking.models.request.*;
+import com.Turfbooking.models.response.*;
+import com.Turfbooking.repository.*;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
@@ -62,6 +48,7 @@ public class CommonServiceImpl implements CommonService {
     private OrderRepository orderRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
     private CartRepository cartRepository;
+    private PaymentDetailsRepository paymentDetailsRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -85,7 +72,7 @@ public class CommonServiceImpl implements CommonService {
     private JavaMailSender javaMailSender;
 
     @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository,CartRepository cartRepository) {
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository,CartRepository cartRepository,PaymentDetailsRepository paymentDetailsRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.otpRepository = otpRepository;
         this.restTemplate = restTemplate;
@@ -93,6 +80,7 @@ public class CommonServiceImpl implements CommonService {
         this.orderRepository = orderRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.cartRepository = cartRepository;
+        this.paymentDetailsRepository = paymentDetailsRepository;
     }
 
     @Override
@@ -272,6 +260,22 @@ public class CommonServiceImpl implements CommonService {
         response.setTimeSlots(bookedTimeSlotList);
         return response;
 
+    }
+
+    @Override
+    public PaymentDetailsResponse savePaymentDetails(PaymentDetailsRequest paymentDetailsRequest) {
+
+        PaymentDetails paymentDetails = PaymentDetails.builder()
+                .paymentId(paymentDetailsRequest.getPaymentId())
+                .userPhoneNumber(paymentDetailsRequest.getUserPhoneNumber())
+                .bookingId(paymentDetailsRequest.getBookingId())
+                .build();
+
+        PaymentDetails savedPaymentDetails = paymentDetailsRepository.insert(paymentDetails);
+
+        PaymentDetailsResponse paymentDetailsResponse = new PaymentDetailsResponse(savedPaymentDetails);
+
+        return paymentDetailsResponse;
     }
 
     private List<BookedTimeSlot> bookSlot(List<TimeSlotRequest> timeSlotRequestList, String userId) throws GeneralException {

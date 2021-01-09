@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Setter
 @Getter
@@ -20,6 +21,11 @@ public class CommonResponse<T> implements Serializable {
 
     public CommonResponse(T body) {
         this.body = body;
+    }
+
+    public CommonResponse(T body,LocalDateTime timestamp) {
+        this.body = body;
+        this.timestamp=timestamp;
     }
 
     public CommonResponse(T body, int code, String message, Boolean success) {

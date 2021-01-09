@@ -2,9 +2,11 @@ package com.Turfbooking.service;
 
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.OrderRequest;
+import com.Turfbooking.models.request.PaymentDetailsRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.OrderResponse;
+import com.Turfbooking.models.response.PaymentDetailsResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 
 public interface CommonService {
@@ -14,4 +16,6 @@ public interface CommonService {
     ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest);
 
     OrderResponse placeOrder(OrderRequest orderRequest);
+
+    PaymentDetailsResponse savePaymentDetails(PaymentDetailsRequest paymentDetailsRequest);
 }
