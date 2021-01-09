@@ -2,6 +2,7 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.OrderRequest;
+import com.Turfbooking.models.request.SlotValidationRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateResponse;
@@ -50,5 +51,9 @@ public class CommonController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-
+    @PostMapping("/validate")
+    public CommonResponse slotAvailableOrNot(@RequestBody SlotValidationRequest slotValidationRequest) {
+        CommonResponse response = new CommonResponse(commonService.validateSlotAvailableOrNot(slotValidationRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
 }
