@@ -1,6 +1,7 @@
 package com.Turfbooking.models.request;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.Valid;
@@ -10,6 +11,7 @@ import java.util.List;
 @Valid
 @Getter
 @Setter
+@NoArgsConstructor
 public class GetAllSlotsRequest {
 
     private List<String> turfIds;

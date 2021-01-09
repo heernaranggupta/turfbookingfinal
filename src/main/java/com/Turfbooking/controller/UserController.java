@@ -87,6 +87,7 @@ public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotReque
 
     @PostMapping("/get-all-slots-by-date")
     public CommonResponse getAllSlotsByDate(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
+//        System.out.println(getAllSlotsRequest);
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
