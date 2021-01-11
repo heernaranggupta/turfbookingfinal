@@ -140,13 +140,26 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional
     public String deleteConfigByDate(String day, String strDate) {
         LocalDate date = LocalDate.parse(strDate);
-        List<StartEndTime> deletedConfig = null;
-        deletedConfig = startEndTimeRepository.deleteByDate(date);
-        if (null != deletedConfig) {
-            deletedConfig = startEndTimeRepository.deleteByDay(day);
+        List<StartEndTime> deletedStartEndTimeList = null;
+        OpenCloseTime deleteOpenCloseTime = openCloseTimeRepository.findByDate(date);
+        if (null != deleteOpenCloseTime) {
+            openCloseTimeRepository.delete(deleteOpenCloseTime);
+            deletedStartEndTimeList = startEndTimeRepository.findByDate(date);
+            startEndTimeRepository.deleteAll(deletedStartEndTimeList);
+            deletedStartEndTimeList = startEndTimeRepository.findByDate(date);
+            deleteOpenCloseTime = openCloseTimeRepository.findByDate(date);
+        } else {
+            deleteOpenCloseTime = openCloseTimeRepository.findByDay(day);
+            if (null != deleteOpenCloseTime) {
+                openCloseTimeRepository.delete(deleteOpenCloseTime);
+                deletedStartEndTimeList = startEndTimeRepository.findByDay(day);
+                startEndTimeRepository.deleteAll(deletedStartEndTimeList);
+                deletedStartEndTimeList = startEndTimeRepository.findByDay(day);
+                deleteOpenCloseTime = openCloseTimeRepository.findByDay(day);
+            }
         }
 
-        if (null != deletedConfig) {
+        if (deletedStartEndTimeList.size() == 0 && null == deleteOpenCloseTime) {
             return "deleted successfully";
         }
         return "error in deletion";

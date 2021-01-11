@@ -15,10 +15,13 @@ import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
 import com.Turfbooking.models.mics.CustomUserDetails;
 import com.Turfbooking.models.request.GenerateOtpRequest;
 import com.Turfbooking.models.request.OrderRequest;
+import com.Turfbooking.models.request.SlotValidationRequest;
 import com.Turfbooking.models.request.TimeSlotRequest;
 import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.OrderResponse;
+import com.Turfbooking.models.response.SlotValidationResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
@@ -43,7 +46,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -301,4 +306,39 @@ public class CommonServiceImpl implements CommonService {
         return bookedTimeSlotList;
     }
 
+    @Override
+    public SlotValidationResponse validateSlotAvailableOrNot(SlotValidationRequest slotValidationRequest) throws GeneralException {
+
+        List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
+        for (TimeSlotRequest timeSlotRequest : slotValidationRequest.getTimeSlotRequestList()) {
+            Boolean flag = true;
+            BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), timeSlotRequest.getStartTime(), timeSlotRequest.getDate());
+            if (null != isBookedTimeSlot) {
+                TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
+                timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
+                timeSlotResponses.add(timeSlotResponse);
+                flag = false;
+            } else {
+                LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+                LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));
+                if (timeSlotRequest.getDate().isBefore(today) || timeSlotRequest.getDate().equals(today)) {
+                    if (timeSlotRequest.getStartTime().isBefore(now) || timeSlotRequest.getStartTime().equals(now)) {
+                        TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
+                        timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
+                        timeSlotResponses.add(timeSlotResponse);
+                        flag = false;
+                    }
+                }
+            }
+            if (flag) {
+                TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
+                timeSlotResponse.setStatus(BookingStatus.AVAILABLE.name());
+                timeSlotResponses.add(timeSlotResponse);
+            }
+        }
+
+        SlotValidationResponse slotValidationResponse = new SlotValidationResponse();
+        slotValidationResponse.setTimeSlotResponses(timeSlotResponses);
+        return slotValidationResponse;
+    }
 }

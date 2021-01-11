@@ -2,6 +2,7 @@ package com.Turfbooking.models.response;
 
 import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.CancelledSlot;
+import com.Turfbooking.models.request.TimeSlotRequest;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ public class TimeSlotResponse {
         this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
+        this.price = bookedTimeSlot.getPrice();
         this.status = bookedTimeSlot.getStatus();
         this.date = bookedTimeSlot.getDate();
         this.startTime = bookedTimeSlot.getStartTime();
@@ -36,6 +38,7 @@ public class TimeSlotResponse {
         this.bookingId = cancelledSlot.getBookingId();
         this.userId = cancelledSlot.getUserId();
         this.turfId = cancelledSlot.getTurfId();
+        this.price = cancelledSlot.getPrice();
         this.status = cancelledSlot.getStatus();
         this.date = cancelledSlot.getDate();
         this.startTime = cancelledSlot.getStartTime();
@@ -51,6 +54,14 @@ public class TimeSlotResponse {
         this.startTime = startTime;
         this.endTime = endTime;
         this.timestamp = timestamp;
+    }
+
+    public TimeSlotResponse(TimeSlotRequest timeSlotRequest) {
+        this.turfId = timeSlotRequest.getTurfId();
+        this.date = timeSlotRequest.getDate();
+        this.price = timeSlotRequest.getPrice();
+        this.startTime = timeSlotRequest.getStartTime();
+        this.endTime = timeSlotRequest.getEndTime();
     }
 
     public TimeSlotResponse(String turfId, Double price, String status, LocalDate date, LocalTime startTime, LocalTime endTime) {
