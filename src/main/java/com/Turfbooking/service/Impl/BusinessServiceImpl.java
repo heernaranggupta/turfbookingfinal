@@ -265,8 +265,8 @@ public class BusinessServiceImpl implements BusinessService {
         if (null != timeSlot) {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_BUSINESS.name());
-            CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
             bookedTimeSlotRepository.deleteById(timeSlot.get_id());
+            CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
             if (null != savedInDB) {
                 TimeSlotResponse response = new TimeSlotResponse(savedInDB);
                 return response;
@@ -274,7 +274,7 @@ public class BusinessServiceImpl implements BusinessService {
                 throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            throw new GeneralException("No booked slot with booking id: " + cancelRequest.getTurfId(), HttpStatus.OK);
+            throw new GeneralException("No booked slot.", HttpStatus.OK);
         }
     }
 
