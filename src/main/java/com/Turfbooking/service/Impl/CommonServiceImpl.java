@@ -283,11 +283,17 @@ public class CommonServiceImpl implements CommonService {
                     .date(timeSlotRequest.getDate())
                     .price(timeSlotRequest.getPrice())
                     .turfId(timeSlotRequest.getTurfId())
-                    .status(BookingStatus.BOOKED_BY_USER.name())
                     .startTime(timeSlotRequest.getStartTime())
                     .endTime(timeSlotRequest.getEndTime())
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
+
+            User user = userRepository.findByPhoneNumber(userId);
+            if (null != user) {
+                addNewBookedTimeSlot.setStatus(BookingStatus.RESCHEDULED_BY_USER.name());
+            } else {
+                addNewBookedTimeSlot.setStatus(BookingStatus.BOOKED_BY_BUSINESS.name());
+            }
 
             BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
             bookedTimeSlotList.add(bookedTimeSlot);
