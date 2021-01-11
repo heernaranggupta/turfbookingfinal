@@ -38,7 +38,7 @@ jobs:
         key: ${{ secrets.TURF_BOOKING_BACKEND }}
         script: |
           sudo fuser -k -n tcp 7070
-          java -jar /home/ec2-user/builds/target/*.jar > /home/ec2-user/builds/target/turf-server-logs.txt 2>&1 &
+          java -jar /home/ubuntu/builds/target/*.jar > /home/ubuntu/builds/target/turf-server-logs.txt 2>&1 &
           
     - name: Message for success to Teams
       if: success()
