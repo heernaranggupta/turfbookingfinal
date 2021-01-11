@@ -1,6 +1,5 @@
 package com.Turfbooking.models.response;
 
-import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Order;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +12,8 @@ import java.util.List;
 public class OrderResponse {
 
     private String userId;
-    private List<BookedTimeSlot> timeSlots;
+    private String paymentId;
+    private List<TimeSlotResponse> timeSlots;
     private LocalDateTime timestamp;
 
     public OrderResponse(Order order) {
