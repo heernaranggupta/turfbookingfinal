@@ -132,8 +132,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CreateUserLoginResponse userLogin(UserLoginRequest userLoginRequest) {
-
+    public CreateUserLoginResponse userLogin(UserLoginRequest userLoginRequest) throws GeneralException {
         String username = userLoginRequest.getUsername();
         String password = CommonUtilities.getEncryptedPassword(userLoginRequest.getPassword());
         String userLoginType = CommonUtilities.findEmailIdOrPasswordValidator(userLoginRequest.getUsername());
@@ -143,7 +142,6 @@ public class UserServiceImpl implements UserService {
         } else {
             isExist = userRepository.findByPhoneNumberAndPassword(username, password);
         }
-
         if (null != isExist) {
             CustomUserDetails customUserDetails = new CustomUserDetails(isExist);
             String token = jwtTokenUtil.generateToken(username, customUserDetails, accessSecret, accessTokenValidity);
@@ -160,18 +158,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException {
-
         User isExist = userRepository.findByPhoneNumber(userId);
-
         if (null != isExist) {
             List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByUserId(userId);
-            AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(bookedTimeSlots);
+            List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
+            for (BookedTimeSlot bookedTimeSlot : bookedTimeSlots) {
+                TimeSlotResponse response = new TimeSlotResponse(bookedTimeSlot);
+                timeSlotResponses.add(response);
+            }
+            AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(timeSlotResponses);
             return response;
-
         } else {
             throw new GeneralException("No user found with user id: " + userId, HttpStatus.OK);
         }
-
     }
 
     @Override

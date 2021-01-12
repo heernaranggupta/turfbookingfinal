@@ -9,12 +9,14 @@ import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
 import com.Turfbooking.service.CommonService;
+import com.Turfbooking.service.PaymentService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.mail.MessagingException;
@@ -26,10 +28,12 @@ import java.io.IOException;
 public class CommonController {
 
     private CommonService commonService;
+    private PaymentService paymentService;
 
     @Autowired
-    public CommonController(CommonService commonService) {
+    public CommonController(CommonService commonService, PaymentService paymentService) {
         this.commonService = commonService;
+        this.paymentService = paymentService;
     }
 
     @PostMapping("/generate-otp")
@@ -42,7 +46,6 @@ public class CommonController {
     public CommonResponse<ValidateOtpResponse> validateOTP(@RequestBody ValidateOtpRequest request) {
         CommonResponse commonResponse = new CommonResponse<>(commonService.validateOTP(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);
-
     }
 
     @PostMapping("/order")
@@ -56,4 +59,11 @@ public class CommonController {
         CommonResponse response = new CommonResponse(commonService.validateSlotAvailableOrNot(slotValidationRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
+
+    @PostMapping("/payment-details")
+    public CommonResponse getPaymentDetails(@RequestParam String paymentID) {
+        CommonResponse response = new CommonResponse(paymentService.getPaymentDetails(paymentID));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
 }
