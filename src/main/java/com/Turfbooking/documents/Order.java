@@ -16,9 +16,8 @@ public class Order {
     @Id
     private String _id;
     private String userId;
-    private String paymentId;
-    private String paymentMethod;
-    private List<String> timeSlots; //list of booking ids of slots
+    private String transactionId;
+    private List<String> timeSlots;
     private LocalDateTime timestamp;
 
 }

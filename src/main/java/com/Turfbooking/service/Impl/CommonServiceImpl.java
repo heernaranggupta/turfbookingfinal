@@ -30,6 +30,7 @@ import com.Turfbooking.repository.OrderRepository;
 import com.Turfbooking.repository.OtpRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.CommonService;
+import com.Turfbooking.service.PaymentService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +68,7 @@ public class CommonServiceImpl implements CommonService {
     private OrderRepository orderRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
     private CartRepository cartRepository;
+    private PaymentService paymentService;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -90,7 +92,7 @@ public class CommonServiceImpl implements CommonService {
     private JavaMailSender javaMailSender;
 
     @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository,CartRepository cartRepository) {
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, PaymentService paymentService) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.otpRepository = otpRepository;
         this.restTemplate = restTemplate;
@@ -98,6 +100,7 @@ public class CommonServiceImpl implements CommonService {
         this.orderRepository = orderRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.cartRepository = cartRepository;
+        this.paymentService = paymentService;
     }
 
     @Override
@@ -248,6 +251,7 @@ public class CommonServiceImpl implements CommonService {
         }
 
         List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
+        List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
         for (TimeSlotRequest request : orderRequest.getTimeSlots()) {
             BookedTimeSlot slot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(request.getTurfId(), request.getStartTime(), request.getDate());
             if (null == slot) {
@@ -270,15 +274,30 @@ public class CommonServiceImpl implements CommonService {
 
         Order savedOrder = orderRepository.save(saveOrder);
         List<Cart> isDeleted = cartRepository.deleteByUserPhoneNumber(orderRequest.getUserId());
-        if(null == isDeleted){
-            throw new GeneralException("Error while deleting cart",HttpStatus.INTERNAL_SERVER_ERROR);
+        String paymentId = null;
+        if (null != savedOrder) {
+            paymentId = paymentService.addPaymentDetails(orderRequest.getTransactionId(), savedOrder.get_id(), orderRequest.getUserId());
+        }
+        if (null == isDeleted) {
+            throw new GeneralException("Error while deleting cart", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         OrderResponse response = new OrderResponse(savedOrder);
-        response.setTimeSlots(bookedTimeSlotList);
+        for (BookedTimeSlot bookedTimeSlot : bookedTimeSlotList) {
+
+            bookedTimeSlot.setPaymentId(paymentId);
+            bookedTimeSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
+
+            TimeSlotResponse timeSlotResponse = new TimeSlotResponse(bookedTimeSlot);
+            timeSlotResponses.add(timeSlotResponse);
+
+        }
+        response.setTimeSlots(timeSlotResponses);
+        response.setPaymentId(paymentId);
         return response;
 
     }
 
+    @Transactional
     private List<BookedTimeSlot> bookSlot(List<TimeSlotRequest> timeSlotRequestList, String userId) throws GeneralException {
         List<BookedTimeSlot> bookedTimeSlotList = new ArrayList<>();
         for (TimeSlotRequest timeSlotRequest : timeSlotRequestList) {
@@ -295,7 +314,7 @@ public class CommonServiceImpl implements CommonService {
 
             User user = userRepository.findByPhoneNumber(userId);
             if (null != user) {
-                addNewBookedTimeSlot.setStatus(BookingStatus.RESCHEDULED_BY_USER.name());
+                addNewBookedTimeSlot.setStatus(BookingStatus.BOOKED_BY_USER.name());
             } else {
                 addNewBookedTimeSlot.setStatus(BookingStatus.BOOKED_BY_BUSINESS.name());
             }

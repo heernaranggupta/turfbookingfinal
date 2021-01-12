@@ -20,6 +20,7 @@ public class TimeSlotResponse {
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
+    private String paymentId;
     private LocalDateTime timestamp;
 
     public TimeSlotResponse(BookedTimeSlot bookedTimeSlot) {
@@ -31,6 +32,7 @@ public class TimeSlotResponse {
         this.date = bookedTimeSlot.getDate();
         this.startTime = bookedTimeSlot.getStartTime();
         this.endTime = bookedTimeSlot.getEndTime();
+        this.paymentId = bookedTimeSlot.getPaymentId();
         this.timestamp = bookedTimeSlot.getTimeStamp();
     }
 
