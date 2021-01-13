@@ -20,6 +20,7 @@ import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -108,4 +109,9 @@ public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
+    @GetMapping("/get-all-business-users")
+    public CommonResponse getAllBusinessUsers() {
+        CommonResponse response = new CommonResponse(businessService.getAllBusinessUsers());
+        return ResponseUtilities.createSuccessResponse(response);
+    }
 }

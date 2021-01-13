@@ -344,4 +344,17 @@ public class BusinessServiceImpl implements BusinessService {
             return response;
         }
     }
+
+    @Override
+    public List<BusinessResponse> getAllBusinessUsers() throws GeneralException {
+        List<Business> allBusinessUsers = businessRepository.findAll();
+        List<BusinessResponse> businessResponses = new ArrayList<>();
+        if (0 != allBusinessUsers.size()) {
+            for (Business business : allBusinessUsers) {
+                BusinessResponse businessResponse = new BusinessResponse(business);
+                businessResponses.add(businessResponse);
+            }
+        }
+        return businessResponses;
+    }
 }

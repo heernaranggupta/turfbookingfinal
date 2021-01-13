@@ -37,6 +37,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/admin/**").permitAll()
 
                 .antMatchers("/business/signup").hasRole("ADMIN")
+                .antMatchers("/business/get-all-business-users").hasRole("ADMIN")
                 .antMatchers("/business/login").permitAll()
 
                 .antMatchers("/business/all-slots").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
