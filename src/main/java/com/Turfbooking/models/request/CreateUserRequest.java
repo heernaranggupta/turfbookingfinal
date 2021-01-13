@@ -25,6 +25,7 @@ public class CreateUserRequest {
     private Double latitude;
     private Double longitude;
     private String displayImageUrl;
+    private String cartId;
     @NotEmpty(message = "Please provide user role")
     private String role;
 
