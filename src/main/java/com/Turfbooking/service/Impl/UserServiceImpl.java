@@ -127,6 +127,12 @@ public class UserServiceImpl implements UserService {
         String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), customUserDetails, accessSecret, accessTokenValidity);
         String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), customUserDetails, refreshSecret, refreshTokenValidity);
 
+        Cart getCart = cartRepository.findBy_cartId(createUserRequest.getCartId());
+        if (null != getCart) {
+            getCart.setUserPhoneNumber(newCreatedUser.getPhoneNumber());
+            getCart = cartRepository.save(getCart);
+        }
+
         CreateUserResponse response = new CreateUserResponse(userResponse, token, refreshToken);
         return response;
     }
@@ -147,6 +153,31 @@ public class UserServiceImpl implements UserService {
             String token = jwtTokenUtil.generateToken(username, customUserDetails, accessSecret, accessTokenValidity);
             String refreshToken = jwtTokenUtil.generateToken(username, customUserDetails, refreshSecret, refreshTokenValidity);
 
+            Cart getCart = cartRepository.findBy_cartId(userLoginRequest.getCartId());
+            if (null != getCart) {
+                Cart usersCart = cartRepository.findByUserPhoneNumber(username);
+                Cart mergeCart = null;
+                if (null != usersCart) {
+                    List<Slot> slotList = new ArrayList<>();
+                    if (null != usersCart.getSelectedSlots() && usersCart.getSelectedSlots().size() != 0) {
+                        slotList.addAll(usersCart.getSelectedSlots());
+                    }
+                    if (null != getCart.getSelectedSlots() && getCart.getSelectedSlots().size() != 0) {
+                        slotList.addAll(getCart.getSelectedSlots());
+                    }
+                    usersCart.setSelectedSlots(slotList);
+                    mergeCart = cartRepository.save(usersCart);
+                } else {
+                    getCart.setUserPhoneNumber(username);
+                    mergeCart = cartRepository.save(getCart);
+                }
+                if (null != mergeCart) {
+                    cartRepository.delete(getCart);
+                } else {
+                    throw new GeneralException("Error in cart merging", HttpStatus.INTERNAL_SERVER_ERROR);
+
+                }
+            }
             UserResponse userResponse = new UserResponse(isExist);
             CreateUserLoginResponse loginResponse = new CreateUserLoginResponse(userResponse, token, refreshToken);
             return loginResponse;
