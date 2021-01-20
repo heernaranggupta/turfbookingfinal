@@ -13,6 +13,7 @@ import com.Turfbooking.service.PaymentService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,7 +61,7 @@ public class CommonController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @PostMapping("/payment-details")
+    @GetMapping("/payment-details")
     public CommonResponse getPaymentDetails(@RequestParam String paymentID) {
         CommonResponse response = new CommonResponse(paymentService.getPaymentDetails(paymentID));
         return ResponseUtilities.createSuccessResponse(response);
