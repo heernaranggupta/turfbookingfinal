@@ -107,8 +107,7 @@ public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotReque
     @GetMapping("/cart")
     public CommonResponse getCart(@RequestParam(required = false) String phoneNumber,
                                   @RequestParam(required = false) String cartId){
-        CommonResponse response = new CommonResponse(userService.getCart(phoneNumber,cartId));
-        return ResponseUtilities.createSuccessResponse(response);
+        return userService.getCart(phoneNumber, cartId);
     }
 
     @PostMapping("/cart/remove")

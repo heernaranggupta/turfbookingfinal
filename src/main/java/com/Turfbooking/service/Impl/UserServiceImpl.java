@@ -24,6 +24,7 @@ import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.CartResponse;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
@@ -39,6 +40,7 @@ import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
+import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -446,21 +448,62 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CartResponse getCart(String phoneNumber, String cartId) throws GeneralException {
-       if(null != phoneNumber){
-           Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
-           if(null != cart){
-               CartResponse response = new CartResponse(cart);
-               return response;
-           }
-       } else if (null != cartId){
-           Cart cart = cartRepository.findBy_cartId(cartId);
-           if(null != cart){
-               CartResponse response = new CartResponse(cart);
-               return response;
-           }
-       }
-       return null;
+    public CommonResponse getCart(String phoneNumber, String cartId) throws GeneralException {
+        String successMessage = "";
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+        LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));
+        List<Slot> slotToBeDeleted = new ArrayList<>();
+        Double cartTotalToBeDeducted = 0D;
+        if (null != phoneNumber) {
+            Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
+            if (null != cart) {
+                //if slot is unavailable or booked remove it from cart
+                cart.getSelectedSlots().stream().forEach(slot -> {
+                    BookedTimeSlot isBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), slot.getStartTime(), slot.getDate());
+                    if (null != isBooked) {
+                        slotToBeDeleted.add(slot);
+                    } else if (slot.getDate().isBefore(today) || (slot.getDate().equals(today) && slot.getStartTime().isBefore(now))) {
+                        slotToBeDeleted.add(slot);
+                    }
+                });
+                cartTotalToBeDeducted = slotToBeDeleted.stream().mapToDouble(x -> x.getPrice()).sum();
+                if (slotToBeDeleted.size() != 0) {
+                    Double newTotal = cart.getCartTotal() - cartTotalToBeDeducted;
+                    cart.setCartTotal(newTotal);
+                    cart.getSelectedSlots().removeAll(slotToBeDeleted);
+                    cart = cartRepository.save(cart);
+                    successMessage = "slot which are of past date and booked are removed from cart";
+                }
+                CartResponse response = new CartResponse(cart);
+                CommonResponse commonResponse = new CommonResponse(response);
+                return ResponseUtilities.createSucessResponseWithMessage(commonResponse, successMessage);
+            }
+        } else if (null != cartId) {
+            Cart cart = cartRepository.findBy_cartId(cartId);
+            if (null != cart) {
+                //if slot is unavailable or booked remove it from cart
+                cart.getSelectedSlots().stream().forEach(slot -> {
+                    BookedTimeSlot isBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), slot.getStartTime(), slot.getDate());
+                    if (null != isBooked) {
+                        slotToBeDeleted.add(slot);
+                    } else if (slot.getDate().isBefore(today) || (slot.getDate().equals(today) && slot.getStartTime().isBefore(now))) {
+                        slotToBeDeleted.add(slot);
+                    }
+                });
+                cartTotalToBeDeducted = slotToBeDeleted.stream().mapToDouble(x -> x.getPrice()).sum();
+                if (slotToBeDeleted.size() != 0) {
+                    Double newTotal = cart.getCartTotal() - cartTotalToBeDeducted;
+                    cart.setCartTotal(newTotal);
+                    cart.getSelectedSlots().removeAll(slotToBeDeleted);
+                    cart = cartRepository.save(cart);
+                    successMessage = "slot which are of past date and booked are removed from cart";
+                }
+                CartResponse response = new CartResponse(cart);
+                CommonResponse commonResponse = new CommonResponse(response);
+                return ResponseUtilities.createSucessResponseWithMessage(commonResponse, successMessage);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -508,7 +551,7 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    @Scheduled(cron = "0 15 10 1 * ?", zone = "Asia/Kolkata")
+    @Scheduled(cron = "0 0 0 1 * ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
     public void deleteNonUsedCart(){
         LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
         time = time.minusDays(30);
