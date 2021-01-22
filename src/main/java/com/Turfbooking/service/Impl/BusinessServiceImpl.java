@@ -160,7 +160,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public RescheduleBookingResponse rescheduleBooking(CreateRescheduleBookingRequest createRescheduleBookingRequest) throws GeneralException {
-        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(createRescheduleBookingRequest.getTurfId(), createRescheduleBookingRequest.getStartTime(), createRescheduleBookingRequest.getDate());
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(createRescheduleBookingRequest.getTurfId(), LocalDateTime.of(createRescheduleBookingRequest.getDate(), createRescheduleBookingRequest.getStartTime()), createRescheduleBookingRequest.getDate());
         if (null != bookedTimeSlot) {
             bookedTimeSlot = BookedTimeSlot.builder()
                     ._id(bookedTimeSlot.get_id())
@@ -169,8 +169,8 @@ public class BusinessServiceImpl implements BusinessService {
                     .turfId(createRescheduleBookingRequest.getTurfId())
                     .date(createRescheduleBookingRequest.getDate())
                     .status(BookingStatus.RESCHEDULED_BY_BUSINESS.name())
-                    .startTime(createRescheduleBookingRequest.getStartTime())
-                    .endTime(createRescheduleBookingRequest.getEndTime())
+                    .startTime(LocalDateTime.of(createRescheduleBookingRequest.getDate(), createRescheduleBookingRequest.getStartTime()))
+                    .endTime(LocalDateTime.of(createRescheduleBookingRequest.getDate(), createRescheduleBookingRequest.getEndTime()))
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
 
@@ -201,14 +201,14 @@ public class BusinessServiceImpl implements BusinessService {
             for (String turf : turfs) {
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsBusinessRequest.getDate(), turf);
                 List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsBusinessRequest.getDate(), openCloseTime.getOpenTime(), openCloseTime.getCloseTime(), getAllSlotsBusinessRequest.getSlotDuration());
-                List<LocalTime> startDateTimeList = slotFromDB.stream()
+                List<LocalDateTime> startDateTimeList = slotFromDB.stream()
                         .map(x -> x.getStartTime())
                         .collect(Collectors.toList());
 
                 for (int i = 0; i < allSlotList.size(); i++) {
                     if (startDateTimeList.contains(allSlotList.get(i).getStartTime())) {
                         for (int j = 0; j < slotFromDB.size(); j++) {
-                            if (allSlotList.get(i).getStartTime() == slotFromDB.get(j).getStartTime()) {
+                            if (allSlotList.get(i).getStartTime().equals(slotFromDB.get(j).getStartTime())) {
                                 TimeSlotResponse bookedResponse = new TimeSlotResponse(slotFromDB.get(j));
                                 allSlotList.set(i, bookedResponse);
                             }
@@ -261,7 +261,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     @Override
     public TimeSlotResponse cancelBooking(CancelOrUnavailableSlotRequest cancelRequest) {
-        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), cancelRequest.getStartTime(), cancelRequest.getDate());
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), LocalDateTime.of(cancelRequest.getDate(), cancelRequest.getStartTime()), cancelRequest.getDate());
         if (null != timeSlot) {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_BUSINESS.name());
@@ -311,7 +311,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public TimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest makeUnavailableSlotRequest) {
 
-        BookedTimeSlot slotExist = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(makeUnavailableSlotRequest.getTurfId(), makeUnavailableSlotRequest.getStartTime(), makeUnavailableSlotRequest.getDate());
+        BookedTimeSlot slotExist = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(makeUnavailableSlotRequest.getTurfId(), LocalDateTime.of(makeUnavailableSlotRequest.getDate(), makeUnavailableSlotRequest.getStartTime()), makeUnavailableSlotRequest.getDate());
 
         if (null != slotExist) {
             slotExist = BookedTimeSlot.builder()
@@ -335,8 +335,8 @@ public class BusinessServiceImpl implements BusinessService {
                     .date(makeUnavailableSlotRequest.getDate())
                     .status(BookingStatus.NOT_AVAILABLE.name())
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .startTime(makeUnavailableSlotRequest.getStartTime())
-                    .endTime(makeUnavailableSlotRequest.getEndTime())
+                    .startTime(LocalDateTime.of(makeUnavailableSlotRequest.getDate(), makeUnavailableSlotRequest.getStartTime()))
+                    .endTime(LocalDateTime.of(makeUnavailableSlotRequest.getDate(), makeUnavailableSlotRequest.getEndTime()))
                     .build();
 
             BookedTimeSlot unavailableSlot = bookedTimeSlotRepository.insert(slotExist);
