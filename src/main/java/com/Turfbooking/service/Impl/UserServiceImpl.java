@@ -51,15 +51,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -287,18 +284,18 @@ public class UserServiceImpl implements UserService {
             openCloseTime = openCloseTimeRepository.findByDay(day.toString());
         }
 
-        TimeZone timeZone = TimeZone.getDefault();
-
-        LocalDateTime ldt1 = openCloseTime.getOpenTime().atDate(getAllSlotsRequest.getDate());
-        LocalDateTime ldt2 = openCloseTime.getCloseTime().atDate(getAllSlotsRequest.getDate());
-        ZoneId zoneId = ZoneId.of("Asia/Kolkata");
-        Instant instantOpen = ldt1.atZone(zoneId).toInstant();
-        Instant instantClose = ldt2.atZone(zoneId).toInstant();
-        LocalTime openTime = instantOpen.atZone(ZoneOffset.UTC).toLocalTime();
-        LocalTime closeTime = instantClose.atZone(ZoneOffset.UTC).toLocalTime();
-
-        openCloseTime.setOpenTime(openTime);
-        openCloseTime.setCloseTime(closeTime);
+//        TimeZone timeZone = TimeZone.getDefault();
+//
+//        LocalDateTime ldt1 = openCloseTime.getOpenTime().atDate(getAllSlotsRequest.getDate());
+//        LocalDateTime ldt2 = openCloseTime.getCloseTime().atDate(getAllSlotsRequest.getDate());
+//        ZoneId zoneId = ZoneId.of("Asia/Kolkata");
+//        Instant instantOpen = ldt1.atZone(zoneId).toInstant();
+//        Instant instantClose = ldt2.atZone(zoneId).toInstant();
+//        LocalTime openTime = instantOpen.atZone(ZoneOffset.UTC).toLocalTime();
+//        LocalTime closeTime = instantClose.atZone(ZoneOffset.UTC).toLocalTime();
+//
+//        openCloseTime.setOpenTime(openTime);
+//        openCloseTime.setCloseTime(closeTime);
 
         //get all turfs which requested for slots
         List<String> turfs = getAllSlotsRequest.getTurfIds();
