@@ -543,11 +543,24 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    @Scheduled(cron = "0 0 0 1 * ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
-    public void deleteNonUsedCart(){
-        LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
-        time = time.minusDays(30);
-        List<Cart> listDeletedCarts = cartRepository.deleteNonUsedCarts(time);
-        log.info("Deleted carts",listDeletedCarts.toString());
+    @Scheduled(cron = "0 0 0 30 * ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
+    public void deleteNonUsedCart() {
+        LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata")).minusDays(30);
+//        time = time.minusDays(30);
+//        List<Cart> listDeletedCarts = cartRepository.deleteNonUsedCarts(time);
+
+        List<Cart> allCart = cartRepository.findAll();
+        List<Cart> cartToBeDeleted = new ArrayList<>();
+
+        allCart.stream().forEach(cart -> {
+            if (cart.getUserPhoneNumber() == null && cart.getTimeStamp().isBefore(time)) {
+                cartToBeDeleted.add(cart);
+            }
+        });
+
+        cartRepository.deleteAll(cartToBeDeleted);
+        List<Cart> remainingCarts = cartRepository.findAll();
+        log.info("CRON JOB : " + (allCart.size() - remainingCarts.size()) + " carts are deleted");
+
     }
 }
