@@ -253,7 +253,7 @@ public class CommonServiceImpl implements CommonService {
         List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
         for (TimeSlotRequest request : orderRequest.getTimeSlots()) {
-            BookedTimeSlot slot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(request.getTurfId(), request.getStartTime(), request.getDate());
+            BookedTimeSlot slot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(request.getTurfId(), LocalDateTime.of(request.getDate(), request.getStartTime()), request.getDate());
             if (null == slot) {
                 timeSlotRequests.add(request);
             } else {
@@ -307,8 +307,8 @@ public class CommonServiceImpl implements CommonService {
                     .date(timeSlotRequest.getDate())
                     .price(timeSlotRequest.getPrice())
                     .turfId(timeSlotRequest.getTurfId())
-                    .startTime(timeSlotRequest.getStartTime())
-                    .endTime(timeSlotRequest.getEndTime())
+                    .startTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()))
+                    .endTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getEndTime()))
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
 
@@ -331,7 +331,7 @@ public class CommonServiceImpl implements CommonService {
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
         for (TimeSlotRequest timeSlotRequest : slotValidationRequest.getTimeSlotRequestList()) {
             Boolean flag = true;
-            BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), timeSlotRequest.getStartTime(), timeSlotRequest.getDate());
+            BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()), timeSlotRequest.getDate());
             if (null != isBookedTimeSlot) {
                 TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
                 timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());

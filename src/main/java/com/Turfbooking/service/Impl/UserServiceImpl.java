@@ -231,7 +231,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) {
-        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), cancelRequest.getStartTime(), cancelRequest.getDate());
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), LocalDateTime.of(cancelRequest.getDate(), cancelRequest.getStartTime()), cancelRequest.getDate());
         if (null != timeSlot) {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
@@ -251,7 +251,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
-        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(updateRequest.getTurfId(), updateRequest.getStartTime(), updateRequest.getDate());
+        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(updateRequest.getTurfId(), LocalDateTime.of(updateRequest.getDate(), updateRequest.getStartTime()), updateRequest.getDate());
         if (null != isSlotBooked) {
             throw new GeneralException("Slot which you want to book is already booked.", HttpStatus.OK);
         }
@@ -264,8 +264,8 @@ public class UserServiceImpl implements UserService {
                     .price(updateRequest.getPrice())
                     .date(updateRequest.getDate())
                     .status(BookingStatus.RESCHEDULED_BY_USER.name())
-                    .startTime(updateRequest.getStartTime())
-                    .endTime(updateRequest.getEndTime())
+                    .startTime(LocalDateTime.of(updateRequest.getDate(), updateRequest.getStartTime()))
+                    .endTime(LocalDateTime.of(updateRequest.getDate(), updateRequest.getEndTime()))
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
             BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
@@ -308,14 +308,14 @@ public class UserServiceImpl implements UserService {
             for (String turf : turfs) {
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
                 List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), openCloseTime.getOpenTime(), openCloseTime.getCloseTime(), getAllSlotsRequest.getSlotDuration());
-                List<LocalTime> startDateTimeList = slotFromDB.stream()
+                List<LocalDateTime> startDateTimeList = slotFromDB.stream()
                         .map(x -> x.getStartTime())
                         .collect(Collectors.toList());
 
                 for (int i = 0; i < allSlotList.size(); i++) {
                     if (startDateTimeList.contains(allSlotList.get(i).getStartTime())) {
                         for (int j = 0; j < slotFromDB.size(); j++) {
-                            if (allSlotList.get(i).getStartTime() == slotFromDB.get(j).getStartTime()) {
+                            if (allSlotList.get(i).getStartTime().equals(slotFromDB.get(j).getStartTime())) {
                                 TimeSlotResponse bookedResponse = new TimeSlotResponse(slotFromDB.get(j));
                                 allSlotList.set(i, bookedResponse);
                             }
@@ -369,40 +369,42 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CartResponse addToCart(CartRequest cartRequest) throws GeneralException {
-
+        for (Slot slot : cartRequest.getSelectedSlots()) {
+            BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), LocalDateTime.of(slot.getDate(), slot.getStartTime()), slot.getDate());
+            if (null != isBookedTimeSlot) {
+                throw new GeneralException("slot with date :" + slot.getDate() + " and time :" + slot.getStartTime() + "is already booked or unavailable", HttpStatus.CONFLICT);
+            }
+        }
         if (null != cartRequest.getUserPhoneNumber()) {
-
             Cart cart = cartRepository.findByUserPhoneNumber(cartRequest.getUserPhoneNumber());
             if (null != cart) {
                 Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
                         .collect(Collectors.summingDouble(Double::intValue));
-
                 cartTotal = cartTotal + cart.getCartTotal();
-
                 List<Slot> selectedSlotList = cart.getSelectedSlots();
                 selectedSlotList.addAll(cartRequest.getSelectedSlots());
-
                 Cart saveCart = new Cart(cart.get_cartId(),
                         cartRequest.getUserPhoneNumber(),
                         selectedSlotList,
                         cartTotal,
                         LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
                 );
-
                 Cart savedCart = cartRepository.save(saveCart);
                 CartResponse response = new CartResponse(savedCart);
                 return response;
             } else {
+
                 Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
                         .collect(Collectors.summingDouble(Double::intValue));
-
                 Cart saveCart = new Cart(
                         cartRequest.getUserPhoneNumber(),
                         cartRequest.getSelectedSlots(),
                         cartTotal,
                         LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
                 );
-
+//                if(flag){
+//                    throw new GeneralException("request valid slot",HttpStatus.CONFLICT);
+//                }
                 Cart savedCart = cartRepository.insert(saveCart);
                 CartResponse response = new CartResponse(savedCart);
                 return response;
@@ -412,39 +414,32 @@ public class UserServiceImpl implements UserService {
             if (null != cart) {
                 Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
                         .collect(Collectors.summingDouble(Double::intValue));
-
                 cartTotal = cartTotal + cart.getCartTotal();
-
                 List<Slot> selectedSlotList = cart.getSelectedSlots();
                 selectedSlotList.addAll(cartRequest.getSelectedSlots());
-
                 Cart saveCart = new Cart(cart.get_cartId(),
                         cartRequest.getUserPhoneNumber(),
                         selectedSlotList,
                         cartTotal,
                         LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
                 );
-
                 Cart savedCart = cartRepository.save(saveCart);
                 CartResponse response = new CartResponse(savedCart);
                 return response;
             } else {
                 Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
                         .collect(Collectors.summingDouble(Double::intValue));
-
                 Cart saveCart = new Cart(
                         cartRequest.getUserPhoneNumber(),
                         cartRequest.getSelectedSlots(),
                         cartTotal,
                         LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
                 );
-
                 Cart savedCart = cartRepository.insert(saveCart);
                 CartResponse response = new CartResponse(savedCart);
                 return response;
             }
         }
-
     }
 
     @Override
@@ -459,7 +454,7 @@ public class UserServiceImpl implements UserService {
             if (null != cart) {
                 //if slot is unavailable or booked remove it from cart
                 cart.getSelectedSlots().stream().forEach(slot -> {
-                    BookedTimeSlot isBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), slot.getStartTime(), slot.getDate());
+                    BookedTimeSlot isBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), LocalDateTime.of(slot.getDate(), slot.getStartTime()), slot.getDate());
                     if (null != isBooked) {
                         slotToBeDeleted.add(slot);
                     } else if (slot.getDate().isBefore(today) || (slot.getDate().equals(today) && slot.getStartTime().isBefore(now))) {
@@ -483,7 +478,7 @@ public class UserServiceImpl implements UserService {
             if (null != cart) {
                 //if slot is unavailable or booked remove it from cart
                 cart.getSelectedSlots().stream().forEach(slot -> {
-                    BookedTimeSlot isBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), slot.getStartTime(), slot.getDate());
+                    BookedTimeSlot isBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), LocalDateTime.of(slot.getDate(), slot.getStartTime()), slot.getDate());
                     if (null != isBooked) {
                         slotToBeDeleted.add(slot);
                     } else if (slot.getDate().isBefore(today) || (slot.getDate().equals(today) && slot.getStartTime().isBefore(now))) {

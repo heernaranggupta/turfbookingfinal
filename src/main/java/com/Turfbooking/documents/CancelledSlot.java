@@ -32,8 +32,8 @@ public class CancelledSlot {
         this.turfId = bookedTimeSlot.getTurfId();
         this.price = bookedTimeSlot.getPrice();
         this.date = bookedTimeSlot.getDate();
-        this.startTime = bookedTimeSlot.getStartTime();
-        this.endTime = bookedTimeSlot.getEndTime();
+        this.startTime = bookedTimeSlot.getStartTime().toLocalTime();
+        this.endTime = bookedTimeSlot.getEndTime().toLocalTime();
         this.timeStamp = bookedTimeSlot.getTimeStamp();
     }
 }
