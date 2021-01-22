@@ -30,8 +30,8 @@ public class TimeSlotResponse {
         this.price = bookedTimeSlot.getPrice();
         this.status = bookedTimeSlot.getStatus();
         this.date = bookedTimeSlot.getDate();
-        this.startTime = bookedTimeSlot.getStartTime();
-        this.endTime = bookedTimeSlot.getEndTime();
+        this.startTime = bookedTimeSlot.getStartTime().toLocalTime();
+        this.endTime = bookedTimeSlot.getEndTime().toLocalTime();
         this.paymentId = bookedTimeSlot.getPaymentId();
         this.timestamp = bookedTimeSlot.getTimeStamp();
     }

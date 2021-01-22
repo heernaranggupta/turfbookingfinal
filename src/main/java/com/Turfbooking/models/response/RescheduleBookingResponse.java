@@ -25,8 +25,8 @@ public class RescheduleBookingResponse {
         this.turfId = bookedTimeSlot.getTurfId();
         this.status = bookedTimeSlot.getStatus();
         this.date = bookedTimeSlot.getDate();
-        this.startTime = bookedTimeSlot.getStartTime();
-        this.endTime = bookedTimeSlot.getEndTime();
+        this.startTime = bookedTimeSlot.getStartTime().toLocalTime();
+        this.endTime = bookedTimeSlot.getEndTime().toLocalTime();
         this.timestamp = bookedTimeSlot.getTimeStamp(); //LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
     }
 }
