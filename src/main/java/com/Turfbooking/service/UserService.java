@@ -10,6 +10,7 @@ import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
 import com.Turfbooking.models.response.CartResponse;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
@@ -34,7 +35,7 @@ public interface UserService {
 
     CartResponse addToCart(CartRequest cartRequest);
 
-    CartResponse getCart(String PhoneNumber,String cartId);
+    CommonResponse getCart(String PhoneNumber, String cartId);
 
     CartResponse removeFromCart(RemoveCartRequest removeCartRequest);
 
