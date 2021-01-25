@@ -284,19 +284,6 @@ public class UserServiceImpl implements UserService {
             openCloseTime = openCloseTimeRepository.findByDay(day.toString());
         }
 
-//        TimeZone timeZone = TimeZone.getDefault();
-//
-//        LocalDateTime ldt1 = openCloseTime.getOpenTime().atDate(getAllSlotsRequest.getDate());
-//        LocalDateTime ldt2 = openCloseTime.getCloseTime().atDate(getAllSlotsRequest.getDate());
-//        ZoneId zoneId = ZoneId.of("Asia/Kolkata");
-//        Instant instantOpen = ldt1.atZone(zoneId).toInstant();
-//        Instant instantClose = ldt2.atZone(zoneId).toInstant();
-//        LocalTime openTime = instantOpen.atZone(ZoneOffset.UTC).toLocalTime();
-//        LocalTime closeTime = instantClose.atZone(ZoneOffset.UTC).toLocalTime();
-//
-//        openCloseTime.setOpenTime(openTime);
-//        openCloseTime.setCloseTime(closeTime);
-
         //get all turfs which requested for slots
         List<String> turfs = getAllSlotsRequest.getTurfIds();
         GetAllSlotsResponse finalResponse = new GetAllSlotsResponse();
@@ -304,15 +291,15 @@ public class UserServiceImpl implements UserService {
             List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
-                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), openCloseTime.getOpenTime(), openCloseTime.getCloseTime(), getAllSlotsRequest.getSlotDuration());
-                List<LocalDateTime> startDateTimeList = slotFromDB.stream()
-                        .map(x -> x.getStartTime())
+                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), LocalDateTime.of(getAllSlotsRequest.getDate(), openCloseTime.getOpenTime()), LocalDateTime.of(getAllSlotsRequest.getDate(), openCloseTime.getCloseTime()), getAllSlotsRequest.getSlotDuration());
+                List<LocalTime> startDateTimeList = slotFromDB.stream()
+                        .map(x -> x.getStartTime().toLocalTime())
                         .collect(Collectors.toList());
 
                 for (int i = 0; i < allSlotList.size(); i++) {
                     if (startDateTimeList.contains(allSlotList.get(i).getStartTime())) {
                         for (int j = 0; j < slotFromDB.size(); j++) {
-                            if (allSlotList.get(i).getStartTime().equals(slotFromDB.get(j).getStartTime())) {
+                            if (allSlotList.get(i).getStartTime().equals(slotFromDB.get(j).getStartTime().toLocalTime())) {
                                 TimeSlotResponse bookedResponse = new TimeSlotResponse(slotFromDB.get(j));
                                 allSlotList.set(i, bookedResponse);
                             }
@@ -334,7 +321,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalTime openTime, LocalTime closeTime, int durationInMinutes) {
+    private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
         List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDate(date);
         if (startEndTimeList.size() == 0) {
             DayOfWeek day = date.getDayOfWeek();
@@ -342,21 +329,23 @@ public class UserServiceImpl implements UserService {
         }
 
         List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
-        LocalTime slotStartTime = openTime;
-        LocalTime slotEndTime = null;
+        LocalDateTime slotStartTime = openTime;
+        LocalDateTime slotEndTime = null;
 
         Double price = null;
         for (StartEndTime startEndTime : startEndTimeList) {
+            LocalDateTime startTime = LocalDateTime.of(date, startEndTime.getStartTime());
+            LocalDateTime endTime = LocalDateTime.of(date, startEndTime.getEndTime());
             if (startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
                 //slot end time should be before close time.
                 while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
                     slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-                    if ((startEndTime.getStartTime().equals(slotStartTime) || startEndTime.getStartTime().isAfter(slotStartTime)) && slotStartTime.isBefore(startEndTime.getEndTime()) && startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
+                    if ((startTime.equals(slotStartTime) || startTime.isAfter(slotStartTime)) && slotStartTime.isBefore(endTime) && startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
                         if (null != startEndTime.getPrice()) {
                             price = startEndTime.getPrice();
                         }
                     }
-                    timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
+                    timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime.toLocalTime(), slotEndTime.toLocalTime()));
                     slotStartTime = slotEndTime;
                 }
             }
@@ -399,9 +388,6 @@ public class UserServiceImpl implements UserService {
                         cartTotal,
                         LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
                 );
-//                if(flag){
-//                    throw new GeneralException("request valid slot",HttpStatus.CONFLICT);
-//                }
                 Cart savedCart = cartRepository.insert(saveCart);
                 CartResponse response = new CartResponse(savedCart);
                 return response;
