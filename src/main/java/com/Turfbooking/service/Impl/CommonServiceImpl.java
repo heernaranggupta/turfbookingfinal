@@ -284,7 +284,7 @@ public class CommonServiceImpl implements CommonService {
         OrderResponse response = new OrderResponse(savedOrder);
         for (BookedTimeSlot bookedTimeSlot : bookedTimeSlotList) {
 
-            bookedTimeSlot.setPaymentId(paymentId);
+            bookedTimeSlot.setOrderId(savedOrder.get_id());
             bookedTimeSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
 
             TimeSlotResponse timeSlotResponse = new TimeSlotResponse(bookedTimeSlot);
@@ -292,7 +292,7 @@ public class CommonServiceImpl implements CommonService {
 
         }
         response.setTimeSlots(timeSlotResponses);
-        response.setPaymentId(paymentId);
+        response.setOrderId(savedOrder.get_id());
         return response;
 
     }

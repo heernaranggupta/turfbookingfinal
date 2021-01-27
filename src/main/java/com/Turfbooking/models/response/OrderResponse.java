@@ -12,7 +12,7 @@ import java.util.List;
 public class OrderResponse {
 
     private String userId;
-    private String paymentId;
+    private String orderId;
     private List<TimeSlotResponse> timeSlots;
     private LocalDateTime timestamp;
 
