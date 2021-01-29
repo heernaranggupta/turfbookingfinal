@@ -196,22 +196,17 @@ public class CommonServiceImpl implements CommonService {
 
     @Override
     public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
-
         String phoneNumber = validateOtpRequest.getPhoneNumber();
         String countryCode = validateOtpRequest.getCountryCode();
-
         String phoneNumberWithCountryCode = null;
-
         if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
             phoneNumberWithCountryCode = StringUtils.join(countryCode, phoneNumber);
         else {
             throw new GeneralException("Phone number or county code is invalid.", HttpStatus.OK);
         }
-
         Integer userOtp = validateOtpRequest.getOtp();
         ValidateOtpResponse validateOtpResponse = new ValidateOtpResponse();
         Otp otp = otpRepository.findByPhoneNumberAndOtp(phoneNumberWithCountryCode, validateOtpRequest.getOtp());
-
         if (null != otp && validateOtpRequest.getOtp().intValue() == userOtp.intValue() && LocalDateTime.now().isBefore(otp.getTimeTillActive())) {
             //delete otp entry from database
             long otpdeltedCount = otpRepository.deleteByPhoneNumber(otp.getPhoneNumber());
@@ -219,12 +214,10 @@ public class CommonServiceImpl implements CommonService {
         } else {
             validateOtpResponse.setOtpStatus(OtpStatus.INVALID.name());
         }
-
         //logic for is this user exist or not.
         User isUserOrNot = userRepository.findByPhoneNumber(phoneNumber);
         String token;
         String refreshToken;
-
         if (null != isUserOrNot) {
             CustomUserDetails customUserDetails = new CustomUserDetails(isUserOrNot);
             token = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, accessSecret, accessTokenValidity);
@@ -239,7 +232,6 @@ public class CommonServiceImpl implements CommonService {
             validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
         }
         return validateOtpResponse;
-
     }
 
     @Override
@@ -249,7 +241,6 @@ public class CommonServiceImpl implements CommonService {
         if (null == isUserExist) {
             throw new GeneralException("User does not exist.", HttpStatus.OK);
         }
-
         List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
         for (TimeSlotRequest request : orderRequest.getTimeSlots()) {
@@ -260,18 +251,15 @@ public class CommonServiceImpl implements CommonService {
                 throw new GeneralException("slot with start time " + slot.getStartTime() + " on date " + slot.getDate() + " is already booked.", HttpStatus.OK);
             }
         }
-
         List<BookedTimeSlot> bookedTimeSlotList = bookSlot(timeSlotRequests, orderRequest.getUserId());
         List<String> bookingIdList = bookedTimeSlotList.stream()
                 .map(x -> x.getBookingId())
                 .collect(Collectors.toList());
-
         Order saveOrder = Order.builder()
                 .userId(orderRequest.getUserId())
                 .timeSlots(bookingIdList)
                 .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                 .build();
-
         Order savedOrder = orderRepository.save(saveOrder);
         List<Cart> isDeleted = cartRepository.deleteByUserPhoneNumber(orderRequest.getUserId());
         String paymentId = null;
@@ -283,18 +271,14 @@ public class CommonServiceImpl implements CommonService {
         }
         OrderResponse response = new OrderResponse(savedOrder);
         for (BookedTimeSlot bookedTimeSlot : bookedTimeSlotList) {
-
             bookedTimeSlot.setOrderId(savedOrder.get_id());
             bookedTimeSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
-
             TimeSlotResponse timeSlotResponse = new TimeSlotResponse(bookedTimeSlot);
             timeSlotResponses.add(timeSlotResponse);
-
         }
         response.setTimeSlots(timeSlotResponses);
         response.setOrderId(savedOrder.get_id());
         return response;
-
     }
 
     @Transactional
@@ -311,14 +295,12 @@ public class CommonServiceImpl implements CommonService {
                     .endTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getEndTime()))
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
-
             User user = userRepository.findByPhoneNumber(userId);
             if (null != user) {
                 addNewBookedTimeSlot.setStatus(BookingStatus.BOOKED_BY_USER.name());
             } else {
                 addNewBookedTimeSlot.setStatus(BookingStatus.BOOKED_BY_BUSINESS.name());
             }
-
             BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
             bookedTimeSlotList.add(bookedTimeSlot);
         }
@@ -327,7 +309,6 @@ public class CommonServiceImpl implements CommonService {
 
     @Override
     public SlotValidationResponse validateSlotAvailableOrNot(SlotValidationRequest slotValidationRequest) throws GeneralException {
-
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
         for (TimeSlotRequest timeSlotRequest : slotValidationRequest.getTimeSlotRequestList()) {
             Boolean flag = true;
@@ -355,9 +336,24 @@ public class CommonServiceImpl implements CommonService {
                 timeSlotResponses.add(timeSlotResponse);
             }
         }
-
         SlotValidationResponse slotValidationResponse = new SlotValidationResponse();
         slotValidationResponse.setTimeSlotResponses(timeSlotResponses);
         return slotValidationResponse;
     }
+
+    @Override
+    public List<TimeSlotResponse> getAllBookedSlotsByOrderId(String orderId) throws GeneralException {
+        List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByOrderId(orderId);
+        List<TimeSlotResponse> slotResponses = new ArrayList<>();
+        if (bookedTimeSlots.size() > 0) {
+            bookedTimeSlots.stream().forEach(bookedTimeSlot -> {
+                TimeSlotResponse response = new TimeSlotResponse(bookedTimeSlot);
+                slotResponses.add(response);
+            });
+            return slotResponses;
+        } else {
+            throw new GeneralException("No booked slots with order id :" + orderId, HttpStatus.NOT_FOUND);
+        }
+    }
+
 }

@@ -39,4 +39,7 @@ public interface BookedTimeSlotRepository extends MongoRepository<BookedTimeSlot
     @Query("{'status':?0 ,'date':{ $gte: ?1}}")
     List<BookedTimeSlot> findByDateAndBookingStatus(String status, LocalDate date);
 
+    @Query("{'orderId': ?0}")
+    List<BookedTimeSlot> findByOrderId(String orderId);
+
 }
