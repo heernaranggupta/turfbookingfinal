@@ -67,4 +67,9 @@ public class CommonController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
+    @GetMapping("/order/slot-list")
+    public CommonResponse getAllSlotsOfOrderId(@RequestParam String orderId) {
+        CommonResponse response = new CommonResponse(commonService.getAllBookedSlotsByOrderId(orderId));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
 }
