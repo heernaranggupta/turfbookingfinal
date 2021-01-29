@@ -6,6 +6,7 @@ import com.Turfbooking.models.response.ConfigResponse;
 import com.Turfbooking.service.ConfigService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("admin/config")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ConfigController {
 
     @Autowired
