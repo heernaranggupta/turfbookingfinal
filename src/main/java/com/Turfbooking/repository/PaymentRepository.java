@@ -1,14 +1,14 @@
 package com.Turfbooking.repository;
 
-import com.Turfbooking.documents.Payment;
+import com.Turfbooking.documents.PaymentDetails;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PaymentRepository extends MongoRepository<Payment, String> {
+public interface PaymentRepository extends MongoRepository<PaymentDetails, String> {
 
-    @Query("{'id':?0}")
-    Payment findByPaymentId(String id);
+    @Query("{'orderId':?0}")
+    PaymentDetails findByOrderId(String id);
 
 }
