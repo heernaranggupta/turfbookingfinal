@@ -25,7 +25,7 @@ public class BookedTimeSlot {
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private String paymentId;
+    private String orderId;
     private LocalDateTime timeStamp;
 
 }

@@ -33,6 +33,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/cart").permitAll()
                 .antMatchers("/user/cart/remove").permitAll()
                 .antMatchers("/user/get-all-slots-by-date").permitAll()
+                .antMatchers("/payment/**").permitAll()
 
                 .antMatchers("/admin/**").permitAll()
 

@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Setter
 @Builder
 @Document
-public class Payment {
+public class PaymentDetails {
 
     @Id
     private String id;
@@ -18,7 +18,7 @@ public class Payment {
     private String orderId;
     private String transactionId;
 
-    public Payment(String id, String userPhoneNumber, String orderId, String transactionId) {
+    public PaymentDetails(String id, String userPhoneNumber, String orderId, String transactionId) {
         this.id = id;
         this.userPhoneNumber = userPhoneNumber;
         this.orderId = orderId;
