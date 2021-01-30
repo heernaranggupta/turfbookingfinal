@@ -56,6 +56,12 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
+    @GetMapping
+    public CommonResponse getUser(@RequestParam String userPhoneNumber) {
+        CommonResponse response = new CommonResponse(userService.getUser(userPhoneNumber));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
     @PutMapping("/update-profile")
     public CommonResponse<CustomerProfileUpdateResponse> updateProfile(@Valid @RequestBody CustomerProfileUpdateRequest customerProfileUpdateRequest) {
         CustomerProfileUpdateResponse customerProfileUpdateResponse = userService.updateProfile(customerProfileUpdateRequest);
@@ -63,16 +69,16 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-//    @CacheEvict(
+    //    @CacheEvict(
 //            value = "listOfSlotsByTurfIdAndDate",
 //            allEntries = true,
 //            condition = "#cancelOrUnavailableSlotRequest.turfId != null")
-@PostMapping("cancel-booking")
-public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
-    TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
-    CommonResponse response = new CommonResponse(timeSlotResponse);
-    return response;
-}
+    @PostMapping("cancel-booking")
+    public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+        TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
+        CommonResponse response = new CommonResponse(timeSlotResponse);
+        return response;
+    }
 
     //    @CacheEvict(
 //            value = "listOfSlotsByTurfIdAndDate",
@@ -99,21 +105,21 @@ public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotReque
     }
 
     @PostMapping("/cart")
-    public CommonResponse addToCart(@Valid @RequestBody CartRequest cartRequest){
+    public CommonResponse addToCart(@Valid @RequestBody CartRequest cartRequest) {
         CommonResponse response = new CommonResponse(userService.addToCart(cartRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
     @GetMapping("/cart")
     public CommonResponse getCart(@RequestParam(required = false) String phoneNumber,
-                                  @RequestParam(required = false) String cartId){
+                                  @RequestParam(required = false) String cartId) {
         return userService.getCart(phoneNumber, cartId);
     }
 
     @PostMapping("/cart/remove")
-    public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest){
+    public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest) {
         CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
-        return ResponseUtilities.createSucessResponseWithMessage(response,"Slot successfully removed");
+        return ResponseUtilities.createSucessResponseWithMessage(response, "Slot successfully removed");
     }
 
 }
