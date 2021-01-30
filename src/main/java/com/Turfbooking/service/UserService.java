@@ -16,12 +16,15 @@ import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.TimeSlotResponse;
+import com.Turfbooking.models.response.UserResponse;
 
 public interface UserService {
 
     CreateUserResponse createNewUser(CreateUserRequest createUserRequest);
 
     CreateUserLoginResponse userLogin(UserLoginRequest userLoginRequest);
+
+    UserResponse getUser(String userPhoneNumber);
 
     AllBookedSlotByUserResponse getAllBookedSlots(String userId);
 

@@ -187,6 +187,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse getUser(String userPhoneNumber) throws GeneralException {
+        User user = userRepository.findByPhoneNumber(userPhoneNumber);
+        if (null != user) {
+            UserResponse response = new UserResponse(user);
+            return response;
+        } else {
+            throw new GeneralException("No user found with phone number :" + userPhoneNumber, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
     public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException {
         User isExist = userRepository.findByPhoneNumber(userId);
         if (null != isExist) {
@@ -497,7 +508,7 @@ public class UserServiceImpl implements UserService {
                         deductPrice += slot.getPrice();
                     }
                 }
-                cart.setCartTotal(cart.getCartTotal()-deductPrice);
+                cart.setCartTotal(cart.getCartTotal() - deductPrice);
                 cart.getSelectedSlots().removeAll(removeSlotFromCart);
                 Cart savedCart = cartRepository.save(cart);
                 CartResponse cartResponse = new CartResponse(savedCart);
@@ -517,7 +528,7 @@ public class UserServiceImpl implements UserService {
                         deductPrice += slot.getPrice();
                     }
                 }
-                cartWithoutUser.setCartTotal(cartWithoutUser.getCartTotal()-deductPrice);
+                cartWithoutUser.setCartTotal(cartWithoutUser.getCartTotal() - deductPrice);
                 cartWithoutUser.getSelectedSlots().removeAll(removeSlotFromCart);
                 Cart savedCart = cartRepository.save(cartWithoutUser);
                 CartResponse cartResponse = new CartResponse(savedCart);
@@ -530,10 +541,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Scheduled(cron = "0 0 0 1 * ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
-    public void deleteNonUsedCart(){
+    public void deleteNonUsedCart() {
         LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
         time = time.minusDays(30);
         List<Cart> listDeletedCarts = cartRepository.deleteNonUsedCarts(time);
-        log.info("Deleted carts",listDeletedCarts.toString());
+        log.info("Deleted carts", listDeletedCarts.toString());
     }
 }
