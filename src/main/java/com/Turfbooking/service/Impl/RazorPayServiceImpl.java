@@ -51,7 +51,7 @@ public class RazorPayServiceImpl implements RazorPayService {
     public RefundResponse initRefund(String orderId, String amount) throws RazorpayException, GeneralException {
         RazorpayClient razorpayClient = this.initRazorPayClient();
         PaymentDetails paymentDetails = paymentRepository.findByOrderId(orderId);
-        String id = /*paymentDetails.getTransactionId()*/ "pay_GTY5433lnJoxhc";
+        String id = paymentDetails.getTransactionId();
         Payment payment = razorpayClient.Payments.fetch(id);
         if (payment.get("status").toString().equalsIgnoreCase("authorized")) {
             JSONObject jsonObject = new JSONObject();
@@ -59,7 +59,7 @@ public class RazorPayServiceImpl implements RazorPayService {
             payment = razorpayClient.Payments.capture(id, jsonObject);
         }
         JSONObject amountObject = new JSONObject();
-        amountObject.put("amount", amount);
+        amountObject.put("amount", Float.parseFloat(amount));
         if (false) { //if capture is false and status is authorized
             razorpayClient.Payments.capture(id, amountObject);
         }

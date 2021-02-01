@@ -24,6 +24,8 @@ public class CancelledSlot {
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
+    private String orderId;
+    private String refundId;
     private LocalDateTime timeStamp;
 
     public CancelledSlot(BookedTimeSlot bookedTimeSlot) {
@@ -34,6 +36,7 @@ public class CancelledSlot {
         this.date = bookedTimeSlot.getDate();
         this.startTime = bookedTimeSlot.getStartTime().toLocalTime();
         this.endTime = bookedTimeSlot.getEndTime().toLocalTime();
+        this.orderId = bookedTimeSlot.getOrderId();
         this.timeStamp = bookedTimeSlot.getTimeStamp();
     }
 }

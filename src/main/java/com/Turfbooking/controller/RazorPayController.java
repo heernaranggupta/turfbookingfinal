@@ -25,11 +25,11 @@ public class RazorPayController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @GetMapping("/refund")
-    CommonResponse refund(@RequestParam String orderId, @RequestParam(required = false) String amount) throws RazorpayException {
-        CommonResponse response = new CommonResponse(razorPayService.initRefund(orderId, amount));
-        return ResponseUtilities.createSuccessResponse(response);
-    }
+//    @GetMapping("/refund")
+//    CommonResponse refund(@RequestParam String orderId, @RequestParam(required = false) String amount) throws RazorpayException {
+//        CommonResponse response = new CommonResponse(razorPayService.initRefund(orderId, amount));
+//        return ResponseUtilities.createSuccessResponse(response);
+//    }
 
     @GetMapping("/refund-details")
     CommonResponse getRefundDetail(@RequestParam String orderId, @RequestParam(required = false) String refundId) throws RazorpayException {
