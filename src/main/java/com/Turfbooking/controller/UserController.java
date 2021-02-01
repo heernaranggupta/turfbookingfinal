@@ -14,6 +14,7 @@ import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.TimeSlotResponse;
+import com.Turfbooking.razorpay.RazorpayException;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +75,7 @@ public class UserController {
 //            allEntries = true,
 //            condition = "#cancelOrUnavailableSlotRequest.turfId != null")
     @PostMapping("cancel-booking")
-    public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+    public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) throws RazorpayException {
         TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
