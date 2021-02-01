@@ -160,7 +160,13 @@ public class UserServiceImpl implements UserService {
                         slotList.addAll(usersCart.getSelectedSlots());
                     }
                     if (null != getCart.getSelectedSlots() && getCart.getSelectedSlots().size() != 0) {
-                        slotList.addAll(getCart.getSelectedSlots());
+                        for (Slot slot : getCart.getSelectedSlots()) {
+                            for (Slot slot1 : usersCart.getSelectedSlots()) {
+                                if (!slot.getDate().equals(slot1.getDate()) && !slot.getStartTime().equals(slot1.getStartTime())) {
+                                    slotList.add(slot);
+                                }
+                            }
+                        }
                     }
                     usersCart.setSelectedSlots(slotList);
                     mergeCart = cartRepository.save(usersCart);
