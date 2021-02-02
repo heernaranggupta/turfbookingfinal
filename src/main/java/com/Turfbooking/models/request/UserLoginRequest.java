@@ -13,5 +13,6 @@ public class UserLoginRequest {
     private String username;
     @NotEmpty(message = "Password should be not empty.")
     private String password;
+    private String cartId;
 
 }

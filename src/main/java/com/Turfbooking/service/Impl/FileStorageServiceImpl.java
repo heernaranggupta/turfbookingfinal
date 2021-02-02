@@ -21,9 +21,9 @@ import java.nio.file.StandardCopyOption;
 
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
+
     @Value("${file.upload-dir}")
     private String path;
-
 
     public Path getuploadDir(String path) {
         Path dirPath = Paths.get(path)
@@ -61,7 +61,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public CommonResponse deleteFile(String nameOfFile) throws GeneralException{
+    public CommonResponse deleteFile(String nameOfFile) throws GeneralException {
 
 
         // Normalize file name

@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -17,10 +18,15 @@ import java.util.Collections;
 import java.util.List;
 
 @EnableCaching
+@EnableScheduling
 @SpringBootApplication
 @EnableMongoRepositories
 @OpenAPIDefinition(info = @Info(title = "Turf Booking", version = "0.1", description = "API documentation of turf booking project."))
 public class TurfbookingApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(TurfbookingApplication.class, args);
+    }
 
     @Bean
     public RestTemplate getRestTemplate() {
@@ -31,11 +37,6 @@ public class TurfbookingApplication {
         messageConverters.add(converter);
         restTemplate.setMessageConverters(messageConverters);
         return restTemplate;
-    }
-
-
-    public static void main(String[] args) {
-        SpringApplication.run(TurfbookingApplication.class, args);
     }
 
 }

@@ -1,45 +1,62 @@
 package com.Turfbooking.service.Impl;
 
 import com.Turfbooking.documents.BookedTimeSlot;
-import com.Turfbooking.documents.Otp;
+import com.Turfbooking.documents.CancelledSlot;
+import com.Turfbooking.documents.Cart;
+import com.Turfbooking.documents.OpenCloseTime;
+import com.Turfbooking.documents.StartEndTime;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
+import com.Turfbooking.models.common.Slot;
 import com.Turfbooking.models.enums.BookingStatus;
-import com.Turfbooking.models.enums.OtpStatus;
-import com.Turfbooking.models.enums.UserStatus;
-import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.enums.Turfs;
+import com.Turfbooking.models.mics.CustomUserDetails;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CartRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.RemoveCartRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
+import com.Turfbooking.models.response.CartResponse;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.UserResponse;
-import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.razorpay.RazorpayException;
+import com.Turfbooking.razorpay.response.RefundResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
-import com.Turfbooking.repository.OtpRepository;
+import com.Turfbooking.repository.CancelledSlotRepository;
+import com.Turfbooking.repository.CartRepository;
+import com.Turfbooking.repository.OpenCloseTimeRepository;
+import com.Turfbooking.repository.StartEndTimeRepository;
 import com.Turfbooking.repository.UserRepository;
+import com.Turfbooking.service.RazorPayService;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
+import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,47 +68,50 @@ public class UserServiceImpl implements UserService {
 
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
-    private OtpRepository otpRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
-
-    @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, OtpRepository otpRepository, BookedTimeSlotRepository bookedTimeSlotRepository) {
-        this.jwtTokenUtil = jwtTokenUtil;
-        this.userRepository = userRepository;
-        this.otpRepository = otpRepository;
-        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
-    }
+    private CartRepository cartRepository;
+    private CancelledSlotRepository cancelledSlotRepository;
+    private OpenCloseTimeRepository openCloseTimeRepository;
+    private StartEndTimeRepository startEndTimeRepository;
+    private RazorPayService razorPayService;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
-
     @Value("${jwt.secret.refreshToken}")
     private String refreshSecret;
-
     @Value("${jwt.accessToken.validity}")
     private long accessTokenValidity;
-
     @Value("${jwt.refreshToken.validity}")
     private long refreshTokenValidity;
 
+    @Autowired
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, CancelledSlotRepository cancelledSlotRepository, OpenCloseTimeRepository openCloseTimeRepository, StartEndTimeRepository startEndTimeRepository, RazorPayService razorPayService) {
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.userRepository = userRepository;
+        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
+        this.cartRepository = cartRepository;
+        this.cancelledSlotRepository = cancelledSlotRepository;
+        this.openCloseTimeRepository = openCloseTimeRepository;
+        this.startEndTimeRepository = startEndTimeRepository;
+        this.razorPayService = razorPayService;
+    }
+
     @Override
     public CreateUserResponse createNewUser(CreateUserRequest createUserRequest) throws GeneralException {
-
         User isExist = userRepository.findByPhoneNumber(createUserRequest.getPhoneNumber());
         if (isExist != null) {
             throw new GeneralException("User exist with this phone number.", HttpStatus.BAD_REQUEST);
         }
-
-        User addUser = User.builder()
-                .nameOfUser(createUserRequest.getName())
-                .gender(createUserRequest.getGender())
-                .dateOfBirth(createUserRequest.getDateOfBirth())
-                .countryCode(createUserRequest.getCountryCode())
-                .password(CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()))
-                .phoneNumber(createUserRequest.getPhoneNumber())
-                .emailId(createUserRequest.getEmailId())
-                .displayImageUrl(createUserRequest.getDisplayImageUrl())
-                .build();
+        User addUser = new User(createUserRequest.getName(),
+                CommonUtilities.getEncryptedPassword(createUserRequest.getPassword()),
+                createUserRequest.getGender(),
+                createUserRequest.getDateOfBirth(),
+                createUserRequest.getCountryCode(),
+                createUserRequest.getPhoneNumber(),
+                createUserRequest.getEmailId(),
+                createUserRequest.getDisplayImageUrl(),
+                createUserRequest.getRole()
+        );
         Location userLocation = new Location();
         if (null != createUserRequest && null != createUserRequest.getLatitude() && null != createUserRequest.getLongitude()) {
             userLocation.type = "Point";
@@ -101,20 +121,22 @@ public class UserServiceImpl implements UserService {
             userLocation.setCoordinates(locationArray);
         }
         addUser.setLocation(userLocation);
-
         User newCreatedUser = userRepository.insert(addUser);
         UserResponse userResponse = new UserResponse(newCreatedUser);
-
-        String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), accessSecret, accessTokenValidity);
-        String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), refreshSecret, refreshTokenValidity);
-
+        CustomUserDetails customUserDetails = new CustomUserDetails(newCreatedUser);
+        String token = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), customUserDetails, accessSecret, accessTokenValidity);
+        String refreshToken = jwtTokenUtil.generateToken(newCreatedUser.getPhoneNumber(), customUserDetails, refreshSecret, refreshTokenValidity);
+        Cart getCart = cartRepository.findBy_cartId(createUserRequest.getCartId());
+        if (null != getCart) {
+            getCart.setUserPhoneNumber(newCreatedUser.getPhoneNumber());
+            getCart = cartRepository.save(getCart);
+        }
         CreateUserResponse response = new CreateUserResponse(userResponse, token, refreshToken);
         return response;
     }
 
     @Override
-    public CreateUserLoginResponse userLogin(UserLoginRequest userLoginRequest) {
-
+    public CreateUserLoginResponse userLogin(UserLoginRequest userLoginRequest) throws GeneralException {
         String username = userLoginRequest.getUsername();
         String password = CommonUtilities.getEncryptedPassword(userLoginRequest.getPassword());
         String userLoginType = CommonUtilities.findEmailIdOrPasswordValidator(userLoginRequest.getUsername());
@@ -124,119 +146,79 @@ public class UserServiceImpl implements UserService {
         } else {
             isExist = userRepository.findByPhoneNumberAndPassword(username, password);
         }
-
         if (null != isExist) {
-            String token = jwtTokenUtil.generateToken(username, accessSecret, accessTokenValidity);
-            String refreshToken = jwtTokenUtil.generateToken(username, refreshSecret, refreshTokenValidity);
-
+            CustomUserDetails customUserDetails = new CustomUserDetails(isExist);
+            String token = jwtTokenUtil.generateToken(username, customUserDetails, accessSecret, accessTokenValidity);
+            String refreshToken = jwtTokenUtil.generateToken(username, customUserDetails, refreshSecret, refreshTokenValidity);
+            Cart getCart = cartRepository.findBy_cartId(userLoginRequest.getCartId());
+            if (null != getCart) {
+                Cart usersCart = cartRepository.findByUserPhoneNumber(username);
+                Cart mergeCart = null;
+                if (null != usersCart) {
+                    List<Slot> slotList = new ArrayList<>();
+                    if (null != usersCart.getSelectedSlots() && usersCart.getSelectedSlots().size() != 0) {
+                        slotList.addAll(usersCart.getSelectedSlots());
+                    }
+                    if (null != getCart.getSelectedSlots() && getCart.getSelectedSlots().size() != 0) {
+                        for (Slot slot : getCart.getSelectedSlots()) {
+                            for (Slot slot1 : usersCart.getSelectedSlots()) {
+                                if (!slot.getDate().equals(slot1.getDate()) && !slot.getStartTime().equals(slot1.getStartTime())) {
+                                    slotList.add(slot);
+                                }
+                            }
+                        }
+                    }
+                    usersCart.setSelectedSlots(slotList);
+                    mergeCart = cartRepository.save(usersCart);
+                } else {
+                    getCart.setUserPhoneNumber(username);
+                    mergeCart = cartRepository.save(getCart);
+                }
+                if (null != mergeCart) {
+                    cartRepository.delete(getCart);
+                } else {
+                    throw new GeneralException("Error in cart merging", HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            }
             UserResponse userResponse = new UserResponse(isExist);
             CreateUserLoginResponse loginResponse = new CreateUserLoginResponse(userResponse, token, refreshToken);
             return loginResponse;
-
         } else {
             throw new UserNotFoundException("Username and password does not matched.");
         }
     }
 
     @Override
-    public BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest) throws GeneralException {
-
-        //GET SLOT BY DATE AND SLOT NUMBER
-        BookedTimeSlot slot = bookedTimeSlotRepository.findByDateAndSlotNumber(bookTimeSlotRequest.getSlotNumber(), bookTimeSlotRequest.getDate());
-
-        if (slot == null) {
-            BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
-                    .bookingId(CommonUtilities.getAlphaNumericString(5))
-                    .userId(bookTimeSlotRequest.getUserId())
-                    .date(bookTimeSlotRequest.getDate())
-                    .slotNumber(bookTimeSlotRequest.getSlotNumber())
-                    .turfId(bookTimeSlotRequest.getTurfId())
-                    .status(BookingStatus.BOOKED_BY_USER.name())
-                    .startTime(bookTimeSlotRequest.getStartTime())
-                    .endTime(bookTimeSlotRequest.getEndTime())
-                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .build();
-
-            BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
-
-            BookTimeSlotResponse bookTimeSlotResponse = new BookTimeSlotResponse(bookedTimeSlot);
-
-            return bookTimeSlotResponse;
-
+    public UserResponse getUser(String userPhoneNumber) throws GeneralException {
+        User user = userRepository.findByPhoneNumber(userPhoneNumber);
+        if (null != user) {
+            UserResponse response = new UserResponse(user);
+            return response;
         } else {
-            throw new GeneralException("Slot already booked.", HttpStatus.CONFLICT);
+            throw new GeneralException("No user found with phone number :" + userPhoneNumber, HttpStatus.NOT_FOUND);
         }
     }
 
     @Override
     public AllBookedSlotByUserResponse getAllBookedSlots(String userId) throws GeneralException {
-
         User isExist = userRepository.findByPhoneNumber(userId);
-
         if (null != isExist) {
             List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByUserId(userId);
-            AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(bookedTimeSlots);
+            List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
+            for (BookedTimeSlot bookedTimeSlot : bookedTimeSlots) {
+                TimeSlotResponse response = new TimeSlotResponse(bookedTimeSlot);
+                timeSlotResponses.add(response);
+            }
+            AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(timeSlotResponses);
             return response;
-
         } else {
             throw new GeneralException("No user found with user id: " + userId, HttpStatus.OK);
         }
-
-    }
-
-    @Override
-    public ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest) {
-
-        String phoneNumber = validateOtpRequest.getPhoneNumber();
-        String countryCode = validateOtpRequest.getCountryCode();
-
-        String phoneNumberWithCountryCode = null;
-
-        if (StringUtils.isNotBlank(phoneNumber) && StringUtils.isNotBlank(countryCode))
-            phoneNumberWithCountryCode = phoneNumber;
-        else {
-            throw new GeneralException("Phone number or county code is invalid.", HttpStatus.OK);
-        }
-
-        Integer userOtp = validateOtpRequest.getOtp();
-        ValidateOtpResponse validateOtpResponse = new ValidateOtpResponse();
-        Otp otp = otpRepository.findByPhoneNumberAndOtp(phoneNumberWithCountryCode, validateOtpRequest.getOtp());
-
-        if (null != otp && validateOtpRequest.getOtp().intValue() == userOtp.intValue() && LocalDateTime.now().isBefore(otp.getTimeTillActive())) {
-            //delete otp entry from database
-            long otpdeltedCount = otpRepository.deleteByPhoneNumber(otp.getPhoneNumber());
-            validateOtpResponse.setOtpStatus(OtpStatus.VALID.name());
-        } else {
-            validateOtpResponse.setOtpStatus(OtpStatus.INVALID.name());
-        }
-
-        //logic for is this user exist or not.
-        User isUserOrNot = userRepository.findByPhoneNumber(phoneNumber);
-        String token;
-        String refreshToken;
-
-        if (null != isUserOrNot) {
-            token = jwtTokenUtil.generateToken(phoneNumber, accessSecret, accessTokenValidity);
-            refreshToken = jwtTokenUtil.generateToken(phoneNumber, refreshSecret, refreshTokenValidity);
-            validateOtpResponse.setToken(token);
-            validateOtpResponse.setRefreshToken(refreshToken);
-            validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
-            validateOtpResponse.setNameOfTheUser(isUserOrNot.getFirstName());
-            UserResponse userResponse = new UserResponse(isUserOrNot);
-            validateOtpResponse.setUser(userResponse);
-        } else {
-            validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
-
-        }
-        return validateOtpResponse;
-
     }
 
     @Override
     public CustomerProfileUpdateResponse updateProfile(CustomerProfileUpdateRequest customerProfileUpdateRequest) throws GeneralException {
-
         User userDocument = userRepository.findByPhoneNumber(customerProfileUpdateRequest.getPhoneNumber());
-
         if (userDocument != null) {
             userDocument.setNameOfUser(customerProfileUpdateRequest.getName());
             userDocument.setGender(customerProfileUpdateRequest.getGender());
@@ -255,60 +237,56 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BookTimeSlotResponse cancelBookedSlot(String bookingId) {
-
-        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByBookingId(bookingId);
-
+    @Transactional
+    public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest) throws GeneralException, RazorpayException {
+        if (cancelRequest.getDate().isBefore(LocalDate.now(ZoneId.of("Asia/Kolkata"))) /*|| cancelRequest.getDate().equals(LocalDate.now(ZoneId.of("Asia/Kolkata")))*/) {
+            throw new GeneralException("slot cannot be cancelled with date : " + cancelRequest.getDate().toString(), HttpStatus.BAD_REQUEST);
+        }
+        BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), LocalDateTime.of(cancelRequest.getDate(), cancelRequest.getStartTime()), cancelRequest.getDate());
         if (null != timeSlot) {
-            timeSlot = BookedTimeSlot.builder()
-                    ._id(timeSlot.get_id())
-                    .bookingId(timeSlot.getBookingId())
-                    .userId(timeSlot.getUserId())
-                    .slotNumber(null)
-                    .turfId(timeSlot.getTurfId())
-                    .status(BookingStatus.CANCELLED_BY_USER.name())
-                    .date(timeSlot.getDate())
-                    .startTime(timeSlot.getStartTime())
-                    .endTime(timeSlot.getEndTime())
-                    .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
-                    .build();
-
-            BookedTimeSlot cancelled = bookedTimeSlotRepository.save(timeSlot);
-
-            if (null != cancelled) {
-
-                BookTimeSlotResponse response = new BookTimeSlotResponse(cancelled);
+            CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
+            cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
+            //call api for refund
+            RefundResponse refundResponse = razorPayService.initRefund(timeSlot.getOrderId(), timeSlot.getPrice().toString());
+            if (null == refundResponse.getId()) {
+                throw new GeneralException("error while initiating refund", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            cancelledSlot.setRefundId(refundResponse.getId());
+            CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
+            if (null != savedInDB) {
+                bookedTimeSlotRepository.deleteById(timeSlot.get_id());
+                TimeSlotResponse response = new TimeSlotResponse(savedInDB);
                 return response;
-
             } else {
                 throw new GeneralException("Error in cancellation.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            throw new GeneralException("No booked slot with booking id: " + bookingId, HttpStatus.OK);
+            throw new GeneralException("No booked slot.", HttpStatus.OK);
         }
     }
 
     @Override
-    public BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
-
+    public TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
-
+        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(updateRequest.getTurfId(), LocalDateTime.of(updateRequest.getDate(), updateRequest.getStartTime()), updateRequest.getDate());
+        if (null != isSlotBooked) {
+            throw new GeneralException("Slot which you want to book is already booked.", HttpStatus.OK);
+        }
         if (null != bookedTimeSlot) {
             bookedTimeSlot = BookedTimeSlot.builder()
                     ._id(bookedTimeSlot.get_id())
                     .bookingId(CommonUtilities.getAlphaNumericString(6))
                     .userId(updateRequest.getUserId())
-                    .slotNumber(updateRequest.getSlotNumber())
                     .turfId(updateRequest.getTurfId())
+                    .price(updateRequest.getPrice())
                     .date(updateRequest.getDate())
                     .status(BookingStatus.RESCHEDULED_BY_USER.name())
-                    .startTime(updateRequest.getStartTime())
-                    .endTime(updateRequest.getEndTime())
+                    .startTime(LocalDateTime.of(updateRequest.getDate(), updateRequest.getStartTime()))
+                    .endTime(LocalDateTime.of(updateRequest.getDate(), updateRequest.getEndTime()))
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
-
             BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
-            BookTimeSlotResponse response = new BookTimeSlotResponse(updatedBookedSlot);
+            TimeSlotResponse response = new TimeSlotResponse(updatedBookedSlot);
             return response;
         } else {
             throw new GeneralException("Invalid booking id.", HttpStatus.OK);
@@ -319,49 +297,255 @@ public class UserServiceImpl implements UserService {
     public GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         int days = getAllSlotsRequest.getDate().compareTo(today);
-
+        OpenCloseTime openCloseTime = openCloseTimeRepository.findByDate(getAllSlotsRequest.getDate());
+        if (null == openCloseTime) {
+            DayOfWeek day = getAllSlotsRequest.getDate().getDayOfWeek();
+            openCloseTime = openCloseTimeRepository.findByDay(day.toString());
+        }
+        //get all turfs which requested for slots
+        List<String> turfs = getAllSlotsRequest.getTurfIds();
+        GetAllSlotsResponse finalResponse = new GetAllSlotsResponse();
         if (days >= 0) { //means today or in future
-            List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),getAllSlotsRequest.getTurfId());
-//            List<Integer> integerList = new ArrayList();
-            List<BookTimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(getAllSlotsRequest.getTurfId(), getAllSlotsRequest.getDate(), getAllSlotsRequest.getOpenTime(), getAllSlotsRequest.getCloseTime(), getAllSlotsRequest.getSlotDuration());
-
-            List<Integer> integerList = slotFromDB.stream()
-                    .map(x -> x.getSlotNumber())
-                    .collect(Collectors.toList());
-
-            allSlotList.stream().
-                    forEach((response) -> {
-                        if (integerList.contains(response.getSlotNumber())) {
-                            slotFromDB.stream().forEach((bookedSlot) -> {
-                                if (response.getSlotNumber() == bookedSlot.getSlotNumber()) {
-                                    BookTimeSlotResponse bookedResponse = new BookTimeSlotResponse(bookedSlot);
-                                    allSlotList.set(response.getSlotNumber() - 1, bookedResponse);
-                                }
-                            });
+            List<List<TimeSlotResponse>> responseList = new ArrayList<>();
+            for (String turf : turfs) {
+                List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
+                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), LocalDateTime.of(getAllSlotsRequest.getDate(), openCloseTime.getOpenTime()), LocalDateTime.of(getAllSlotsRequest.getDate(), openCloseTime.getCloseTime()), getAllSlotsRequest.getSlotDuration());
+                List<LocalTime> startDateTimeList = slotFromDB.stream()
+                        .map(x -> x.getStartTime().toLocalTime())
+                        .collect(Collectors.toList());
+                for (int i = 0; i < allSlotList.size(); i++) {
+                    if (startDateTimeList.contains(allSlotList.get(i).getStartTime())) {
+                        for (int j = 0; j < slotFromDB.size(); j++) {
+                            if (allSlotList.get(i).getStartTime().equals(slotFromDB.get(j).getStartTime().toLocalTime())) {
+                                TimeSlotResponse bookedResponse = new TimeSlotResponse(slotFromDB.get(j));
+                                allSlotList.set(i, bookedResponse);
+                            }
                         }
-                    });
-
-            GetAllSlotsResponse response = new GetAllSlotsResponse(allSlotList);
-            return response;
+                    }
+                }
+                if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF01.getValue())) {
+                    finalResponse.setTurf01(allSlotList);
+                } else if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF02.getValue())) {
+                    finalResponse.setTurf02(allSlotList);
+                } else if (allSlotList.size() != 0 && allSlotList.get(0).getTurfId().equals(Turfs.TURF03.getValue())) {
+                    finalResponse.setTurf03(allSlotList);
+                }
+            }
+            return finalResponse;
         } else {
             throw new GeneralException("Date should be not in past.", HttpStatus.BAD_REQUEST);
         }
     }
 
-    private List<BookTimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
-        List<BookTimeSlotResponse> timeSlotsList = new ArrayList<>();
+    private List<TimeSlotResponse> getTimeSlotByStartAndEndTimeAndSlotDuration(String turfId, LocalDate date, LocalDateTime openTime, LocalDateTime closeTime, int durationInMinutes) {
+        List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDate(date);
+        if (startEndTimeList.size() == 0) {
+            DayOfWeek day = date.getDayOfWeek();
+            startEndTimeList = startEndTimeRepository.findByDay(day.toString());
+        }
+        List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
-        LocalDateTime slotEndTime;
-        int count = 1;
-
-        //slot end time should be before close time.
-        while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime)) {
-            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-            timeSlotsList.add(new BookTimeSlotResponse(turfId, count, BookingStatus.AVAILABLE.name(), date, slotStartTime, slotEndTime));
-            slotStartTime = slotEndTime;
-            count++;
+        LocalDateTime slotEndTime = null;
+        Double price = null;
+        for (StartEndTime startEndTime : startEndTimeList) {
+            LocalDateTime startTime = LocalDateTime.of(date, startEndTime.getStartTime());
+            LocalDateTime endTime = LocalDateTime.of(date, startEndTime.getEndTime());
+            if (startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
+                //slot end time should be before close time.
+                while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
+                    slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+                    if ((startTime.equals(slotStartTime) || startTime.isAfter(slotStartTime)) && slotStartTime.isBefore(endTime) && startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
+                        if (null != startEndTime.getPrice()) {
+                            price = startEndTime.getPrice();
+                        }
+                    }
+                    timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime.toLocalTime(), slotEndTime.toLocalTime()));
+                    slotStartTime = slotEndTime;
+                }
+            }
         }
         return timeSlotsList;
     }
 
+    @Override
+    public CartResponse addToCart(CartRequest cartRequest) throws GeneralException {
+        for (Slot slot : cartRequest.getSelectedSlots()) {
+            BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), LocalDateTime.of(slot.getDate(), slot.getStartTime()), slot.getDate());
+            if (null != isBookedTimeSlot) {
+                throw new GeneralException("slot with date :" + slot.getDate() + " and time :" + slot.getStartTime() + "is already booked or unavailable", HttpStatus.CONFLICT);
+            }
+        }
+        if (null != cartRequest.getUserPhoneNumber()) {
+            Cart cart = cartRepository.findByUserPhoneNumber(cartRequest.getUserPhoneNumber());
+            if (null != cart) {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+                cartTotal = cartTotal + cart.getCartTotal();
+                List<Slot> selectedSlotList = cart.getSelectedSlots();
+                selectedSlotList.addAll(cartRequest.getSelectedSlots());
+                Cart saveCart = new Cart(cart.get_cartId(),
+                        cartRequest.getUserPhoneNumber(),
+                        selectedSlotList,
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+                Cart savedCart = cartRepository.save(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            } else {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+                Cart saveCart = new Cart(
+                        cartRequest.getUserPhoneNumber(),
+                        cartRequest.getSelectedSlots(),
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+                Cart savedCart = cartRepository.insert(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            }
+        } else {
+            Cart cart = cartRepository.findBy_cartId(cartRequest.getCartId());
+            if (null != cart) {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+                cartTotal = cartTotal + cart.getCartTotal();
+                List<Slot> selectedSlotList = cart.getSelectedSlots();
+                selectedSlotList.addAll(cartRequest.getSelectedSlots());
+                Cart saveCart = new Cart(cart.get_cartId(),
+                        cartRequest.getUserPhoneNumber(),
+                        selectedSlotList,
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+                Cart savedCart = cartRepository.save(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            } else {
+                Double cartTotal = cartRequest.getSelectedSlots().stream().map(x -> x.getPrice())
+                        .collect(Collectors.summingDouble(Double::intValue));
+                Cart saveCart = new Cart(
+                        cartRequest.getUserPhoneNumber(),
+                        cartRequest.getSelectedSlots(),
+                        cartTotal,
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+                Cart savedCart = cartRepository.insert(saveCart);
+                CartResponse response = new CartResponse(savedCart);
+                return response;
+            }
+        }
+    }
+
+    @Override
+    public CommonResponse getCart(String phoneNumber, String cartId) throws GeneralException {
+        String successMessage = "";
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+        LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));
+        List<Slot> slotToBeDeleted = new ArrayList<>();
+        Double cartTotalToBeDeducted = 0D;
+        if (null != phoneNumber) {
+            Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
+            if (null != cart) {
+                //if slot is unavailable or booked remove it from cart
+                cart.getSelectedSlots().stream().forEach(slot -> {
+                    BookedTimeSlot isBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), LocalDateTime.of(slot.getDate(), slot.getStartTime()), slot.getDate());
+                    if (null != isBooked) {
+                        slotToBeDeleted.add(slot);
+                    } else if (slot.getDate().isBefore(today) || (slot.getDate().equals(today) && slot.getStartTime().isBefore(now))) {
+                        slotToBeDeleted.add(slot);
+                    }
+                });
+                cartTotalToBeDeducted = slotToBeDeleted.stream().mapToDouble(x -> x.getPrice()).sum();
+                if (slotToBeDeleted.size() != 0) {
+                    Double newTotal = cart.getCartTotal() - cartTotalToBeDeducted;
+                    cart.setCartTotal(newTotal);
+                    cart.getSelectedSlots().removeAll(slotToBeDeleted);
+                    cart = cartRepository.save(cart);
+                    successMessage = "slot which are of past date and booked are removed from cart";
+                }
+                CartResponse response = new CartResponse(cart);
+                CommonResponse commonResponse = new CommonResponse(response);
+                return ResponseUtilities.createSucessResponseWithMessage(commonResponse, successMessage);
+            }
+        } else if (null != cartId) {
+            Cart cart = cartRepository.findBy_cartId(cartId);
+            if (null != cart) {
+                //if slot is unavailable or booked remove it from cart
+                cart.getSelectedSlots().stream().forEach(slot -> {
+                    BookedTimeSlot isBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), LocalDateTime.of(slot.getDate(), slot.getStartTime()), slot.getDate());
+                    if (null != isBooked) {
+                        slotToBeDeleted.add(slot);
+                    } else if (slot.getDate().isBefore(today) || (slot.getDate().equals(today) && slot.getStartTime().isBefore(now))) {
+                        slotToBeDeleted.add(slot);
+                    }
+                });
+                cartTotalToBeDeducted = slotToBeDeleted.stream().mapToDouble(x -> x.getPrice()).sum();
+                if (slotToBeDeleted.size() != 0) {
+                    Double newTotal = cart.getCartTotal() - cartTotalToBeDeducted;
+                    cart.setCartTotal(newTotal);
+                    cart.getSelectedSlots().removeAll(slotToBeDeleted);
+                    cart = cartRepository.save(cart);
+                    successMessage = "slot which are of past date and booked are removed from cart";
+                }
+                CartResponse response = new CartResponse(cart);
+                CommonResponse commonResponse = new CommonResponse(response);
+                return ResponseUtilities.createSucessResponseWithMessage(commonResponse, successMessage);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public CartResponse removeFromCart(RemoveCartRequest removeCartRequest) throws GeneralException {
+        if (null != removeCartRequest.getUserPhoneNumber()) {
+            Cart cart = cartRepository.findByUserPhoneNumber(removeCartRequest.getUserPhoneNumber());
+            List<Slot> removeSlotFromCart = new ArrayList<>();
+            Double deductPrice = 0D;
+            if (null != cart) {
+                for (Slot slot : cart.getSelectedSlots()) {
+                    if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getStartTime().equals(removeCartRequest.getRemoveSlot().getStartTime())) {
+                        removeSlotFromCart.add(slot);
+                        deductPrice += slot.getPrice();
+                    }
+                }
+                cart.setCartTotal(cart.getCartTotal() - deductPrice);
+                cart.getSelectedSlots().removeAll(removeSlotFromCart);
+                Cart savedCart = cartRepository.save(cart);
+                CartResponse cartResponse = new CartResponse(savedCart);
+                return cartResponse;
+            } else {
+                throw new GeneralException("Cart is empty", HttpStatus.NOT_FOUND);
+            }
+        } else if (null != removeCartRequest.getCartId()) {
+            Cart cartWithoutUser = cartRepository.findBy_cartId(removeCartRequest.getCartId());
+            List<Slot> removeSlotFromCart = new ArrayList<>();
+            Double deductPrice = 0D;
+            if (null != cartWithoutUser) {
+                for (Slot slot : cartWithoutUser.getSelectedSlots()) {
+                    if (slot.getDate().equals(removeCartRequest.getRemoveSlot().getDate()) && slot.getTurfId().equals(removeCartRequest.getRemoveSlot().getTurfId()) && slot.getStartTime().equals(removeCartRequest.getRemoveSlot().getStartTime())) {
+                        removeSlotFromCart.add(slot);
+                        deductPrice += slot.getPrice();
+                    }
+                }
+                cartWithoutUser.setCartTotal(cartWithoutUser.getCartTotal() - deductPrice);
+                cartWithoutUser.getSelectedSlots().removeAll(removeSlotFromCart);
+                Cart savedCart = cartRepository.save(cartWithoutUser);
+                CartResponse cartResponse = new CartResponse(savedCart);
+                return cartResponse;
+            } else {
+                throw new GeneralException("Identification required", HttpStatus.BAD_REQUEST);
+            }
+        }
+        return null;
+    }
+
+    @Scheduled(cron = "0 0 0 1 * ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
+    public void deleteNonUsedCart() {
+        LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+        time = time.minusDays(30);
+        List<Cart> listDeletedCarts = cartRepository.deleteNonUsedCarts(time);
+        log.info("Deleted carts", listDeletedCarts.toString());
+    }
 }

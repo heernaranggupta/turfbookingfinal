@@ -5,7 +5,6 @@ import lombok.Getter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Builder
@@ -13,11 +12,12 @@ import java.time.LocalDate;
 @Valid
 public class CreateUserRequest {
 
-    @NotNull
+    @NotEmpty(message = "Please provide name of user")
     private String name;
     private String gender;
     private LocalDate dateOfBirth;
     private String password;
+    @NotEmpty(message = "Please provide country code")
     private String countryCode;
     @NotEmpty(message = "Please provide contact number")
     private String phoneNumber;
@@ -25,5 +25,8 @@ public class CreateUserRequest {
     private Double latitude;
     private Double longitude;
     private String displayImageUrl;
+    private String cartId;
+    @NotEmpty(message = "Please provide user role")
+    private String role;
 
 }

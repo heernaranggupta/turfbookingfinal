@@ -1,19 +1,23 @@
 package com.Turfbooking.service;
 
-import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CartRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.RemoveCartRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
+import com.Turfbooking.models.response.CartResponse;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
-import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
+import com.Turfbooking.models.response.UserResponse;
+import com.Turfbooking.razorpay.RazorpayException;
 
 public interface UserService {
 
@@ -21,17 +25,22 @@ public interface UserService {
 
     CreateUserLoginResponse userLogin(UserLoginRequest userLoginRequest);
 
-    AllBookedSlotByUserResponse getAllBookedSlots(String userId);
+    UserResponse getUser(String userPhoneNumber);
 
-    ValidateOtpResponse validateOTP(ValidateOtpRequest request);
+    AllBookedSlotByUserResponse getAllBookedSlots(String userId);
 
     CustomerProfileUpdateResponse updateProfile(CustomerProfileUpdateRequest customerProfileUpdateRequest);
 
-    BookTimeSlotResponse cancelBookedSlot(String bookingId);
+    TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) throws RazorpayException;
 
-    BookTimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest);
-
-    BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest);
+    TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest);
 
     GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest);
+
+    CartResponse addToCart(CartRequest cartRequest);
+
+    CommonResponse getCart(String PhoneNumber, String cartId);
+
+    CartResponse removeFromCart(RemoveCartRequest removeCartRequest);
+
 }

@@ -1,12 +1,18 @@
 package com.Turfbooking.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -21,41 +27,30 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable().authorizeRequests()
+        http.cors().and().csrf().disable().authorizeRequests()
                 .antMatchers("/user/sign-up").permitAll()
                 .antMatchers("/user/login").permitAll()
-                .antMatchers("/user/getAllSlots").permitAll()
-                .antMatchers("/user/validate-otp").permitAll()
-                .antMatchers("/user/slot/cancel").permitAll()
-                .antMatchers("/user/booking-history").permitAll()
-                .antMatchers("/user/validate-otp").permitAll()
-                .antMatchers("/user/cancel-booking").permitAll()
-                .antMatchers("/user/book-slot").permitAll()
-                .antMatchers("/user/update-slot").permitAll()
-                .antMatchers("/user/cancel-slot").permitAll()
-                .antMatchers("/user/updateProfile").permitAll()
-
-                .antMatchers("/common/generateOTP").permitAll()
-                .antMatchers("/common/validateOTP").permitAll()
-                .antMatchers("/user/update-booking").permitAll()
+                .antMatchers("/user/cart").permitAll()
+                .antMatchers("/user/cart/remove").permitAll()
                 .antMatchers("/user/get-all-slots-by-date").permitAll()
+                .antMatchers("/payment/**").permitAll()
 
+                .antMatchers("/admin/**").permitAll()
 
-                .antMatchers("/common/generate-otp").permitAll()
-                .antMatchers("/common/validate-otp").permitAll()
-
+                .antMatchers("/business/signup").hasRole("ADMIN")
+                .antMatchers("/business/get-all-business-users").hasRole("ADMIN")
                 .antMatchers("/business/login").permitAll()
-                .antMatchers("/business/reset-password").permitAll()
-                .antMatchers("/business/update").permitAll()
-                .antMatchers("/business/book-slot").permitAll()
-                .antMatchers("/business/all-slots").permitAll()
 
-                .antMatchers("/business/slot/make-unavailable").permitAll()
+                .antMatchers("/business/all-slots").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                .antMatchers("/business/all-slots").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
 
 
-                .antMatchers("/images/uploadFile").permitAll()
-                .antMatchers("/images/downloadFile/**").permitAll()
+                .antMatchers("/business/reset-password").hasRole("ADMIN")
+                .antMatchers("/business/update").hasRole("ADMIN")
+                .antMatchers("/business/slot/make-unavailable").hasAnyRole("ADMIN", "MANAGER")
+                .antMatchers("/business/reschedule-booking").hasAnyRole("ADMIN", "MANAGER")
 
+                .antMatchers("/actuator/**").permitAll()
                 .antMatchers("/swagger-ui/**").permitAll()
                 .antMatchers("/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/swagger-config", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
 
@@ -66,5 +61,15 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.applyPermitDefaultValues();
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

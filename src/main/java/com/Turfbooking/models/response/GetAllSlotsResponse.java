@@ -1,21 +1,20 @@
 package com.Turfbooking.models.response;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
 @Getter
 @Setter
-@Builder
+@NoArgsConstructor
 public class GetAllSlotsResponse {
 
-    List<BookTimeSlotResponse> responseList;
+    private List<TimeSlotResponse> turf01;
+    private List<TimeSlotResponse> turf02;
+    private List<TimeSlotResponse> turf03;
 
-    public GetAllSlotsResponse(List<BookTimeSlotResponse> responseList) {
-        this.responseList = responseList;
-    }
 }
 
 

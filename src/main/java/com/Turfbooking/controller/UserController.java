@@ -1,24 +1,25 @@
 package com.Turfbooking.controller;
 
-import com.Turfbooking.models.request.BookTimeSlotRequest;
+import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
+import com.Turfbooking.models.request.CartRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.CustomerProfileUpdateRequest;
 import com.Turfbooking.models.request.GetAllSlotsRequest;
+import com.Turfbooking.models.request.RemoveCartRequest;
 import com.Turfbooking.models.request.UpdateBookedTimeSlotRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
-import com.Turfbooking.models.request.ValidateOtpRequest;
 import com.Turfbooking.models.response.AllBookedSlotByUserResponse;
-import com.Turfbooking.models.response.BookTimeSlotResponse;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
-import com.Turfbooking.models.response.UserResponse;
-import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.models.response.TimeSlotResponse;
+import com.Turfbooking.razorpay.RazorpayException;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -29,8 +30,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+@Slf4j
 @RestController
 @RequestMapping("/user")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class UserController {
 
     private UserService userService;
@@ -40,8 +43,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    /*TODO:: make a booking*/
-
     @PostMapping("/sign-up")
     public CommonResponse<CreateUserResponse> createUser(@RequestBody @Valid CreateUserRequest createUserRequest) {
         CreateUserResponse userResponse = userService.createNewUser(createUserRequest);
@@ -50,16 +51,16 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public CommonResponse<UserResponse> userLogin(@Valid @RequestBody UserLoginRequest userLoginRequest) {
+    public CommonResponse<CreateUserLoginResponse> userLogin(@Valid @RequestBody UserLoginRequest userLoginRequest) {
         CreateUserLoginResponse userResponse = userService.userLogin(userLoginRequest);
         CommonResponse response = new CommonResponse(userResponse);
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @PostMapping("/validate-otp")
-    public CommonResponse<ValidateOtpResponse> validateOTP(@RequestBody ValidateOtpRequest request) {
-        CommonResponse commonResponse = new CommonResponse<>(userService.validateOTP(request));
-        return ResponseUtilities.createSuccessResponse(commonResponse);
+    @GetMapping
+    public CommonResponse getUser(@RequestParam String userPhoneNumber) {
+        CommonResponse response = new CommonResponse(userService.getUser(userPhoneNumber));
+        return ResponseUtilities.createSuccessResponse(response);
     }
 
     @PutMapping("/update-profile")
@@ -69,43 +70,32 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
-            condition = "#bookTimeSlotRequest.turfId != null")
-    //we need to get booking id,date for removing cache ,as we need key which is turfId and date
-    @GetMapping("cancel-booking")
-    public CommonResponse cancelBookedSlot(@RequestParam String bookingId) {
-        BookTimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(bookingId);
+    //    @CacheEvict(
+//            value = "listOfSlotsByTurfIdAndDate",
+//            allEntries = true,
+//            condition = "#cancelOrUnavailableSlotRequest.turfId != null")
+    @PostMapping("cancel-booking")
+    public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) throws RazorpayException {
+        TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }
 
-    @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            key = "#bookTimeSlotRequest.turfId.concat('-').concat(#bookTimeSlotRequest.date.toString())",
-            condition = "#bookTimeSlotRequest.turfId != null")
-    @PostMapping("/book-slot")
-    public CommonResponse<BookTimeSlotResponse> bookSlot(@Valid @RequestBody BookTimeSlotRequest bookTimeSlotRequest){
-        CommonResponse response = new CommonResponse<>(userService.bookSlot(bookTimeSlotRequest));
-        return ResponseUtilities.createSuccessResponse(response);
-    }
-
-    @CacheEvict(
-            value = "listOfSlotsByTurfIdAndDate",
-            key = "#updateBookedTimeSlotRequest.turfId.concat('-').concat(#updateBookedTimeSlotRequest.date.toString())",
-            condition = "#updateBookedTimeSlotRequest.turfId != null")
+    //    @CacheEvict(
+//            value = "listOfSlotsByTurfIdAndDate",
+//            allEntries = true,
+//            condition = "#updateBookedTimeSlotRequest.turfId != null")
     @PostMapping("update-booking")
-    public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest){
-        BookTimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
+    public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest) {
+        TimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return ResponseUtilities.createSuccessResponse(response);
     }
 
     //view user booking history
     @GetMapping("/booking-history")
-    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userId) {
-        CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userId));
+    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userPhoneNumber) {
+        CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userPhoneNumber));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
@@ -114,4 +104,23 @@ public class UserController {
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
+
+    @PostMapping("/cart")
+    public CommonResponse addToCart(@Valid @RequestBody CartRequest cartRequest) {
+        CommonResponse response = new CommonResponse(userService.addToCart(cartRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @GetMapping("/cart")
+    public CommonResponse getCart(@RequestParam(required = false) String phoneNumber,
+                                  @RequestParam(required = false) String cartId) {
+        return userService.getCart(phoneNumber, cartId);
+    }
+
+    @PostMapping("/cart/remove")
+    public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest) {
+        CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
+        return ResponseUtilities.createSucessResponseWithMessage(response, "Slot successfully removed");
+    }
+
 }
