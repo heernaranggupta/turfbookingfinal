@@ -12,8 +12,8 @@ import java.time.LocalDate;
 public class CustomerProfileUpdateRequest {
     @NotNull
     private String name;
-    private String password;
-    private String countryCode;
+    //    private String password;
+//    private String countryCode;
     @NotEmpty(message = "Please provide contact number")
     private String phoneNumber;
     private String gender;
@@ -25,5 +25,6 @@ public class CustomerProfileUpdateRequest {
     private Double latitude;
     private Double longitude;
     private String emailId;
+    private String downloadUrl;
 
 }

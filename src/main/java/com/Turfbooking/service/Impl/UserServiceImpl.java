@@ -220,11 +220,21 @@ public class UserServiceImpl implements UserService {
     public CustomerProfileUpdateResponse updateProfile(CustomerProfileUpdateRequest customerProfileUpdateRequest) throws GeneralException {
         User userDocument = userRepository.findByPhoneNumber(customerProfileUpdateRequest.getPhoneNumber());
         if (userDocument != null) {
-            userDocument.setNameOfUser(customerProfileUpdateRequest.getName());
-            userDocument.setGender(customerProfileUpdateRequest.getGender());
-            userDocument.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
-            userDocument.setAddress(new Address(customerProfileUpdateRequest.getAddressLine(), customerProfileUpdateRequest.getZipCode(), customerProfileUpdateRequest.getCity(), customerProfileUpdateRequest.getState(), "INDIA"));
-            userDocument.setEmailId(customerProfileUpdateRequest.getEmailId());
+            if (null != customerProfileUpdateRequest.getName()) {
+                userDocument.setNameOfUser(customerProfileUpdateRequest.getName());
+            }
+            if (null != customerProfileUpdateRequest.getGender()) {
+                userDocument.setGender(customerProfileUpdateRequest.getGender());
+            }
+            if (null != customerProfileUpdateRequest.getDateOfBirth()) {
+                userDocument.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
+            }
+            if (null != customerProfileUpdateRequest.getAddressLine()) {
+                userDocument.setAddress(new Address(customerProfileUpdateRequest.getAddressLine(), customerProfileUpdateRequest.getZipCode(), customerProfileUpdateRequest.getCity(), customerProfileUpdateRequest.getState(), "INDIA"));
+            }
+            if (null != customerProfileUpdateRequest.getDownloadUrl()) {
+                userDocument.setDisplayImageUrl(customerProfileUpdateRequest.getDownloadUrl());
+            }
             User newCreatedUser = userRepository.save(userDocument);
             UserResponse userResponse = new UserResponse(newCreatedUser);
             CustomerProfileUpdateResponse customerProfileUpdateResponse = CustomerProfileUpdateResponse.builder()

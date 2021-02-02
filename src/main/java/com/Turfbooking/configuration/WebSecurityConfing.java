@@ -33,22 +33,20 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/cart").permitAll()
                 .antMatchers("/user/cart/remove").permitAll()
                 .antMatchers("/user/get-all-slots-by-date").permitAll()
-                .antMatchers("/payment/**").permitAll()
 
-                .antMatchers("/admin/**").permitAll()
+                /*.antMatchers("/payment/**").permitAll()*/
 
-                .antMatchers("/business/signup").hasRole("ADMIN")
-                .antMatchers("/business/get-all-business-users").hasRole("ADMIN")
+                /*.antMatchers("/admin/**").permitAll()*/
+
                 .antMatchers("/business/login").permitAll()
-
-                .antMatchers("/business/all-slots").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
-                .antMatchers("/business/all-slots").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
-
-
-                .antMatchers("/business/reset-password").hasRole("ADMIN")
-                .antMatchers("/business/update").hasRole("ADMIN")
                 .antMatchers("/business/slot/make-unavailable").hasAnyRole("ADMIN", "MANAGER")
                 .antMatchers("/business/reschedule-booking").hasAnyRole("ADMIN", "MANAGER")
+                .antMatchers("/business/all-slots").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                .antMatchers("/business/all-slots").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                .antMatchers("/business/signup").hasRole("ADMIN")
+                .antMatchers("/business/get-all-business-users").hasRole("ADMIN")
+                .antMatchers("/business/reset-password").hasRole("ADMIN")
+                .antMatchers("/business/update").hasRole("ADMIN")
 
                 .antMatchers("/actuator/**").permitAll()
                 .antMatchers("/swagger-ui/**").permitAll()
