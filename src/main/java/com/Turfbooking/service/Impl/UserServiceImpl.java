@@ -59,6 +59,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -204,11 +205,17 @@ public class UserServiceImpl implements UserService {
         User isExist = userRepository.findByPhoneNumber(userId);
         if (null != isExist) {
             List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByUserId(userId);
+            List<CancelledSlot> cancelledSlotList = cancelledSlotRepository.findByUserId(userId);
             List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
             for (BookedTimeSlot bookedTimeSlot : bookedTimeSlots) {
                 TimeSlotResponse response = new TimeSlotResponse(bookedTimeSlot);
                 timeSlotResponses.add(response);
             }
+            for (CancelledSlot cancelledSlot : cancelledSlotList) {
+                TimeSlotResponse timeSlotResponse = new TimeSlotResponse(cancelledSlot);
+                timeSlotResponses.add(timeSlotResponse);
+            }
+            timeSlotResponses.sort(Comparator.comparing(TimeSlotResponse::getTimestamp));/*sorted((t1, t2 ) -> t1.getTimestamp().compareTo(t2.getTimestamp()));*/
             AllBookedSlotByUserResponse response = new AllBookedSlotByUserResponse(timeSlotResponses);
             return response;
         } else {
