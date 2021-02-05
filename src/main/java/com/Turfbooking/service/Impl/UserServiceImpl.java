@@ -236,7 +236,7 @@ public class UserServiceImpl implements UserService {
             if (null != customerProfileUpdateRequest.getDateOfBirth()) {
                 userDocument.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
             }
-            if (null != customerProfileUpdateRequest.getAddressLine()) {
+            if (null != customerProfileUpdateRequest.getAddressLine() && null != customerProfileUpdateRequest.getZipCode() && null != customerProfileUpdateRequest.getCity() && null != customerProfileUpdateRequest.getState()) {
                 userDocument.setAddress(new Address(customerProfileUpdateRequest.getAddressLine(), customerProfileUpdateRequest.getZipCode(), customerProfileUpdateRequest.getCity(), customerProfileUpdateRequest.getState(), "INDIA"));
             }
             if (null != customerProfileUpdateRequest.getDownloadUrl()) {

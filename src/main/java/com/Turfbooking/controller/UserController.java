@@ -65,8 +65,7 @@ public class UserController {
 
     @PutMapping("/update-profile")
     public CommonResponse<CustomerProfileUpdateResponse> updateProfile(@Valid @RequestBody CustomerProfileUpdateRequest customerProfileUpdateRequest) {
-        CustomerProfileUpdateResponse customerProfileUpdateResponse = userService.updateProfile(customerProfileUpdateRequest);
-        CommonResponse commonResponse = new CommonResponse<>(customerProfileUpdateRequest);
+        CommonResponse commonResponse = new CommonResponse<>(userService.updateProfile(customerProfileUpdateRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
