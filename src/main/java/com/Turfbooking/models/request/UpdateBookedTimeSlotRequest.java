@@ -1,6 +1,7 @@
 package com.Turfbooking.models.request;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import java.time.LocalTime;
 
 @Valid
 @Getter
+@Setter
 public class UpdateBookedTimeSlotRequest {
 
     @NotBlank

@@ -30,13 +30,16 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable().authorizeRequests()
                 .antMatchers("/user/sign-up").permitAll()
                 .antMatchers("/user/login").permitAll()
-                .antMatchers("/user/cart").permitAll()
+                .antMatchers("/user/guest-cart").permitAll()
                 .antMatchers("/user/cart/remove").permitAll()
                 .antMatchers("/user/get-all-slots-by-date").permitAll()
 
                 /*.antMatchers("/payment/**").permitAll()*/
 
                 /*.antMatchers("/admin/**").permitAll()*/
+
+                .antMatchers("/common/generate-otp").permitAll()
+                .antMatchers("/common/validate-otp").permitAll()
 
                 .antMatchers("/business/login").permitAll()
                 .antMatchers("/business/slot/make-unavailable").hasAnyRole("ADMIN", "MANAGER")

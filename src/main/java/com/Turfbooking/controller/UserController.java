@@ -19,6 +19,7 @@ import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,34 +59,29 @@ public class UserController {
     }
 
     @GetMapping
-    public CommonResponse getUser(@RequestParam String userPhoneNumber) {
-        CommonResponse response = new CommonResponse(userService.getUser(userPhoneNumber));
+    public CommonResponse getUser(Authentication authentication) {
+        CommonResponse response = new CommonResponse(userService.getUser(authentication.getName()));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
     @PutMapping("/update-profile")
-    public CommonResponse<CustomerProfileUpdateResponse> updateProfile(@Valid @RequestBody CustomerProfileUpdateRequest customerProfileUpdateRequest) {
+    public CommonResponse<CustomerProfileUpdateResponse> updateProfile(@Valid @RequestBody CustomerProfileUpdateRequest customerProfileUpdateRequest, Authentication authentication) {
+        customerProfileUpdateRequest.setPhoneNumber(authentication.getName());
         CommonResponse commonResponse = new CommonResponse<>(userService.updateProfile(customerProfileUpdateRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-    //    @CacheEvict(
-//            value = "listOfSlotsByTurfIdAndDate",
-//            allEntries = true,
-//            condition = "#cancelOrUnavailableSlotRequest.turfId != null")
     @PostMapping("cancel-booking")
-    public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) throws RazorpayException {
-        TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
+    public CommonResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest, Authentication authentication) throws RazorpayException {
+        TimeSlotResponse timeSlotResponse = userService.cancelBookedSlot(cancelOrUnavailableSlotRequest, authentication.getName());
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return response;
     }
 
-    //    @CacheEvict(
-//            value = "listOfSlotsByTurfIdAndDate",
-//            allEntries = true,
-//            condition = "#updateBookedTimeSlotRequest.turfId != null")
+
     @PostMapping("update-booking")
-    public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest) {
+    public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest, Authentication authentication) {
+        updateBookedTimeSlotRequest.setUserId(authentication.getName());
         TimeSlotResponse timeSlotResponse = userService.updateBookedSlot(updateBookedTimeSlotRequest);
         CommonResponse response = new CommonResponse(timeSlotResponse);
         return ResponseUtilities.createSuccessResponse(response);
@@ -93,8 +89,8 @@ public class UserController {
 
     //view user booking history
     @GetMapping("/booking-history")
-    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(@RequestParam String userPhoneNumber) {
-        CommonResponse response = new CommonResponse(userService.getAllBookedSlots(userPhoneNumber));
+    public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(Authentication authentication) {
+        CommonResponse response = new CommonResponse(userService.getAllBookedSlots(authentication.getName()));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
@@ -105,19 +101,25 @@ public class UserController {
     }
 
     @PostMapping("/cart")
-    public CommonResponse addToCart(@Valid @RequestBody CartRequest cartRequest) {
+    public CommonResponse addToCart(@Valid @RequestBody CartRequest cartRequest, Authentication authentication) {
+        cartRequest.setUserPhoneNumber(authentication.getName());
         CommonResponse response = new CommonResponse(userService.addToCart(cartRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
+    @GetMapping("/guest-cart")
+    public CommonResponse getCart(@RequestParam(required = false) String cartId, @RequestParam(required = false) String phoneNumber) {
+        return userService.getCart(cartId, cartId);
+    }
+
     @GetMapping("/cart")
-    public CommonResponse getCart(@RequestParam(required = false) String phoneNumber,
-                                  @RequestParam(required = false) String cartId) {
-        return userService.getCart(phoneNumber, cartId);
+    public CommonResponse getCart(@RequestParam(required = false) String cartId, @RequestParam(required = false) String phoneNumber, Authentication authentication) {
+        return userService.getCart(authentication.getName(), cartId);
     }
 
     @PostMapping("/cart/remove")
-    public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest) {
+    public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest, Authentication authentication) {
+        removeCartRequest.setUserPhoneNumber(authentication.getName());
         CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
         return ResponseUtilities.createSucessResponseWithMessage(response, "Slot successfully removed");
     }
