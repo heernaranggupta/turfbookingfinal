@@ -12,6 +12,7 @@ import com.Turfbooking.service.CommonService;
 import com.Turfbooking.service.PaymentService;
 import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,7 +51,8 @@ public class CommonController {
     }
 
     @PostMapping("/order")
-    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest) {
+    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest, Authentication authentication) {
+        orderRequest.setUserId(authentication.getName());
         CommonResponse response = new CommonResponse<>(commonService.placeOrder(orderRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }

@@ -1,16 +1,17 @@
 package com.Turfbooking.models.request;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
-@Getter
 @Valid
+@Getter
+@Setter
 public class OrderRequest {
 
-    @NotEmpty
     private String userId;
     @NotEmpty
     private String transactionId;

@@ -19,6 +19,7 @@ import com.Turfbooking.service.BusinessService;
 import com.Turfbooking.utils.ResponseUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,22 +46,16 @@ public class BusinessController {
 
 
     @PostMapping("/signup")
-    public CommonResponse<CreateBusinessResponse> createNewBusinessUser(@Valid @RequestBody CreateBusinessRequest createBusinessRequest){
+    public CommonResponse<CreateBusinessResponse> createNewBusinessUser(@Valid @RequestBody CreateBusinessRequest createBusinessRequest) {
         CommonResponse response = new CommonResponse(businessService.createBusinessUser(createBusinessRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-
-//    @Cacheable(
-//            value = "listOfSlotsByTurfIdAndDate",
-//            key = "#getAllSlotsBusinessRequest.date.toString()",
-//            condition = "#getAllSlotsBusinessRequest.date != null")
-@PostMapping("/all-slots")
-public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
-    CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
-    return ResponseUtilities.createSuccessResponse(commonResponse);
-}
-
+    @PostMapping("/all-slots")
+    public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest getAllSlotsBusinessRequest) {
+        CommonResponse commonResponse = new CommonResponse(businessService.getAllSlots(getAllSlotsBusinessRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
 
     @PostMapping("/login")
     public CommonResponse<CreateBusinessLoginResponse> businessLogin(@RequestBody @Valid CreateBusinessLoginRequest request) {
@@ -74,10 +69,9 @@ public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
 
-
-    //not required in minimum viable product
     @PutMapping("/update")
-    public CommonResponse<CreateBusinessUpdateResponse> update(@RequestBody UpdateBusinessRequest updateBusinessRequest) {
+    public CommonResponse<CreateBusinessUpdateResponse> update(@RequestBody UpdateBusinessRequest updateBusinessRequest, Authentication authentication) {
+        updateBusinessRequest.setPhoneNumber(authentication.getName());
         CommonResponse commonResponse = new CommonResponse(businessService.updateBusiness(updateBusinessRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
@@ -89,7 +83,8 @@ public CommonResponse getAllSlots(@Valid @RequestBody GetAllSlotsBusinessRequest
     }
 
     @PostMapping("/reschedule-booking")
-    public CommonResponse<RescheduleBookingResponse> rescheduleBooking(@RequestBody CreateRescheduleBookingRequest createRescheduleBookingRequest) {
+    public CommonResponse<RescheduleBookingResponse> rescheduleBooking(@RequestBody CreateRescheduleBookingRequest createRescheduleBookingRequest, Authentication authentication) {
+        createRescheduleBookingRequest.setUserId(authentication.getName());
         CommonResponse commonResponse = new CommonResponse(businessService.rescheduleBooking(createRescheduleBookingRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
