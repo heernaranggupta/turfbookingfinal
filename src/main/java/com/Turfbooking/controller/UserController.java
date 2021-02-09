@@ -107,9 +107,17 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @GetMapping("/guest-cart")
+    @PostMapping("/cart/guest")
+    public CommonResponse addToGuestCart(@Valid @RequestBody CartRequest cartRequest) {
+        System.out.println("################ CartID :" + cartRequest.getCartId());
+        CommonResponse response = new CommonResponse(userService.addToCart(cartRequest));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @GetMapping("/cart/guest")
     public CommonResponse getCart(@RequestParam(required = false) String cartId, @RequestParam(required = false) String phoneNumber) {
-        return userService.getCart(cartId, cartId);
+        System.out.println("################ CartID :" + cartId);
+        return userService.getCart(phoneNumber, cartId);
     }
 
     @GetMapping("/cart")
@@ -120,6 +128,13 @@ public class UserController {
     @PostMapping("/cart/remove")
     public CommonResponse removeFromCart(@Valid @RequestBody RemoveCartRequest removeCartRequest, Authentication authentication) {
         removeCartRequest.setUserPhoneNumber(authentication.getName());
+        CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
+        return ResponseUtilities.createSucessResponseWithMessage(response, "Slot successfully removed");
+    }
+
+    @PostMapping("/cart/guest/remove")
+    public CommonResponse removeFromGuestCart(@Valid @RequestBody RemoveCartRequest removeCartRequest, Authentication authentication) {
+        System.out.println("################ CartID :" + removeCartRequest.getCartId());
         CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
         return ResponseUtilities.createSucessResponseWithMessage(response, "Slot successfully removed");
     }
