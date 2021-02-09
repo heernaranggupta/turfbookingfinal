@@ -233,6 +233,9 @@ public class UserServiceImpl implements UserService {
             if (null != customerProfileUpdateRequest.getGender()) {
                 userDocument.setGender(customerProfileUpdateRequest.getGender());
             }
+            if (null != customerProfileUpdateRequest.getEmailId()) {
+                userDocument.setEmailId(customerProfileUpdateRequest.getEmailId());
+            }
             if (null != customerProfileUpdateRequest.getDateOfBirth()) {
                 userDocument.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
             }
@@ -457,6 +460,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CommonResponse getCart(String phoneNumber, String cartId) throws GeneralException {
+        System.out.println(cartId);
         String successMessage = "";
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));

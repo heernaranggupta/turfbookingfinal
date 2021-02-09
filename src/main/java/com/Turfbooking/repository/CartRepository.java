@@ -14,6 +14,7 @@ public interface CartRepository extends MongoRepository<Cart, String> {
 
     Cart findByUserPhoneNumber(String phoneNumber);
 
+    @Query("{'_cartId' : ?0 }")
     Cart findBy_cartId(String cartId);
 
     @Query("DELETE FROM cart AS c WHERE c.userPhoneNumber = null AND  timeStamp > :date")
