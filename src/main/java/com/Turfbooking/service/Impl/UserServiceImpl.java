@@ -12,6 +12,7 @@ import com.Turfbooking.models.common.Address;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.common.Slot;
 import com.Turfbooking.models.enums.BookingStatus;
+import com.Turfbooking.models.enums.Roles;
 import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.mics.CustomUserDetails;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
@@ -263,9 +264,14 @@ public class UserServiceImpl implements UserService {
             throw new GeneralException("slot cannot be cancelled with date : " + cancelRequest.getDate().toString(), HttpStatus.BAD_REQUEST);
         }
         BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), LocalDateTime.of(cancelRequest.getDate(), cancelRequest.getStartTime()), cancelRequest.getDate());
-        if (null != timeSlot && userID.equals(timeSlot.getUserId())) {
+        User user = userRepository.findByPhoneNumber(userID);
+        if (null != timeSlot && null != user) {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
-            cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
+            if (user.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
+                cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_BUSINESS.name());
+            } else if (user.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
+                cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
+            }
             //call api for refund
             RefundResponse refundResponse = razorPayService.initRefund(timeSlot.getOrderId(), timeSlot.getPrice().toString());
             if (null == refundResponse.getId()) {
@@ -289,6 +295,7 @@ public class UserServiceImpl implements UserService {
     public TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateRequest) throws GeneralException {
         BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateRequest.getBookingId());
         BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(updateRequest.getTurfId(), LocalDateTime.of(updateRequest.getDate(), updateRequest.getStartTime()), updateRequest.getDate());
+        User user = userRepository.findByPhoneNumber(updateRequest.getUserId());
         if (null != isSlotBooked) {
             throw new GeneralException("Slot which you want to book is already booked.", HttpStatus.OK);
         }
@@ -300,16 +307,20 @@ public class UserServiceImpl implements UserService {
                     .turfId(updateRequest.getTurfId())
                     .price(updateRequest.getPrice())
                     .date(updateRequest.getDate())
-                    .status(BookingStatus.RESCHEDULED_BY_USER.name())
                     .startTime(LocalDateTime.of(updateRequest.getDate(), updateRequest.getStartTime()))
                     .endTime(LocalDateTime.of(updateRequest.getDate(), updateRequest.getEndTime()))
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
+            if (user.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
+                bookedTimeSlot.setStatus(BookingStatus.RESCHEDULED_BY_BUSINESS.name());
+            } else if (user.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
+                bookedTimeSlot.setStatus(BookingStatus.RESCHEDULED_BY_USER.name());
+            }
             BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
             TimeSlotResponse response = new TimeSlotResponse(updatedBookedSlot);
             return response;
         } else {
-            throw new GeneralException("Invalid booking id.", HttpStatus.OK);
+            throw new GeneralException("Invalid booking id.", HttpStatus.BAD_REQUEST);
         }
     }
 

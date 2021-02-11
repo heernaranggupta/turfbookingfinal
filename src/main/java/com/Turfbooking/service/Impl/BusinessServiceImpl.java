@@ -45,6 +45,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -252,6 +253,7 @@ public class BusinessServiceImpl implements BusinessService {
                 TimeSlotResponse response = new TimeSlotResponse(slot);
                 responseList.add(response);
             }
+            Collections.reverse(responseList);
             return responseList;
         } else if (null != status && status.equalsIgnoreCase("CANCELLED")) {
             List<CancelledSlot> cancelledSlotList = cancelledSlotRepository.findAllByDate(fromDate, toDate);
@@ -260,6 +262,7 @@ public class BusinessServiceImpl implements BusinessService {
                 TimeSlotResponse response = new TimeSlotResponse(slot);
                 responseList.add(response);
             }
+            Collections.reverse(responseList);
             return responseList;
         } else if (null != status && status.equalsIgnoreCase("ALL")) {
             bookedList = bookedTimeSlotRepository.findAllByDate(fromDate, toDate);
@@ -274,7 +277,7 @@ public class BusinessServiceImpl implements BusinessService {
                 responseList.add(response);
             }
             responseList.sort(Comparator.comparing(TimeSlotResponse::getTimestamp));
-//            Collections.sort(responseList, Collections.reverseOrder());
+            Collections.reverse(responseList);
             return responseList;
         } else {
             throw new GeneralException("Error", HttpStatus.INTERNAL_SERVER_ERROR);

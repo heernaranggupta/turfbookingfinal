@@ -78,7 +78,6 @@ public class UserController {
         return response;
     }
 
-
     @PostMapping("update-booking")
     public CommonResponse updateBookedSlot(@Valid @RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest, Authentication authentication) {
         updateBookedTimeSlotRequest.setUserId(authentication.getName());
@@ -87,7 +86,6 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    //view user booking history
     @GetMapping("/booking-history")
     public CommonResponse<AllBookedSlotByUserResponse> allBookedSlots(Authentication authentication) {
         CommonResponse response = new CommonResponse(userService.getAllBookedSlots(authentication.getName()));
@@ -109,7 +107,7 @@ public class UserController {
 
     @PostMapping("/cart/guest")
     public CommonResponse addToGuestCart(@Valid @RequestBody CartRequest cartRequest) {
-        System.out.println("################ CartID :" + cartRequest.getCartId());
+//        System.out.println("################ CartID :" + cartRequest.getCartId());
         CommonResponse response = new CommonResponse(userService.addToCart(cartRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
@@ -117,7 +115,7 @@ public class UserController {
     @GetMapping("/cart/guest")
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public CommonResponse getCart(@RequestParam(required = false) String cartId, @RequestParam(required = false) String phoneNumber) {
-        System.out.println("################ CartID :" + cartId);
+//        System.out.println("################ CartID :" + cartId);
         return userService.getCart(phoneNumber, cartId);
     }
 
@@ -135,7 +133,7 @@ public class UserController {
 
     @PostMapping("/cart/guest/remove")
     public CommonResponse removeFromGuestCart(@Valid @RequestBody RemoveCartRequest removeCartRequest) {
-        System.out.println("################ CartID :" + removeCartRequest.getCartId());
+//        System.out.println("################ CartID :" + removeCartRequest.getCartId());
         CommonResponse response = new CommonResponse(userService.removeFromCart(removeCartRequest));
         return ResponseUtilities.createSucessResponseWithMessage(response, "Slot successfully removed");
     }
