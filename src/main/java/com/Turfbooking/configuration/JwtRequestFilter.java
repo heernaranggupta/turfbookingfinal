@@ -1,6 +1,5 @@
 package com.Turfbooking.configuration;
 
-import com.Turfbooking.repository.BusinessRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.utils.JwtTokenUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -25,16 +24,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
-    private BusinessRepository businessRepository;
+
     @Value("${jwt.secret.accessToken}")
     private String accessToken;
     @Value("${jwt.secret.refreshToken}")
     private String refreshToken;
 
     @Autowired
-    public JwtRequestFilter(UserRepository userRepository, BusinessRepository businessRepository) {
+    public JwtRequestFilter(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.businessRepository = businessRepository;
     }
 
     @Override
