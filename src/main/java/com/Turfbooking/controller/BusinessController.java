@@ -2,15 +2,13 @@ package com.Turfbooking.controller;
 
 import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
-import com.Turfbooking.models.request.CreateBusinessLoginRequest;
-import com.Turfbooking.models.request.CreateBusinessRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
+import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.CommonResponse;
-import com.Turfbooking.models.response.CreateBusinessLoginResponse;
-import com.Turfbooking.models.response.CreateBusinessResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
@@ -48,8 +46,9 @@ public class BusinessController {
 
     
     @PostMapping("/signup")
-    public CommonResponse<CreateBusinessResponse> createNewBusinessUser(@Valid @RequestBody CreateBusinessRequest createBusinessRequest) {
-        CommonResponse response = new CommonResponse(businessService.createBusinessUser(createBusinessRequest));
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public CommonResponse createNewBusinessUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
+        CommonResponse response = new CommonResponse(businessService.createBusinessUser(createUserRequest));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
@@ -60,7 +59,8 @@ public class BusinessController {
     }
 
     @PostMapping("/login")
-    public CommonResponse<CreateBusinessLoginResponse> businessLogin(@RequestBody @Valid CreateBusinessLoginRequest request) {
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public CommonResponse businessLogin(@RequestBody @Valid UserLoginRequest request) {
         CommonResponse commonResponse = new CommonResponse(businessService.businessLogin(request));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
@@ -99,6 +99,7 @@ public class BusinessController {
     }
 
     @PostMapping("/view-all-bookings")
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     public CommonResponse<List<TimeSlotResponse>> viewAllBooking(@RequestBody BusinessViewAllBookingRequest businessViewAllBookingRequest) {
         CommonResponse commonResponse = new CommonResponse(businessService.viewAllBooking(businessViewAllBookingRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
