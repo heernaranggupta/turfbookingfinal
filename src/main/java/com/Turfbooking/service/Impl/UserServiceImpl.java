@@ -156,6 +156,8 @@ public class UserServiceImpl implements UserService {
             if (null != getCart) {
                 Cart usersCart = cartRepository.findByUserPhoneNumber(username);
                 Cart mergeCart = null;
+                List<LocalTime> startTimeList = usersCart.getSelectedSlots().stream().map(x -> x.getStartTime()).collect(Collectors.toList());
+                List<LocalDate> dateList = usersCart.getSelectedSlots().stream().map(x -> x.getDate()).collect(Collectors.toList());
                 if (null != usersCart) {
                     List<Slot> slotList = new ArrayList<>();
                     if (null != usersCart.getSelectedSlots() && usersCart.getSelectedSlots().size() != 0) {
@@ -163,10 +165,16 @@ public class UserServiceImpl implements UserService {
                     }
                     if (null != getCart.getSelectedSlots() && getCart.getSelectedSlots().size() != 0) {
                         for (Slot slot : getCart.getSelectedSlots()) {
-                            for (Slot slot1 : usersCart.getSelectedSlots()) {
-                                if (!slot.getDate().equals(slot1.getDate()) && !slot.getStartTime().equals(slot1.getStartTime())) {
+                            if (startTimeList.contains(slot.getStartTime())) {
+                                if (dateList.contains(slot.getDate())) {
+                                    continue;
+                                } else {
                                     slotList.add(slot);
+                                    usersCart.setCartTotal(usersCart.getCartTotal() + slot.getPrice());
                                 }
+                            } else {
+                                slotList.add(slot);
+                                usersCart.setCartTotal(usersCart.getCartTotal() + slot.getPrice());
                             }
                         }
                     }
