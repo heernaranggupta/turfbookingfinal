@@ -10,6 +10,7 @@ import com.Turfbooking.miscellaneous.StringConstants;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpActiveStatus;
 import com.Turfbooking.models.enums.OtpStatus;
+import com.Turfbooking.models.enums.Roles;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
 import com.Turfbooking.models.mics.CustomUserDetails;
@@ -296,9 +297,9 @@ public class CommonServiceImpl implements CommonService {
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
             User user = userRepository.findByPhoneNumber(userId);
-            if (null != user) {
+            if (null != user && user.getRole().equalsIgnoreCase(Roles.USER.name())) {
                 addNewBookedTimeSlot.setStatus(BookingStatus.BOOKED_BY_USER.name());
-            } else {
+            } else if (null != user && user.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
                 addNewBookedTimeSlot.setStatus(BookingStatus.BOOKED_BY_BUSINESS.name());
             }
             BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);

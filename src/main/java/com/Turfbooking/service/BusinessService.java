@@ -2,29 +2,28 @@ package com.Turfbooking.service;
 
 import com.Turfbooking.models.request.BusinessViewAllBookingRequest;
 import com.Turfbooking.models.request.CancelOrUnavailableSlotRequest;
-import com.Turfbooking.models.request.CreateBusinessLoginRequest;
-import com.Turfbooking.models.request.CreateBusinessRequest;
 import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
+import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
-import com.Turfbooking.models.response.BusinessResponse;
-import com.Turfbooking.models.response.CreateBusinessLoginResponse;
-import com.Turfbooking.models.response.CreateBusinessResponse;
+import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
+import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
 import com.Turfbooking.models.response.TimeSlotResponse;
+import com.Turfbooking.models.response.UserResponse;
 
 import java.util.List;
 
 
 public interface BusinessService {
 
-    CreateBusinessResponse createBusinessUser(CreateBusinessRequest createBusinessRequest);
+    CreateUserResponse createBusinessUser(CreateUserRequest createUserRequest);
 
-    CreateBusinessLoginResponse businessLogin(CreateBusinessLoginRequest createBusinessLoginRequest);
+    CreateUserResponse businessLogin(UserLoginRequest userLoginRequest);
 
     CreatePasswordResponse resetPassword(CreateUpdatePasswordRequest createUpdatePasswordRequest);
 
@@ -43,5 +42,5 @@ public interface BusinessService {
 
     List<TimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest);
 
-    List<BusinessResponse> getAllBusinessUsers();
+    List<UserResponse> getAllBusinessUsers();
 }
