@@ -277,7 +277,7 @@ public class UserServiceImpl implements UserService {
             CancelledSlot cancelledSlot = new CancelledSlot(timeSlot);
             if (user.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
                 cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_BUSINESS.name());
-            } else if (user.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
+            } else if (user.getRole().equalsIgnoreCase(Roles.USER.name())) {
                 cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
             }
             //call api for refund
