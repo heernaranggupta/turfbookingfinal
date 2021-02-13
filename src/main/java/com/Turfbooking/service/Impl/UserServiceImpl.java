@@ -153,7 +153,7 @@ public class UserServiceImpl implements UserService {
             String token = jwtTokenUtil.generateToken(username, customUserDetails, accessSecret, accessTokenValidity);
             String refreshToken = jwtTokenUtil.generateToken(username, customUserDetails, refreshSecret, refreshTokenValidity);
             Cart getCart = cartRepository.findBy_cartId(userLoginRequest.getCartId());
-            if (null != getCart) {
+            if (null != getCart && 0 != getCart.getSelectedSlots().size()) {
                 Cart usersCart = cartRepository.findByUserPhoneNumber(username);
                 Cart mergeCart = null;
                 List<LocalTime> startTimeList = usersCart.getSelectedSlots().stream().map(x -> x.getStartTime()).collect(Collectors.toList());
