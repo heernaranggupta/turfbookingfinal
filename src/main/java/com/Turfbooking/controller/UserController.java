@@ -92,6 +92,7 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping("/get-all-slots-by-date")
     public CommonResponse getAllSlotsByDate(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDate(getAllSlotsRequest));
@@ -105,6 +106,7 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping("/cart/guest")
     public CommonResponse addToGuestCart(@Valid @RequestBody CartRequest cartRequest) {
 //        System.out.println("################ CartID :" + cartRequest.getCartId());
@@ -112,12 +114,13 @@ public class UserController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-    @GetMapping("/cart/guest")
     @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @GetMapping("/cart/guest")
     public CommonResponse getCart(@RequestParam(required = false) String cartId, @RequestParam(required = false) String phoneNumber) {
 //        System.out.println("################ CartID :" + cartId);
         return userService.getCart(phoneNumber, cartId);
     }
+
 
     @GetMapping("/cart")
     public CommonResponse getCart(@RequestParam(required = false) String cartId, @RequestParam(required = false) String phoneNumber, Authentication authentication) {
@@ -131,6 +134,7 @@ public class UserController {
         return ResponseUtilities.createSucessResponseWithMessage(response, "Slot successfully removed");
     }
 
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping("/cart/guest/remove")
     public CommonResponse removeFromGuestCart(@Valid @RequestBody RemoveCartRequest removeCartRequest) {
 //        System.out.println("################ CartID :" + removeCartRequest.getCartId());
