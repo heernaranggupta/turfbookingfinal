@@ -240,7 +240,7 @@ public class CommonServiceImpl implements CommonService {
     public OrderResponse placeOrder(OrderRequest orderRequest) throws GeneralException {
         User isUserExist = userRepository.findByPhoneNumber(orderRequest.getUserId());
         if (null == isUserExist) {
-            throw new GeneralException("User does not exist.", HttpStatus.OK);
+            throw new GeneralException("User does not exist.", HttpStatus.NOT_FOUND);
         }
         List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
