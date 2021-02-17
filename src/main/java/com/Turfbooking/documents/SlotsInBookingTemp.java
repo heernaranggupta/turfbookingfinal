@@ -16,14 +16,16 @@ public class SlotsInBookingTemp {
     @Id
     private String id;
     private String turfId;
+    private String userId;
     private Double price;
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private LocalDateTime timestamp;
 
-    public SlotsInBookingTemp(String turfId, Double price, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
+    public SlotsInBookingTemp(String turfId, String userId, Double price, LocalDate date, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime timestamp) {
         this.turfId = turfId;
+        this.userId = userId;
         this.price = price;
         this.date = date;
         this.startTime = startTime;
