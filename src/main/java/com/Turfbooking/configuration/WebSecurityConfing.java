@@ -32,7 +32,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
         configuration.setAllowedHeaders(Arrays.asList("Access-Control-Allow-Headers", "Access-Control-Allow-Origin",
                 "Access-Control-Request-Method", "Access-Control-Request-Headers", "Origin",
                 "Cache-Control", "Content-Type", "Authorization"));
-        configuration.addAllowedOrigin("http://192.168.29.77:3001");
+        configuration.addAllowedOrigin("*");
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
