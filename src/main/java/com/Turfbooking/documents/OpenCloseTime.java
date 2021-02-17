@@ -22,6 +22,7 @@ public class OpenCloseTime {
     private LocalDate date;
     private LocalTime openTime;
     private LocalTime closeTime;
+    private Integer slotDuration;
     private LocalDateTime timestamp;
 
 }

@@ -16,6 +16,7 @@ public class ConfigResponse {
     private LocalDate date;
     private LocalTime openTime;
     private LocalTime closeTime;
+    private Integer slotDuration;
     private List<StartEndTimeResponse> startEndTimeResponseList;
     private String message;
 
@@ -24,6 +25,7 @@ public class ConfigResponse {
         this.date = openCloseTime.getDate();
         this.openTime = openCloseTime.getOpenTime();
         this.closeTime = openCloseTime.getCloseTime();
+        this.slotDuration = openCloseTime.getSlotDuration();
         this.startEndTimeResponseList = startEndTimeResponseList;
         this.message = message;
     }
