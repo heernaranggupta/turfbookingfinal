@@ -353,7 +353,7 @@ public class UserServiceImpl implements UserService {
             List<List<TimeSlotResponse>> responseList = new ArrayList<>();
             for (String turf : turfs) {
                 List<BookedTimeSlot> slotFromDB = bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(), turf);
-                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), LocalDateTime.of(getAllSlotsRequest.getDate(), openCloseTime.getOpenTime()), LocalDateTime.of(getAllSlotsRequest.getDate(), openCloseTime.getCloseTime()), getAllSlotsRequest.getSlotDuration());
+                List<TimeSlotResponse> allSlotList = getTimeSlotByStartAndEndTimeAndSlotDuration(turf, getAllSlotsRequest.getDate(), LocalDateTime.of(getAllSlotsRequest.getDate(), openCloseTime.getOpenTime()), LocalDateTime.of(getAllSlotsRequest.getDate(), openCloseTime.getCloseTime()), openCloseTime.getSlotDuration());
                 List<LocalTime> startDateTimeList = slotFromDB.stream()
                         .map(x -> x.getStartTime().toLocalTime())
                         .collect(Collectors.toList());
