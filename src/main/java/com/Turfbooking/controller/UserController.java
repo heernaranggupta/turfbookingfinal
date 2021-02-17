@@ -142,4 +142,10 @@ public class UserController {
         return ResponseUtilities.createSucessResponseWithMessage(response, "Slot successfully removed");
     }
 
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @PostMapping("/mobile/get-all-slots-by-date")
+    public CommonResponse getAllSlotsByDatePhoneUser(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
+        CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDatePhoneUser(getAllSlotsRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
 }

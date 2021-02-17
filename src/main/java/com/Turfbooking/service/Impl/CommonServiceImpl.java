@@ -4,6 +4,7 @@ import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.Cart;
 import com.Turfbooking.documents.Order;
 import com.Turfbooking.documents.Otp;
+import com.Turfbooking.documents.SlotsInBookingTemp;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.miscellaneous.StringConstants;
@@ -29,6 +30,7 @@ import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.CartRepository;
 import com.Turfbooking.repository.OrderRepository;
 import com.Turfbooking.repository.OtpRepository;
+import com.Turfbooking.repository.SlotsInBookingTempRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.service.PaymentService;
@@ -43,6 +45,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -70,6 +73,7 @@ public class CommonServiceImpl implements CommonService {
     private BookedTimeSlotRepository bookedTimeSlotRepository;
     private CartRepository cartRepository;
     private PaymentService paymentService;
+    private SlotsInBookingTempRepository slotsInBookingTempRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -93,7 +97,7 @@ public class CommonServiceImpl implements CommonService {
     private JavaMailSender javaMailSender;
 
     @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, PaymentService paymentService) {
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, PaymentService paymentService, SlotsInBookingTempRepository slotsInBookingTempRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.otpRepository = otpRepository;
         this.restTemplate = restTemplate;
@@ -102,6 +106,7 @@ public class CommonServiceImpl implements CommonService {
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.cartRepository = cartRepository;
         this.paymentService = paymentService;
+        this.slotsInBookingTempRepository = slotsInBookingTempRepository;
     }
 
     @Override
@@ -249,7 +254,7 @@ public class CommonServiceImpl implements CommonService {
             if (null == slot) {
                 timeSlotRequests.add(request);
             } else {
-                throw new GeneralException("slot with start time " + slot.getStartTime() + " on date " + slot.getDate() + " is already booked.", HttpStatus.OK);
+                throw new GeneralException("slot with start time " + slot.getStartTime() + " on date " + slot.getDate() + " is already booked or in booking process", HttpStatus.CONFLICT);
             }
         }
         List<BookedTimeSlot> bookedTimeSlotList = bookSlot(timeSlotRequests, orderRequest.getUserId());
@@ -276,6 +281,9 @@ public class CommonServiceImpl implements CommonService {
             bookedTimeSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
             TimeSlotResponse timeSlotResponse = new TimeSlotResponse(bookedTimeSlot);
             timeSlotResponses.add(timeSlotResponse);
+            //delete from temp table
+            SlotsInBookingTemp slot = slotsInBookingTempRepository.findByTurfIdAndStartTimeAndDate(bookedTimeSlot.getTurfId(), bookedTimeSlot.getStartTime(), bookedTimeSlot.getDate());
+            slotsInBookingTempRepository.delete(slot);
         }
         response.setTimeSlots(timeSlotResponses);
         response.setOrderId(savedOrder.get_id());
@@ -314,6 +322,15 @@ public class CommonServiceImpl implements CommonService {
         for (TimeSlotRequest timeSlotRequest : slotValidationRequest.getTimeSlotRequestList()) {
             Boolean flag = true;
             BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()), timeSlotRequest.getDate());
+            SlotsInBookingTemp slotsInBookingTemp = slotsInBookingTempRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()), timeSlotRequest.getDate());
+            //check this slots are exist in temp table and in booked table
+            if (null != slotsInBookingTemp) {
+                TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
+                timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
+                timeSlotResponses.add(timeSlotResponse);
+                flag = false;
+            }
+
             if (null != isBookedTimeSlot) {
                 TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
                 timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
@@ -334,6 +351,16 @@ public class CommonServiceImpl implements CommonService {
             if (flag) {
                 TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
                 timeSlotResponse.setStatus(BookingStatus.AVAILABLE.name());
+                //add slots in temp table
+                SlotsInBookingTemp addToTemp = new SlotsInBookingTemp(
+                        timeSlotRequest.getTurfId(),
+                        timeSlotRequest.getPrice(),
+                        timeSlotRequest.getDate(),
+                        LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()),
+                        LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getEndTime()),
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                );
+                addToTemp = slotsInBookingTempRepository.save(addToTemp);
                 timeSlotResponses.add(timeSlotResponse);
             }
         }
@@ -357,4 +384,11 @@ public class CommonServiceImpl implements CommonService {
         }
     }
 
+    //CRON 5 min
+    @Scheduled(cron = "* 1 * * *  ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
+    public void deleteSlotsFromTempCart() throws GeneralException {
+        LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+        slotsInBookingTempRepository.deleteByTimestamp(time.minusMinutes(5));
+        log.info("Deleted carts");
+    }
 }
