@@ -94,6 +94,7 @@ public class ConfigServiceImpl implements ConfigService {
                 OpenCloseTime saveOpenCloseTime = OpenCloseTime.builder()
                         .openTime(configRequest.getOpenTime())
                         .closeTime(configRequest.getCloseTime())
+                        .slotDuration(configRequest.getSlotDuration())
                         .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                         .build();
 

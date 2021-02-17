@@ -388,7 +388,7 @@ public class CommonServiceImpl implements CommonService {
     }
 
     //CRON 5 min
-    @Scheduled(cron = "0 0/1 * * * ?") //0 30 11 * * ? - ss mm hh DD MM YYYY
+    @Scheduled(cron = "0 0/3 * * * ?") //0 30 11 * * ? - ss mm hh DD MM YYYY
     public void deleteSlotsFromTempCart() throws GeneralException {
         log.info("Deleted carts -- START");
         LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
