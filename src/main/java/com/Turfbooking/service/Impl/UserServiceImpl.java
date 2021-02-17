@@ -30,6 +30,7 @@ import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.GetAllSlotsResponseForPhoneUser;
 import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.razorpay.RazorpayException;
@@ -60,8 +61,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -579,6 +584,34 @@ public class UserServiceImpl implements UserService {
             }
         }
         return null;
+    }
+
+    @Override
+    public GetAllSlotsResponseForPhoneUser getAllSlotsByDatePhoneUser(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
+        List<String> turfIDs = Arrays.asList("turf01", "turf02", "turf03");
+        getAllSlotsRequest.setTurfIds(turfIDs);
+        GetAllSlotsResponse allSlotsByDate = this.getAllSlotsByDate(getAllSlotsRequest);
+        GetAllSlotsResponseForPhoneUser response = new GetAllSlotsResponseForPhoneUser();
+        List<TimeSlotResponse> commonSlotList = new LinkedList<>();
+        commonSlotList.addAll(allSlotsByDate.getTurf01());
+        commonSlotList.addAll(allSlotsByDate.getTurf02());
+        commonSlotList.addAll(allSlotsByDate.getTurf03());
+//        commonSlotList.sort(Comparator.comparing(TimeSlotResponse::getTurfId));
+//        commonSlotList.sort(Comparator.comparing(TimeSlotResponse::getStartTime));
+
+        Map<String, List<TimeSlotResponse>> map = new LinkedHashMap<>();
+        commonSlotList.stream().forEach(slot -> {
+            if (map.containsKey(slot.getStartTime().toString())) {
+                List<TimeSlotResponse> temp = map.get(slot.getStartTime().toString());
+                temp.add(slot);
+            } else {
+                List<TimeSlotResponse> temp = new LinkedList<>();
+                temp.add(slot);
+                map.put(slot.getStartTime().toString(), temp);
+            }
+        });
+        response.setSlotList(map);
+        return response;
     }
 
     @Scheduled(cron = "0 0 0 1 * ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
