@@ -58,8 +58,8 @@ public class CommonController {
     }
 
     @PostMapping("/validate")
-    public CommonResponse slotAvailableOrNot(@RequestBody SlotValidationRequest slotValidationRequest) {
-        CommonResponse response = new CommonResponse(commonService.validateSlotAvailableOrNot(slotValidationRequest));
+    public CommonResponse slotAvailableOrNot(@RequestBody SlotValidationRequest slotValidationRequest, Authentication authentication) {
+        CommonResponse response = new CommonResponse(commonService.validateSlotAvailableOrNot(slotValidationRequest, authentication.getName()));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
