@@ -20,7 +20,7 @@ public interface CommonService {
 
     OrderResponse placeOrder(OrderRequest orderRequest);
 
-    SlotValidationResponse validateSlotAvailableOrNot(SlotValidationRequest slotValidationRequest);
+    SlotValidationResponse validateSlotAvailableOrNot(SlotValidationRequest slotValidationRequest, String userID);
 
     List<TimeSlotResponse> getAllBookedSlotsByOrderId(String orderId);
 

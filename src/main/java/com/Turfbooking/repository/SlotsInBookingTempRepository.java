@@ -20,7 +20,11 @@ public interface SlotsInBookingTempRepository extends MongoRepository<SlotsInBoo
     @Query("{'turfId':?0,'startTime':?1,'date':{$eq :?2}}")
     SlotsInBookingTemp deleteByTurfIdAndStartTimeAndDate(String turfId, LocalDateTime startTime, LocalDate date);
 
-    @Query("{'timestamp':{$lt :?1}}")
+    @Transactional
+    @Query("{'timestamp':{$lt :?0}}")
     List<SlotsInBookingTemp> deleteByTimestamp(LocalDateTime time);
+
+    @Query("{'timestamp':{$lt :?0}}")
+    List<SlotsInBookingTemp> findByTimestamp(LocalDateTime time);
 
 }

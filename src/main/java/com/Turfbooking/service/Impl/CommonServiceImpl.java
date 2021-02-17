@@ -317,19 +317,12 @@ public class CommonServiceImpl implements CommonService {
     }
 
     @Override
-    public SlotValidationResponse validateSlotAvailableOrNot(SlotValidationRequest slotValidationRequest) throws GeneralException {
+    public SlotValidationResponse validateSlotAvailableOrNot(SlotValidationRequest slotValidationRequest, String userID) throws GeneralException {
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
         for (TimeSlotRequest timeSlotRequest : slotValidationRequest.getTimeSlotRequestList()) {
             Boolean flag = true;
             BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()), timeSlotRequest.getDate());
             SlotsInBookingTemp slotsInBookingTemp = slotsInBookingTempRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()), timeSlotRequest.getDate());
-            //check this slots are exist in temp table and in booked table
-            if (null != slotsInBookingTemp) {
-                TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
-                timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
-                timeSlotResponses.add(timeSlotResponse);
-                flag = false;
-            }
 
             if (null != isBookedTimeSlot) {
                 TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
@@ -351,16 +344,26 @@ public class CommonServiceImpl implements CommonService {
             if (flag) {
                 TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
                 timeSlotResponse.setStatus(BookingStatus.AVAILABLE.name());
-                //add slots in temp table
-                SlotsInBookingTemp addToTemp = new SlotsInBookingTemp(
-                        timeSlotRequest.getTurfId(),
-                        timeSlotRequest.getPrice(),
-                        timeSlotRequest.getDate(),
-                        LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()),
-                        LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getEndTime()),
-                        LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
-                );
-                addToTemp = slotsInBookingTempRepository.save(addToTemp);
+                //check this slots are exist in temp table and in booked table
+                if (null != slotsInBookingTemp) {
+                    if (slotsInBookingTemp.getUserId().equalsIgnoreCase(userID)) {
+                        timeSlotResponse.setStatus(BookingStatus.AVAILABLE.name());
+                    } else {
+                        timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
+                    }
+                } else {
+                    //add slots in temp table
+                    SlotsInBookingTemp addToTemp = new SlotsInBookingTemp(
+                            timeSlotRequest.getTurfId(),
+                            userID,
+                            timeSlotRequest.getPrice(),
+                            timeSlotRequest.getDate(),
+                            LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()),
+                            LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getEndTime()),
+                            LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
+                    );
+                    addToTemp = slotsInBookingTempRepository.save(addToTemp);
+                }
                 timeSlotResponses.add(timeSlotResponse);
             }
         }
@@ -385,10 +388,17 @@ public class CommonServiceImpl implements CommonService {
     }
 
     //CRON 5 min
-    @Scheduled(cron = "* 1 * * *  ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
+    @Scheduled(cron = "0 0/1 * * * ?") //0 30 11 * * ? - ss mm hh DD MM YYYY
     public void deleteSlotsFromTempCart() throws GeneralException {
+        log.info("Deleted carts -- START");
         LocalDateTime time = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
-        slotsInBookingTempRepository.deleteByTimestamp(time.minusMinutes(5));
-        log.info("Deleted carts");
+        try {
+            List<SlotsInBookingTemp> list = slotsInBookingTempRepository.findByTimestamp(time.minusMinutes(3));
+            slotsInBookingTempRepository.deleteAll(list);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        log.info("Deleted carts -- END");
     }
+
 }
