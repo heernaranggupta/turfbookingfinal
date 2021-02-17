@@ -15,6 +15,7 @@ import com.Turfbooking.models.response.CreateUserLoginResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
 import com.Turfbooking.models.response.CustomerProfileUpdateResponse;
 import com.Turfbooking.models.response.GetAllSlotsResponse;
+import com.Turfbooking.models.response.GetAllSlotsResponseForPhoneUser;
 import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.razorpay.RazorpayException;
@@ -42,5 +43,7 @@ public interface UserService {
     CommonResponse getCart(String PhoneNumber, String cartId);
 
     CartResponse removeFromCart(RemoveCartRequest removeCartRequest);
+
+    GetAllSlotsResponseForPhoneUser getAllSlotsByDatePhoneUser(GetAllSlotsRequest getAllSlotsRequest);
 
 }
