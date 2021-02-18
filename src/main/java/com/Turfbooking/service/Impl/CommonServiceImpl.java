@@ -136,7 +136,7 @@ public class CommonServiceImpl implements CommonService {
             //delete inactive otp
             if (otpDocument != null)
                 otpdeltedCount = otpRepository.deleteByPhoneNumber(otpDocument.getPhoneNumber());
-            otp = CommonUtilities.generate4DigitOTP();
+            otp = CommonUtilities.generate6DigitOTP();
             otpRepository.insert(new Otp(username, otp, LocalDateTime.now().plusMinutes(Integer.valueOf(otpActiveMinutes)), OtpActiveStatus.ACTIVE.name()));
         }
 
