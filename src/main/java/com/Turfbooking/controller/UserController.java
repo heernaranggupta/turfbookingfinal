@@ -148,4 +148,11 @@ public class UserController {
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDatePhoneUser(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
+
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @PostMapping("/get-all-slots-by-date/common")
+    public CommonResponse getAllSlotsByDateCommon(@Valid @RequestBody GetAllSlotsRequest getAllSlotsRequest) {
+        CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDateCommon(getAllSlotsRequest));
+        return ResponseUtilities.createSuccessResponse(commonResponse);
+    }
 }

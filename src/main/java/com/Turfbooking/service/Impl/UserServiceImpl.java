@@ -158,12 +158,12 @@ public class UserServiceImpl implements UserService {
             String token = jwtTokenUtil.generateToken(username, customUserDetails, accessSecret, accessTokenValidity);
             String refreshToken = jwtTokenUtil.generateToken(username, customUserDetails, refreshSecret, refreshTokenValidity);
             Cart getCart = cartRepository.findBy_cartId(userLoginRequest.getCartId());
+            Cart usersCart = cartRepository.findByUserPhoneNumber(username);
             if (null != getCart && 0 != getCart.getSelectedSlots().size()) {
-                Cart usersCart = cartRepository.findByUserPhoneNumber(username);
                 Cart mergeCart = null;
-                List<LocalTime> startTimeList = usersCart.getSelectedSlots().stream().map(x -> x.getStartTime()).collect(Collectors.toList());
-                List<LocalDate> dateList = usersCart.getSelectedSlots().stream().map(x -> x.getDate()).collect(Collectors.toList());
                 if (null != usersCart) {
+                    List<LocalTime> startTimeList = usersCart.getSelectedSlots().stream().map(x -> x.getStartTime()).collect(Collectors.toList());
+                    List<LocalDate> dateList = usersCart.getSelectedSlots().stream().map(x -> x.getDate()).collect(Collectors.toList());
                     List<Slot> slotList = new ArrayList<>();
                     if (null != usersCart.getSelectedSlots() && usersCart.getSelectedSlots().size() != 0) {
                         slotList.addAll(usersCart.getSelectedSlots());
@@ -187,12 +187,14 @@ public class UserServiceImpl implements UserService {
                     mergeCart = cartRepository.save(usersCart);
                 } else {
                     getCart.setUserPhoneNumber(username);
-                    mergeCart = cartRepository.save(getCart);
+                    usersCart = cartRepository.save(getCart);
                 }
                 if (null != mergeCart) {
                     cartRepository.delete(getCart);
                 } else {
-                    throw new GeneralException("Error in cart merging", HttpStatus.INTERNAL_SERVER_ERROR);
+                    if (null == usersCart && getCart != null) {
+                        throw new GeneralException("Error in cart merging", HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
                 }
             }
             UserResponse userResponse = new UserResponse(isExist);
@@ -596,8 +598,6 @@ public class UserServiceImpl implements UserService {
         commonSlotList.addAll(allSlotsByDate.getTurf01());
         commonSlotList.addAll(allSlotsByDate.getTurf02());
         commonSlotList.addAll(allSlotsByDate.getTurf03());
-//        commonSlotList.sort(Comparator.comparing(TimeSlotResponse::getTurfId));
-//        commonSlotList.sort(Comparator.comparing(TimeSlotResponse::getStartTime));
 
         Map<String, List<TimeSlotResponse>> map = new LinkedHashMap<>();
         commonSlotList.stream().forEach(slot -> {
@@ -613,6 +613,45 @@ public class UserServiceImpl implements UserService {
         response.setSlotList(map);
         return response;
     }
+
+    @Override
+    public GetAllSlotsResponseForPhoneUser getAllSlotsByDateCommon(GetAllSlotsRequest getAllSlotsRequest) throws GeneralException {
+        List<String> turfIDs = Arrays.asList("turf01", "turf02", "turf03");
+        getAllSlotsRequest.setTurfIds(turfIDs);
+        GetAllSlotsResponse allSlotsByDate = this.getAllSlotsByDate(getAllSlotsRequest);
+        GetAllSlotsResponseForPhoneUser response = new GetAllSlotsResponseForPhoneUser();
+        List<TimeSlotResponse> commonSlotList = new LinkedList<>();
+        commonSlotList.addAll(allSlotsByDate.getTurf01());
+        commonSlotList.addAll(allSlotsByDate.getTurf02());
+        commonSlotList.addAll(allSlotsByDate.getTurf03());
+
+        Map<String, List<TimeSlotResponse>> map = new LinkedHashMap<>();
+        commonSlotList.stream().forEach(slot -> {
+            if (map.containsKey(slot.getStartTime().toString())) {
+                List<TimeSlotResponse> temp = map.get(slot.getStartTime().toString());
+                temp.add(slot);
+            } else {
+                List<TimeSlotResponse> temp = new LinkedList<>();
+                temp.add(slot);
+                map.put(slot.getStartTime().toString(), temp);
+            }
+        });
+
+        List<String> keys = new ArrayList<>();
+        map.forEach((key, value) -> {
+            value.stream().forEach(slot -> {
+                if (slot.getStatus().equalsIgnoreCase(BookingStatus.NOT_AVAILABLE.name())) {
+                    keys.add(key);
+                }
+            });
+        });
+        keys.forEach(key -> {
+            map.remove(key);
+        });
+        response.setSlotList(map);
+        return response;
+    }
+
 
     @Scheduled(cron = "0 0 0 1 * ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
     public void deleteNonUsedCart() {

@@ -48,6 +48,7 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/cart/guest/remove").permitAll()
                 .antMatchers("/user/get-all-slots-by-date").permitAll()
                 .antMatchers("/user/mobile/get-all-slots-by-date").permitAll()
+                .antMatchers("/user/get-all-slots-by-date/common").permitAll()
 
                 .antMatchers("/common/generate-otp").permitAll()
                 .antMatchers("/common/validate-otp").permitAll()
