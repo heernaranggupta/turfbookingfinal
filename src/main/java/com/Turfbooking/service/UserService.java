@@ -46,4 +46,6 @@ public interface UserService {
 
     GetAllSlotsResponseForPhoneUser getAllSlotsByDatePhoneUser(GetAllSlotsRequest getAllSlotsRequest);
 
+    GetAllSlotsResponseForPhoneUser getAllSlotsByDateCommon(GetAllSlotsRequest getAllSlotsRequest);
+
 }
