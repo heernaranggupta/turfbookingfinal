@@ -36,8 +36,11 @@ import com.Turfbooking.service.CommonService;
 import com.Turfbooking.service.PaymentService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -116,7 +119,6 @@ public class CommonServiceImpl implements CommonService {
         String emailOrPhoneNumber = null;
         emailOrPhoneNumber = CommonUtilities.findEmailIdOrPasswordValidator(username);
         Otp otpDocument = null;
-
         if (StringUtils.equals(emailOrPhoneNumber, "email"))
             otpDocument = otpRepository.findByPhoneNumber(username);
         else {
@@ -124,54 +126,44 @@ public class CommonServiceImpl implements CommonService {
             username = StringUtils.join(countryCode, username);
             otpDocument = otpRepository.findByPhoneNumber(username);
         }
-
         String responseMessage;
         Integer otp;
         int isOtpSent;
         long otpdeltedCount;
-
         if (null != otpDocument && LocalDateTime.now().isBefore(otpDocument.getTimeTillActive())) {
             otp = otpDocument.getOtp();
         } else {
             //delete inactive otp
             if (otpDocument != null)
                 otpdeltedCount = otpRepository.deleteByPhoneNumber(otpDocument.getPhoneNumber());
-            otp = CommonUtilities.generate6DigitOTP();
+            otp = CommonUtilities.generate4DigitOTP();
             otpRepository.insert(new Otp(username, otp, LocalDateTime.now().plusMinutes(Integer.valueOf(otpActiveMinutes)), OtpActiveStatus.ACTIVE.name()));
         }
-
         if (StringUtils.equals(emailOrPhoneNumber, "email"))
             isOtpSent = sendMail(username, otp);
         else
             isOtpSent = sendOtp(username, otp);
-
         //if otp not sent
         if (isOtpSent == 1) {
             responseMessage = OTP_SENT_SUCCESS;
         } else
             throw new GeneralException("Otp Not send", HttpStatus.BAD_REQUEST);
-
         CreateResponse response = CreateResponse.builder()
                 .message(responseMessage)
                 .build();
-
         return response;
     }
-
     //    convert it to lambda expression
     private int sendMail(String mailId, Integer otp) {
-
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(mailId);
-
         msg.setSubject("Turf Booking Otp");
         msg.setText("Your Verification code is : " + otp);
-
         javaMailSender.send(msg);
-
         return 1;
     }
 
+    @SneakyThrows
     private int sendOtp(String phoneNumber, Integer otp) throws GeneralException {
         String messageWithOTP = StringConstants.baseMessageForOTPSMS.replace(StringConstants.otpReplacementPart, otp.toString());
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(StringConstants.baseURLForOTPService)
@@ -184,19 +176,17 @@ public class CommonServiceImpl implements CommonService {
                 .queryParam("number", phoneNumber)
                 .queryParam("text", messageWithOTP)
                 .queryParam("route", 07);
-
         String uri = builder.toUriString();
-
 //        http://msg.balajitech.co.in/api/mt/SendSMS?user=REBOUNCE&password=REBOUNCE&senderid=REBOUN&channel=Trans&DCS=0&flashsms=0&number=+919724500674&text=793287+is+your+Rebounce+Turf+verification+code.+Enjoy+on+Surat's+biggest+and+tallest+turf.+Don't+forget+to+explore+Rebounce+from+inside+too.+Keep+Bouncing!&route=7
-
-        ResponseEntity<ExternalOtpCallResponse> response =
+        ResponseEntity<String> response =
                 restTemplate.getForEntity(
                         builder.toUriString(),
-                        ExternalOtpCallResponse.class);
-
-
-        ExternalOtpCallResponse externalOtpCallResponse = response.getBody();
-
+                        String.class);
+        JSONObject jsonResponse = new JSONObject(response);
+        String str = jsonResponse.getString("body");
+        jsonResponse = new JSONObject(str);
+        ObjectMapper mapper = new ObjectMapper();
+        ExternalOtpCallResponse externalOtpCallResponse = mapper.readValue(jsonResponse.toString(), ExternalOtpCallResponse.class);
         if (!response.getStatusCode().name().equalsIgnoreCase(HttpStatus.OK.name())) {
             log.error(externalOtpCallResponse.toString());
             throw new GeneralException("Error in sending OTP, please try again after sometime.", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -330,7 +320,6 @@ public class CommonServiceImpl implements CommonService {
             Boolean flag = true;
             BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()), timeSlotRequest.getDate());
             SlotsInBookingTemp slotsInBookingTemp = slotsInBookingTempRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()), timeSlotRequest.getDate());
-
             if (null != isBookedTimeSlot) {
                 TimeSlotResponse timeSlotResponse = new TimeSlotResponse(timeSlotRequest);
                 timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
