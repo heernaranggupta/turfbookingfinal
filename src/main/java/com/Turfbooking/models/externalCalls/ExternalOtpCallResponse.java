@@ -1,17 +1,18 @@
 package com.Turfbooking.models.externalCalls;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.List;
 
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties
 public class ExternalOtpCallResponse implements Serializable {
 
     private static final long serialVersionUID = -6190539474319446094L;
@@ -22,26 +23,13 @@ public class ExternalOtpCallResponse implements Serializable {
 //    {"ErrorCode":"000","ErrorMessage":"Done","JobId":"283982",
 //    "MessageData":[{"Number":"918460339810","MessageId":"GpK1btkNMEKztEJzFWOavQ"}]}
 
+    @JsonProperty("ErrorCode")
     private String ErrorCode;
+    @JsonProperty("ErrorMessage")
     private String ErrorMessage;
+    @JsonProperty("JobId")
     private String JobId;
+    @JsonProperty("MessageData")
     private List<ExternalOtpCallResponseData> MessageData;
 
-    @Override
-    public String toString() {
-
-        return "ExternalOtpCallResponse{" +
-                "ErrorCode = '" + ErrorCode + '\'' +
-                ", ErrorMessage = " + ErrorMessage +
-                ", JobId  ='" + JobId + '\'' +
-                '}';
-    }
-
-    private String allData() {
-        String response = "";
-        for (ExternalOtpCallResponseData ex : MessageData) {
-            response.concat(ex.toString());
-        }
-        return response;
-    }
 }
