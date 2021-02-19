@@ -12,6 +12,6 @@ public class GenerateOtpRequest {
     private String countryCode;
     @NotNull(message = "Phone Number Required")
     private String phoneNumber;
-    private Boolean isUpdate;
+//    private Boolean isUpdate;
 
 }

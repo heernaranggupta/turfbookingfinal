@@ -164,7 +164,7 @@ public class CommonServiceImpl implements CommonService {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(mailId);
 
-        msg.setSubject("Turf Booking turn Otp");
+        msg.setSubject("Turf Booking Otp");
         msg.setText("Your Verification code is : " + otp);
 
         javaMailSender.send(msg);
@@ -175,29 +175,34 @@ public class CommonServiceImpl implements CommonService {
     private int sendOtp(String phoneNumber, Integer otp) throws GeneralException {
         String messageWithOTP = StringConstants.baseMessageForOTPSMS.replace(StringConstants.otpReplacementPart, otp.toString());
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(StringConstants.baseURLForOTPService)
-                .queryParam("token", "3429179825ec3aed88b7758.96328390")
-                .queryParam("user_id", "39305273")
-                .queryParam("route", "OT")
-                .queryParam("template_id", "2342")
-                .queryParam("sender_id", "MYTURN")
-                .queryParam("language", "EN")
-                .queryParam("template", messageWithOTP)
-                .queryParam("contact_numbers", phoneNumber);
+                .queryParam("user", "REBOUNCE")
+                .queryParam("password", "REBOUNCE")
+                .queryParam("senderid", "REBOUN")
+                .queryParam("channel", "Trans")
+                .queryParam("DCS", 0)
+                .queryParam("flashsms", 0)
+                .queryParam("number", phoneNumber)
+                .queryParam("text", messageWithOTP)
+                .queryParam("route", 07);
 
         String uri = builder.toUriString();
 
-//http://m1.sarv.com/api/v2.0/sms_campaign.php?token=3429179825ec3aed88b7758.96328390&user_id=39305273&route=EN&template_id=&sender_id=TSTMSG&language=EN&template=My+Message+is+this+test&contact_numbers=8511108666
+//        http://msg.balajitech.co.in/api/mt/SendSMS?user=REBOUNCE&password=REBOUNCE&senderid=REBOUN&channel=Trans&DCS=0&flashsms=0&number=+919724500674&text=793287+is+your+Rebounce+Turf+verification+code.+Enjoy+on+Surat's+biggest+and+tallest+turf.+Don't+forget+to+explore+Rebounce+from+inside+too.+Keep+Bouncing!&route=7
 
         ResponseEntity<ExternalOtpCallResponse> response =
                 restTemplate.getForEntity(
                         builder.toUriString(),
                         ExternalOtpCallResponse.class);
+
+
         ExternalOtpCallResponse externalOtpCallResponse = response.getBody();
 
-        if (externalOtpCallResponse.getCode() != HttpStatus.OK.value()) {
+        if (!response.getStatusCode().name().equalsIgnoreCase(HttpStatus.OK.name())) {
             log.error(externalOtpCallResponse.toString());
-            throw new GeneralException("Error in sending OTP, please try again after sometime.", HttpStatus.BAD_GATEWAY);
-        } else return 1;
+            throw new GeneralException("Error in sending OTP, please try again after sometime.", HttpStatus.INTERNAL_SERVER_ERROR);
+        } else {
+            return 1;
+        }
     }
 
     @Override
