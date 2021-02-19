@@ -13,7 +13,7 @@ public class ValidateOtpRequest {
     private String phoneNumber;
     // @ValueOfEnum(enumClass = OtpStatus.class)
     private Integer otp;
-    private Boolean isBusiness;
-
-    private Boolean isUpdate;
+//    private Boolean isBusiness;
+//
+//    private Boolean isUpdate;
 }
