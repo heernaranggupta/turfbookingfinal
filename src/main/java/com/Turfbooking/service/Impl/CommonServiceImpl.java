@@ -230,15 +230,17 @@ public class CommonServiceImpl implements CommonService {
         String token;
         String refreshToken;
         if (null != isUserOrNot) {
-            CustomUserDetails customUserDetails = new CustomUserDetails(isUserOrNot);
-            token = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, accessSecret, accessTokenValidity);
-            refreshToken = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, refreshSecret, refreshTokenValidity);
-            validateOtpResponse.setToken(token);
-            validateOtpResponse.setRefreshToken(refreshToken);
+            if (validateOtpResponse.getOtpStatus().equalsIgnoreCase(OtpStatus.VALID.name())) {
+                CustomUserDetails customUserDetails = new CustomUserDetails(isUserOrNot);
+                token = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, accessSecret, accessTokenValidity);
+                refreshToken = jwtTokenUtil.generateToken(phoneNumber, customUserDetails, refreshSecret, refreshTokenValidity);
+                validateOtpResponse.setToken(token);
+                validateOtpResponse.setRefreshToken(refreshToken);
+                UserResponse userResponse = new UserResponse(isUserOrNot);
+                validateOtpResponse.setUser(userResponse);
+            }
+            validateOtpResponse.setNameOfTheUser(isUserOrNot.getNameOfUser());
             validateOtpResponse.setUserStatus(UserStatus.EXISTINGUSER.name());
-            validateOtpResponse.setNameOfTheUser(isUserOrNot.getFirstName());
-            UserResponse userResponse = new UserResponse(isUserOrNot);
-            validateOtpResponse.setUser(userResponse);
         } else {
             validateOtpResponse.setUserStatus(UserStatus.USERDOESNOTEXIST.name());
         }
