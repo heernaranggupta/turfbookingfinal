@@ -48,4 +48,6 @@ public interface UserService {
 
     GetAllSlotsResponseForPhoneUser getAllSlotsByDateCommon(GetAllSlotsRequest getAllSlotsRequest);
 
+    CommonResponse getCartForPhoneUsers(String userID);
+
 }
