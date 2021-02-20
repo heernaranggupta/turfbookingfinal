@@ -13,6 +13,7 @@ import java.util.Map;
 public class GetAllSlotsResponseForPhoneUser {
 
     private Map<String, List<TimeSlotResponse>> slotList;
+    private List<TimeSlotResponse> allSLotList;
 
 }
 
