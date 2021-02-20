@@ -486,7 +486,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CommonResponse getCart(String phoneNumber, String cartId) throws GeneralException {
-        System.out.println(cartId);
         String successMessage = "";
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));
@@ -611,6 +610,7 @@ public class UserServiceImpl implements UserService {
             }
         });
         response.setSlotList(map);
+        response.setAllSLotList(commonSlotList);
         return response;
     }
 
@@ -640,7 +640,7 @@ public class UserServiceImpl implements UserService {
         List<String> keys = new ArrayList<>();
         map.forEach((key, value) -> {
             value.stream().forEach(slot -> {
-                if (slot.getStatus().equalsIgnoreCase(BookingStatus.NOT_AVAILABLE.name())) {
+                if (!slot.getStatus().equalsIgnoreCase(BookingStatus.AVAILABLE.name())) {
                     keys.add(key);
                 }
             });
@@ -652,6 +652,24 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
+    @Override
+    public CommonResponse getCartForPhoneUsers(String userID) throws GeneralException {
+        CommonResponse<CartResponse> cartResponse = this.getCart(userID, null);
+        List<Slot> slotList = cartResponse.getBody().getSelectedSlots();
+        Map<String, List<Slot>> map = new LinkedHashMap<>();
+        slotList.stream().forEach(slot -> {
+            if (map.containsKey(slot.getStartTime().toString())) {
+                List<Slot> temp = map.get(slot.getStartTime().toString());
+                temp.add(slot);
+            } else {
+                List<Slot> temp = new LinkedList<>();
+                temp.add(slot);
+                map.put(slot.getStartTime().toString(), temp);
+            }
+        });
+        CommonResponse response = new CommonResponse<Map>(map);
+        return ResponseUtilities.createSuccessResponse(response);
+    }
 
     @Scheduled(cron = "0 0 0 1 * ?", zone = "Asia/Kolkata") //0 30 11 * * ? - ss mm hh DD MM YYYY
     public void deleteNonUsedCart() {

@@ -155,4 +155,10 @@ public class UserController {
         CommonResponse commonResponse = new CommonResponse(userService.getAllSlotsByDateCommon(getAllSlotsRequest));
         return ResponseUtilities.createSuccessResponse(commonResponse);
     }
+
+    @GetMapping("/mobile/cart")
+    public CommonResponse getCartForPhoneUsers(Authentication authentication) {
+        return userService.getCartForPhoneUsers(authentication.getName());
+    }
+
 }
