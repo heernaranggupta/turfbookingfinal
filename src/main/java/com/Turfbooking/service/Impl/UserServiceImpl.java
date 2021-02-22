@@ -610,7 +610,6 @@ public class UserServiceImpl implements UserService {
             }
         });
         response.setSlotList(map);
-        response.setAllSLotList(commonSlotList);
         return response;
     }
 

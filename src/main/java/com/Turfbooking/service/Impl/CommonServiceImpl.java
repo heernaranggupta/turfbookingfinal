@@ -8,6 +8,8 @@ import com.Turfbooking.documents.SlotsInBookingTemp;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
 import com.Turfbooking.miscellaneous.StringConstants;
+import com.Turfbooking.miscellaneous.SuccessfulBookingSMS;
+import com.Turfbooking.models.common.Slot;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpActiveStatus;
 import com.Turfbooking.models.enums.OtpStatus;
@@ -36,6 +38,7 @@ import com.Turfbooking.service.CommonService;
 import com.Turfbooking.service.PaymentService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +51,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,6 +96,12 @@ public class CommonServiceImpl implements CommonService {
 
     @Value("${otp.active.minutes}")
     private String otpActiveMinutes;
+
+    @Value("${REBOUNCE_CONTACT}")
+    private String REBOUNCE_CONTACT;
+
+    @Value("${LOGIN_URL}")
+    private String LOGIN_URL;
 
     @Autowired
     private Environment environment;
@@ -153,6 +163,7 @@ public class CommonServiceImpl implements CommonService {
                 .build();
         return response;
     }
+
     //    convert it to lambda expression
     private int sendMail(String mailId, Integer otp) {
         SimpleMailMessage msg = new SimpleMailMessage();
@@ -264,7 +275,7 @@ public class CommonServiceImpl implements CommonService {
                 .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                 .build();
         Order savedOrder = orderRepository.save(saveOrder);
-        List<Cart> isDeleted = cartRepository.deleteByUserPhoneNumber(orderRequest.getUserId());
+        Cart isDeleted = cartRepository.deleteByUserPhoneNumber(orderRequest.getUserId());
         String paymentId = null;
         if (null != savedOrder) {
             paymentId = paymentService.addPaymentDetails(orderRequest.getTransactionId(), savedOrder.get_id(), orderRequest.getUserId());
@@ -284,6 +295,11 @@ public class CommonServiceImpl implements CommonService {
         }
         response.setTimeSlots(timeSlotResponses);
         response.setOrderId(savedOrder.get_id());
+        try {
+            sendSuccessfulBookingMessage(isUserExist.getPhoneNumber(), isUserExist.getNameOfUser(), isDeleted.getSelectedSlots().size());
+        } catch (JsonProcessingException jsonProcessingException) {
+            throw new GeneralException("Error while sending successful booking SMS", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         return response;
     }
 
@@ -315,7 +331,11 @@ public class CommonServiceImpl implements CommonService {
 
     @Override
     public SlotValidationResponse validateSlotAvailableOrNot(SlotValidationRequest slotValidationRequest, String userID) throws GeneralException {
+        Cart cart = cartRepository.findByUserPhoneNumber(userID);
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
+        List<Slot> slotListToRemove = new ArrayList<>();
+        Integer count = 0;
+        Boolean isDeleted = false;
         for (TimeSlotRequest timeSlotRequest : slotValidationRequest.getTimeSlotRequestList()) {
             Boolean flag = true;
             BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(timeSlotRequest.getTurfId(), LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()), timeSlotRequest.getDate());
@@ -325,6 +345,15 @@ public class CommonServiceImpl implements CommonService {
                 timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
                 timeSlotResponses.add(timeSlotResponse);
                 flag = false;
+                isDeleted = true;
+                Slot slot = new Slot(
+                        timeSlotRequest.getTurfId(),
+                        timeSlotRequest.getPrice(),
+                        timeSlotRequest.getDate(),
+                        timeSlotRequest.getStartTime(),
+                        timeSlotRequest.getEndTime()
+                );
+                slotListToRemove.add(slot);
             } else {
                 LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
                 LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));
@@ -334,6 +363,15 @@ public class CommonServiceImpl implements CommonService {
                         timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
                         timeSlotResponses.add(timeSlotResponse);
                         flag = false;
+                        isDeleted = true;
+                        Slot slot = new Slot(
+                                timeSlotRequest.getTurfId(),
+                                timeSlotRequest.getPrice(),
+                                timeSlotRequest.getDate(),
+                                timeSlotRequest.getStartTime(),
+                                timeSlotRequest.getEndTime()
+                        );
+                        slotListToRemove.add(slot);
                     }
                 }
             }
@@ -346,6 +384,15 @@ public class CommonServiceImpl implements CommonService {
                         timeSlotResponse.setStatus(BookingStatus.AVAILABLE.name());
                     } else {
                         timeSlotResponse.setStatus(BookingStatus.NOT_AVAILABLE.name());
+                        isDeleted = true;
+                        Slot slot = new Slot(
+                                timeSlotRequest.getTurfId(),
+                                timeSlotRequest.getPrice(),
+                                timeSlotRequest.getDate(),
+                                timeSlotRequest.getStartTime(),
+                                timeSlotRequest.getEndTime()
+                        );
+                        slotListToRemove.add(slot);
                     }
                 } else {
                     //add slots in temp table
@@ -363,6 +410,10 @@ public class CommonServiceImpl implements CommonService {
                 timeSlotResponses.add(timeSlotResponse);
             }
         }
+        List<Slot> slotFromCart = cart.getSelectedSlots();
+        slotFromCart.removeAll(slotListToRemove);
+        cart.setSelectedSlots(slotFromCart);
+        cart = cartRepository.save(cart);
         SlotValidationResponse slotValidationResponse = new SlotValidationResponse();
         slotValidationResponse.setTimeSlotResponses(timeSlotResponses);
         return slotValidationResponse;
@@ -380,6 +431,38 @@ public class CommonServiceImpl implements CommonService {
             return slotResponses;
         } else {
             throw new GeneralException("No booked slots with order id :" + orderId, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Async
+    private int sendSuccessfulBookingMessage(String phoneNumber, String username, Integer slotCount) throws GeneralException, JsonProcessingException {
+//        SuccessfulBookingSMS bookingSMS = new SuccessfulBookingSMS(slotCount.toString(),username,LOGIN_URL,REBOUNCE_CONTACT);
+        String successSMS = "Dear+" + username + ",+Your+booking+of+" + slotCount.toString() + "+slots+at+Rebounce+Turf+is+confirmed.+You+can+view+your+booking+on+" + LOGIN_URL + "+by+signing+in.+For+any+change+call+or+Whatapp+on+" + REBOUNCE_CONTACT + ".+Thanking+you+for+choosing+REBOUNCE!";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(SuccessfulBookingSMS.baseURLForOTPService)
+                .queryParam("user", "REBOUNCE")
+                .queryParam("password", "REBOUNCE")
+                .queryParam("senderid", "REBOUN")
+                .queryParam("channel", "Trans")
+                .queryParam("DCS", 0)
+                .queryParam("flashsms", 0)
+                .queryParam("number", phoneNumber)
+                .queryParam("text", successSMS)
+                .queryParam("route", 07);
+        String uri = builder.toUriString();
+//        http://msg.balajitech.co.in/api/mt/SendSMS?user=REBOUNCE&password=REBOUNCE&senderid=REBOUN&channel=Trans&DCS=0&flashsms=0&number=+919724500674&text=793287+is+your+Rebounce+Turf+verification+code.+Enjoy+on+Surat's+biggest+and+tallest+turf.+Don't+forget+to+explore+Rebounce+from+inside+too.+Keep+Bouncing!&route=7
+        ResponseEntity<String> response =
+                restTemplate.getForEntity(
+                        builder.toUriString(),
+                        String.class);
+        JSONObject jsonResponse = new JSONObject(response);
+        String bodyString = jsonResponse.getString("body");
+        ObjectMapper mapper = new ObjectMapper();
+        ExternalOtpCallResponse externalOtpCallResponse = mapper.readValue(bodyString, ExternalOtpCallResponse.class);
+        if (!response.getStatusCode().name().equalsIgnoreCase(HttpStatus.OK.name())) {
+            log.error(externalOtpCallResponse.toString());
+            throw new GeneralException("Error in sending success message", HttpStatus.INTERNAL_SERVER_ERROR);
+        } else {
+            return 1;
         }
     }
 
