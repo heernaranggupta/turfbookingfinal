@@ -10,5 +10,7 @@ import java.util.List;
 public class SlotValidationResponse {
 
     List<TimeSlotResponse> timeSlotResponses;
+    Boolean isDeleted;
+    Integer deleteCount;
 
 }
