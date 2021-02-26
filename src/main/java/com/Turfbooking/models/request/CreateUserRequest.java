@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import java.time.LocalDate;
 
@@ -21,6 +22,7 @@ public class CreateUserRequest {
     private String countryCode;
     @NotEmpty(message = "Please provide contact number")
     private String phoneNumber;
+    @Email(message = "Enter valid email")
     private String emailId;
     private Double latitude;
     private Double longitude;
