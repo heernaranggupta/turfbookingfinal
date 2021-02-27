@@ -59,7 +59,7 @@ public class RazorPayServiceImpl implements RazorPayService {
             payment = razorpayClient.Payments.capture(id, jsonObject);
         }
         JSONObject amountObject = new JSONObject();
-        amountObject.put("amount", Float.parseFloat(amount));
+        amountObject.put("amount", (Float.parseFloat(amount) * 100));
         if (false) { //if capture is false and status is authorized
             razorpayClient.Payments.capture(id, amountObject);
         }
