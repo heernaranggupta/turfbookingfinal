@@ -1,0 +1,12 @@
+
+phases:
+  install:
+    runtime-versions:
+      java: java 8
+  post_build:
+    commands:
+      - mvn clean
+      - mvn package
+      - mv target/Turfbooking-0.0.1-SNAPSHOT.jar Turfbooking-0.0.1-SNAPSHOT.jarartifacts:
+  files:
+    - Turfbooking-0.0.1-SNAPSHOT.jar
