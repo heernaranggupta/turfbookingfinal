@@ -12,6 +12,7 @@ import com.Turfbooking.repository.OpenCloseTimeRepository;
 import com.Turfbooking.repository.StartEndTimeRepository;
 import com.Turfbooking.service.ConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ConfigServiceImpl implements ConfigService {
@@ -111,6 +113,7 @@ public class ConfigServiceImpl implements ConfigService {
                             .startTime(startEndTimeRequest.getStartTime())
                             .endTime(startEndTimeRequest.getEndTime())
                             .price(startEndTimeRequest.getPrice())
+                            .minAmountForBooking(startEndTimeRequest.getMinAmountForBooking())
                             .timestamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                             .build();
                     if (null != configRequest.getDate()) {
@@ -166,4 +169,18 @@ public class ConfigServiceImpl implements ConfigService {
         return "error in deletion";
     }
 
+    @Override
+    public List<Double> minPayPrice(String stringDate) {
+        LocalDate date = LocalDate.parse(stringDate);
+        List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDate(date);
+        if (startEndTimeList.size() == 0) {
+            String day = date.getDayOfWeek().toString();
+            startEndTimeList = startEndTimeRepository.findByDay(day.toUpperCase());
+            if (startEndTimeList.size() == 0) {
+                throw new GeneralException("No data found for date" + date, HttpStatus.BAD_REQUEST);
+            }
+        }
+        List<Double> minPayPriceList = startEndTimeList.stream().map(x -> x.getMinAmountForBooking()).collect(Collectors.toList());
+        return minPayPriceList;
+    }
 }

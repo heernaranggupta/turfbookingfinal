@@ -79,9 +79,9 @@ public class RazorPayServiceImpl implements RazorPayService {
         RazorpayClient razorpayClient = this.initRazorPayClient();
         PaymentDetails paymentDetails = paymentRepository.findByOrderId(orderId);
         String id = paymentDetails.getTransactionId();
-//        JSONObject object = new JSONObject();
-//        object.put("amount",10 * 100);
-//        razorpayClient.Payments.capture(id,object);
+        JSONObject object = new JSONObject();
+        object.put("amount", 10 * 100);
+        razorpayClient.Payments.capture(id, object);
         List<RefundResponse> refundResponses = new ArrayList<>();
         if (null != refundId) {
             Refund refund = razorpayClient.Payments.fetchRefund(id, refundId);

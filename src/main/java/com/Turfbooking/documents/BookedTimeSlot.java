@@ -20,7 +20,8 @@ public class BookedTimeSlot {
     private String bookingId;
     private String userId;
     private String turfId;
-    private Double price;
+    private Double payedAmount;
+    private Double remainingAmount;
     private String status;
     private LocalDate date;
     private LocalDateTime startTime;

@@ -18,7 +18,7 @@ public interface CommonService {
 
     ValidateOtpResponse validateOTP(ValidateOtpRequest validateOtpRequest);
 
-    OrderResponse placeOrder(OrderRequest orderRequest);
+    OrderResponse placeOrder(OrderRequest orderRequest, String username);
 
     SlotValidationResponse validateSlotAvailableOrNot(SlotValidationRequest slotValidationRequest, String userID);
 

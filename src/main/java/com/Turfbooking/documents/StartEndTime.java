@@ -24,6 +24,7 @@ public class StartEndTime {
     private LocalTime startTime;
     private LocalTime endTime;
     private Double price;
+    private Double minAmountForBooking;
     private LocalDateTime timestamp;
 
 }

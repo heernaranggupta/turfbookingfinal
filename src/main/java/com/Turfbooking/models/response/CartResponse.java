@@ -19,6 +19,8 @@ public class CartResponse {
     private String _cartId;
     private List<Slot> selectedSlots;
     private Double cartTotal;
+    private Double payNow;
+    private Double payAtSite;
     private LocalDateTime timeStamp;
 
 

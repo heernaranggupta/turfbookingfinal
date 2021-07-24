@@ -54,6 +54,8 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/common/validate-otp").permitAll()
                 .antMatchers("/common/order/slot-list").permitAll()
 
+                .antMatchers("/admin/config/min_pay_price").hasAnyRole("ADMIN", "MANAGER")
+
                 .antMatchers("/business/login").permitAll()
                 .antMatchers("/business/slot/make-unavailable").hasAnyRole("ADMIN", "MANAGER")
                 .antMatchers("/business/reschedule-booking").hasAnyRole("ADMIN", "MANAGER")

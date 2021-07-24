@@ -15,10 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @RestController
-@RequestMapping("admin/config")
+@RequestMapping("/admin/config")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ConfigController {
 
@@ -44,6 +45,13 @@ public class ConfigController {
                                        @RequestParam(required = false) String date) {
         CommonResponse response = new CommonResponse(configService.deleteConfigByDate(day, date));
         return ResponseUtilities.createSuccessResponse(response);
-
     }
+
+    @GetMapping("/min_pay_price")
+    public CommonResponse getMinPayPrice(@RequestParam String date,
+                                         HttpServletResponse httpServletResponse) {
+        CommonResponse response = new CommonResponse(configService.minPayPrice(date));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
 }

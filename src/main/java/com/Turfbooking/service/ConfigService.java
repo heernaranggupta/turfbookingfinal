@@ -13,4 +13,6 @@ public interface ConfigService {
 
     String deleteConfigByDate(String day, String date);
 
+    List<Double> minPayPrice(String date);
+
 }

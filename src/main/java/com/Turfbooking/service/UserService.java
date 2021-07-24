@@ -38,7 +38,7 @@ public interface UserService {
 
     GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest);
 
-    CartResponse addToCart(CartRequest cartRequest);
+    CartResponse addToCart(CartRequest cartRequest, Boolean guest);
 
     CommonResponse getCart(String PhoneNumber, String cartId);
 

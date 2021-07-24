@@ -53,7 +53,7 @@ public class CommonController {
     @PostMapping("/order")
     public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest, Authentication authentication) {
         orderRequest.setUserId(authentication.getName());
-        CommonResponse response = new CommonResponse<>(commonService.placeOrder(orderRequest));
+        CommonResponse response = new CommonResponse<>(commonService.placeOrder(orderRequest, authentication.getName()));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
@@ -74,4 +74,5 @@ public class CommonController {
         CommonResponse response = new CommonResponse(commonService.getAllBookedSlotsByOrderId(orderId));
         return ResponseUtilities.createSuccessResponse(response);
     }
+
 }

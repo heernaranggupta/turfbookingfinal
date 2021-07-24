@@ -20,6 +20,7 @@ public class StartEndTimeResponse {
     private LocalTime startTime;
     private LocalTime endTime;
     private Double price;
+    private Double minAmountForBooking;
     private LocalDateTime timestamp;
 
     public StartEndTimeResponse(StartEndTime startEndTime) {
@@ -30,6 +31,7 @@ public class StartEndTimeResponse {
         this.startTime = startEndTime.getStartTime();
         this.endTime = startEndTime.getEndTime();
         this.price = startEndTime.getPrice();
+        this.minAmountForBooking = startEndTime.getMinAmountForBooking();
         this.timestamp = startEndTime.getTimestamp();
     }
 

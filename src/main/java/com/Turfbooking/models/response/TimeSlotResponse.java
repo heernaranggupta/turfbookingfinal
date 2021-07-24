@@ -3,6 +3,7 @@ package com.Turfbooking.models.response;
 import com.Turfbooking.documents.BookedTimeSlot;
 import com.Turfbooking.documents.CancelledSlot;
 import com.Turfbooking.models.request.TimeSlotRequest;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -16,6 +17,10 @@ public class TimeSlotResponse {
     private String userId;
     private String turfId;
     private Double price;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Double payedPrice;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Double remainingPrice;
     private String status;
     private LocalDate date;
     private LocalTime startTime;
@@ -28,7 +33,7 @@ public class TimeSlotResponse {
         this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
-        this.price = bookedTimeSlot.getPrice();
+        this.price = bookedTimeSlot.getPayedAmount() + bookedTimeSlot.getRemainingAmount();
         this.status = bookedTimeSlot.getStatus();
         this.date = bookedTimeSlot.getDate();
         this.startTime = bookedTimeSlot.getStartTime().toLocalTime();
