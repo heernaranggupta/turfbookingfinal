@@ -5,7 +5,7 @@ public enum Turfs {
     TURF02("turf02"),
     TURF03("turf03");
 
-    private String value;
+    private final String value;
 
     Turfs(String value)  {
         this.value = value;

@@ -41,6 +41,7 @@ import com.Turfbooking.repository.CartRepository;
 import com.Turfbooking.repository.OpenCloseTimeRepository;
 import com.Turfbooking.repository.StartEndTimeRepository;
 import com.Turfbooking.repository.UserRepository;
+import com.Turfbooking.service.ConfigService;
 import com.Turfbooking.service.RazorPayService;
 import com.Turfbooking.service.UserService;
 import com.Turfbooking.utils.CommonUtilities;
@@ -73,14 +74,15 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private JwtTokenUtil jwtTokenUtil;
-    private UserRepository userRepository;
-    private BookedTimeSlotRepository bookedTimeSlotRepository;
-    private CartRepository cartRepository;
-    private CancelledSlotRepository cancelledSlotRepository;
-    private OpenCloseTimeRepository openCloseTimeRepository;
-    private StartEndTimeRepository startEndTimeRepository;
-    private RazorPayService razorPayService;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final UserRepository userRepository;
+    private final BookedTimeSlotRepository bookedTimeSlotRepository;
+    private final CartRepository cartRepository;
+    private final CancelledSlotRepository cancelledSlotRepository;
+    private final OpenCloseTimeRepository openCloseTimeRepository;
+    private final StartEndTimeRepository startEndTimeRepository;
+    private final RazorPayService razorPayService;
+    private final ConfigService configService;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -92,7 +94,7 @@ public class UserServiceImpl implements UserService {
     private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, CancelledSlotRepository cancelledSlotRepository, OpenCloseTimeRepository openCloseTimeRepository, StartEndTimeRepository startEndTimeRepository, RazorPayService razorPayService) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, CancelledSlotRepository cancelledSlotRepository, OpenCloseTimeRepository openCloseTimeRepository, StartEndTimeRepository startEndTimeRepository, RazorPayService razorPayService, ConfigService configService) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
@@ -101,6 +103,7 @@ public class UserServiceImpl implements UserService {
         this.openCloseTimeRepository = openCloseTimeRepository;
         this.startEndTimeRepository = startEndTimeRepository;
         this.razorPayService = razorPayService;
+        this.configService = configService;
     }
 
     @Override
@@ -149,7 +152,8 @@ public class UserServiceImpl implements UserService {
         String userLoginType = CommonUtilities.findEmailIdOrPasswordValidator(userLoginRequest.getUsername());
         User isExist = null;
         if (StringUtils.equals(userLoginType, "email")) {
-            isExist = userRepository.findByEmailIdAndPassword(username, password);
+//            isExist = userRepository.findByEmailIdAndPassword(username, password);
+            throw new GeneralException("Enter valid phone number", HttpStatus.BAD_REQUEST);
         } else {
             isExist = userRepository.findByPhoneNumberAndPassword(username, password);
         }
@@ -288,7 +292,7 @@ public class UserServiceImpl implements UserService {
                 cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_USER.name());
             }
             //call api for refund
-            RefundResponse refundResponse = razorPayService.initRefund(timeSlot.getOrderId(), timeSlot.getPrice().toString());
+            RefundResponse refundResponse = razorPayService.initRefund(timeSlot.getOrderId(), timeSlot.getPayedAmount().toString());
             if (null == refundResponse.getId()) {
                 throw new GeneralException("error while initiating refund", HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -320,7 +324,7 @@ public class UserServiceImpl implements UserService {
                     .bookingId(CommonUtilities.getAlphaNumericString(6))
                     .userId(updateRequest.getUserId())
                     .turfId(updateRequest.getTurfId())
-                    .price(updateRequest.getPrice())
+                    .payedAmount(updateRequest.getPrice())
                     .date(updateRequest.getDate())
                     .startTime(LocalDateTime.of(updateRequest.getDate(), updateRequest.getStartTime()))
                     .endTime(LocalDateTime.of(updateRequest.getDate(), updateRequest.getEndTime()))
@@ -414,7 +418,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CartResponse addToCart(CartRequest cartRequest) throws GeneralException {
+    public CartResponse addToCart(CartRequest cartRequest, Boolean guest) throws GeneralException {
         for (Slot slot : cartRequest.getSelectedSlots()) {
             BookedTimeSlot isBookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(slot.getTurfId(), LocalDateTime.of(slot.getDate(), slot.getStartTime()), slot.getDate());
             if (null != isBookedTimeSlot) {
@@ -491,8 +495,9 @@ public class UserServiceImpl implements UserService {
         LocalTime now = LocalTime.now(ZoneId.of("Asia/Kolkata"));
         List<Slot> slotToBeDeleted = new ArrayList<>();
         Double cartTotalToBeDeducted = 0D;
+        Cart cart = null;
         if (null != phoneNumber) {
-            Cart cart = cartRepository.findByUserPhoneNumber(phoneNumber);
+            cart = cartRepository.findByUserPhoneNumber(phoneNumber);
             if (null != cart) {
                 //if slot is unavailable or booked remove it from cart
                 cart.getSelectedSlots().stream().forEach(slot -> {
@@ -511,12 +516,9 @@ public class UserServiceImpl implements UserService {
                     cart = cartRepository.save(cart);
                     successMessage = "slot which are of past date and booked are removed from cart";
                 }
-                CartResponse response = new CartResponse(cart);
-                CommonResponse commonResponse = new CommonResponse(response);
-                return ResponseUtilities.createSucessResponseWithMessage(commonResponse, successMessage);
             }
         } else if (null != cartId) {
-            Cart cart = cartRepository.findBy_cartId(cartId);
+            cart = cartRepository.findBy_cartId(cartId);
             if (null != cart) {
                 //if slot is unavailable or booked remove it from cart
                 cart.getSelectedSlots().stream().forEach(slot -> {
@@ -535,10 +537,28 @@ public class UserServiceImpl implements UserService {
                     cart = cartRepository.save(cart);
                     successMessage = "slot which are of past date and booked are removed from cart";
                 }
-                CartResponse response = new CartResponse(cart);
-                CommonResponse commonResponse = new CommonResponse(response);
-                return ResponseUtilities.createSucessResponseWithMessage(commonResponse, successMessage);
             }
+        }
+        if (cart != null) {
+            CartResponse response = new CartResponse(cart);
+            //pay now and pay at site
+            Double payNow = 0D;
+            for (Slot slot : response.getSelectedSlots()) {
+                List<Double> priceList = configService.minPayPrice(slot.getDate().toString());
+                if (slot.getTurfId().equalsIgnoreCase(Turfs.TURF01.name())) {
+                    payNow = payNow + priceList.get(0);
+                } else if (slot.getTurfId().equalsIgnoreCase(Turfs.TURF02.name())) {
+                    payNow = payNow + priceList.get(1);
+                } else if (slot.getTurfId().equalsIgnoreCase(Turfs.TURF03.name())) {
+                    payNow = payNow + priceList.get(2);
+                } else {
+                    throw new GeneralException("Turf id is not valid :" + slot.getTurfId(), HttpStatus.BAD_REQUEST);
+                }
+            }
+            response.setPayNow(payNow);
+            response.setPayAtSite(response.getCartTotal() - payNow);
+            CommonResponse commonResponse = new CommonResponse(response);
+            return ResponseUtilities.createSucessResponseWithMessage(commonResponse, successMessage);
         }
         return null;
     }

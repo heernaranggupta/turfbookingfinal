@@ -27,12 +27,9 @@ public interface BusinessService {
 
     CreatePasswordResponse resetPassword(CreateUpdatePasswordRequest createUpdatePasswordRequest);
 
-//    BookTimeSlotResponse bookSlot(BookTimeSlotRequest bookTimeSlotRequest);
-
     CreateBusinessUpdateResponse updateBusiness(UpdateBusinessRequest updateBusinessRequest);
 
     GetAllSlotsResponse getAllSlots(GetAllSlotsBusinessRequest getAllSlotsBusinessRequest);
-
 
     TimeSlotResponse makeSlotUnavailable(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
 

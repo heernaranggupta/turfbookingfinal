@@ -37,7 +37,7 @@ import javax.validation.Valid;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class UserController {
 
-    private UserService userService;
+    private final UserService userService;
 
     @Autowired
     public UserController(UserService userService) {
@@ -102,7 +102,7 @@ public class UserController {
     @PostMapping("/cart")
     public CommonResponse addToCart(@Valid @RequestBody CartRequest cartRequest, Authentication authentication) {
         cartRequest.setUserPhoneNumber(authentication.getName());
-        CommonResponse response = new CommonResponse(userService.addToCart(cartRequest));
+        CommonResponse response = new CommonResponse(userService.addToCart(cartRequest, false));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
@@ -110,7 +110,7 @@ public class UserController {
     @PostMapping("/cart/guest")
     public CommonResponse addToGuestCart(@Valid @RequestBody CartRequest cartRequest) {
 //        System.out.println("################ CartID :" + cartRequest.getCartId());
-        CommonResponse response = new CommonResponse(userService.addToCart(cartRequest));
+        CommonResponse response = new CommonResponse(userService.addToCart(cartRequest, true));
         return ResponseUtilities.createSuccessResponse(response);
     }
 

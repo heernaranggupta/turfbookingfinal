@@ -36,7 +36,7 @@ public class CancelledSlot {
         this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
-        this.price = bookedTimeSlot.getPrice();
+        this.price = bookedTimeSlot.getPayedAmount() + bookedTimeSlot.getRemainingAmount();
         this.date = bookedTimeSlot.getDate();
         this.startTime = bookedTimeSlot.getStartTime().toLocalTime();
         this.endTime = bookedTimeSlot.getEndTime().toLocalTime();

@@ -8,14 +8,13 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
 @Component
 class CustomTLSSocketFactory extends SSLSocketFactory {
 
-    private SSLSocketFactory internalSSLSocketFactory;
+    private final SSLSocketFactory internalSSLSocketFactory;
 
     CustomTLSSocketFactory() throws KeyManagementException, NoSuchAlgorithmException {
         SSLContext context = SSLContext.getInstance("TLS");
@@ -45,13 +44,13 @@ class CustomTLSSocketFactory extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port) throws IOException {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port));
     }
 
     @Override
     public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
-            throws IOException, UnknownHostException {
+            throws IOException {
         return enableTLSOnSocket(
                 internalSSLSocketFactory.createSocket(host, port, localHost, localPort));
     }

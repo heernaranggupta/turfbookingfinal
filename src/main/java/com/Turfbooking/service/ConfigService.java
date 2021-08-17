@@ -13,4 +13,8 @@ public interface ConfigService {
 
     String deleteConfigByDate(String day, String date);
 
+    List<Double> minPayPrice(String date);
+
+    List<ConfigResponse> getConfigBetweenDates(String strStartDate, String strEndDate, String turfId);
+
 }

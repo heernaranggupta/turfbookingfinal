@@ -13,4 +13,6 @@ public class StartEndTimeRequest {
     private LocalTime startTime;
     private LocalTime endTime;
     private Double price;
+    private Double minAmountForBooking;
+
 }

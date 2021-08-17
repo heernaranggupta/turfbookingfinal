@@ -1,5 +1,6 @@
 package com.Turfbooking.models.request;
 
+import com.Turfbooking.models.common.Slot;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -19,4 +20,14 @@ public class TimeSlotRequest {
     private LocalTime startTime;
     private LocalTime endTime;
 
+    public TimeSlotRequest() {
+    }
+
+    public TimeSlotRequest(Slot slot) {
+        this.turfId = slot.getTurfId();
+        this.price = slot.getPrice();
+        this.date = slot.getDate();
+        this.startTime = slot.getStartTime();
+        this.endTime = slot.getEndTime();
+    }
 }

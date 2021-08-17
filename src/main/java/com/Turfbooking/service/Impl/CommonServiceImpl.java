@@ -14,6 +14,7 @@ import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.OtpActiveStatus;
 import com.Turfbooking.models.enums.OtpStatus;
 import com.Turfbooking.models.enums.Roles;
+import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.enums.UserStatus;
 import com.Turfbooking.models.externalCalls.ExternalOtpCallResponse;
 import com.Turfbooking.models.mics.CustomUserDetails;
@@ -35,6 +36,7 @@ import com.Turfbooking.repository.OtpRepository;
 import com.Turfbooking.repository.SlotsInBookingTempRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.CommonService;
+import com.Turfbooking.service.ConfigService;
 import com.Turfbooking.service.PaymentService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
@@ -72,15 +74,18 @@ public class CommonServiceImpl implements CommonService {
 
     public static final String OTP_SENT_SUCCESS = "Otp Generated Successfully";
 
-    private JwtTokenUtil jwtTokenUtil;
-    private OtpRepository otpRepository;
-    private RestTemplate restTemplate;
-    private UserRepository userRepository;
-    private OrderRepository orderRepository;
-    private BookedTimeSlotRepository bookedTimeSlotRepository;
-    private CartRepository cartRepository;
-    private PaymentService paymentService;
-    private SlotsInBookingTempRepository slotsInBookingTempRepository;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final OtpRepository otpRepository;
+    private final RestTemplate restTemplate;
+    private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
+    private final BookedTimeSlotRepository bookedTimeSlotRepository;
+    private final CartRepository cartRepository;
+    private final PaymentService paymentService;
+    private final SlotsInBookingTempRepository slotsInBookingTempRepository;
+    private final Environment environment;
+    private final JavaMailSender javaMailSender;
+    private final ConfigService configService;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -104,13 +109,7 @@ public class CommonServiceImpl implements CommonService {
     private String LOGIN_URL;
 
     @Autowired
-    private Environment environment;
-
-    @Autowired
-    private JavaMailSender javaMailSender;
-
-    @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, PaymentService paymentService, SlotsInBookingTempRepository slotsInBookingTempRepository) {
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, PaymentService paymentService, SlotsInBookingTempRepository slotsInBookingTempRepository, Environment environment, JavaMailSender javaMailSender, ConfigService configService) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.otpRepository = otpRepository;
         this.restTemplate = restTemplate;
@@ -120,6 +119,9 @@ public class CommonServiceImpl implements CommonService {
         this.cartRepository = cartRepository;
         this.paymentService = paymentService;
         this.slotsInBookingTempRepository = slotsInBookingTempRepository;
+        this.environment = environment;
+        this.javaMailSender = javaMailSender;
+        this.configService = configService;
     }
 
     @Override
@@ -129,12 +131,12 @@ public class CommonServiceImpl implements CommonService {
         String emailOrPhoneNumber = null;
         emailOrPhoneNumber = CommonUtilities.findEmailIdOrPasswordValidator(username);
         Otp otpDocument = null;
-        if (StringUtils.equals(emailOrPhoneNumber, "email"))
-            otpDocument = otpRepository.findByPhoneNumber(username);
-        else {
+        if (!StringUtils.equals(emailOrPhoneNumber, "email")) {
             String countryCode = otpRequest.getCountryCode();
             username = StringUtils.join(countryCode, username);
             otpDocument = otpRepository.findByPhoneNumber(username);
+        } else {
+            throw new GeneralException("Enter valid phone number", HttpStatus.BAD_REQUEST);
         }
         String responseMessage;
         Integer otp;
@@ -250,14 +252,32 @@ public class CommonServiceImpl implements CommonService {
 
     @Override
     @Transactional
-    public OrderResponse placeOrder(OrderRequest orderRequest) throws GeneralException {
-        User isUserExist = userRepository.findByPhoneNumber(orderRequest.getUserId());
+    public OrderResponse placeOrder(OrderRequest orderRequest, String username) throws GeneralException {
+        User isUserExist = userRepository.findByPhoneNumber(username);
         if (null == isUserExist) {
-            throw new GeneralException("User does not exist.", HttpStatus.NOT_FOUND);
+            isUserExist = userRepository.findByEmailId(username);
+            if (null == isUserExist) {
+                throw new GeneralException("User does not exist.", HttpStatus.NOT_FOUND);
+            }
         }
+        if (orderRequest.getUserId() != null && orderRequest.getUserId() != "" && isUserExist.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
+            isUserExist = userRepository.findByPhoneNumber(orderRequest.getUserId());
+            if (null == isUserExist) {
+                isUserExist = userRepository.findByEmailId(orderRequest.getUserId());
+                if (null == isUserExist) {
+                    throw new GeneralException("User does not exist.", HttpStatus.NOT_FOUND);
+                }
+            }
+        }
+        List<TimeSlotRequest> cartTimeSlotRequests = new ArrayList<>();
+        Cart cart = cartRepository.findByUserPhoneNumber(isUserExist.getPhoneNumber());
+        cart.getSelectedSlots().forEach(x -> {
+            TimeSlotRequest req = new TimeSlotRequest(x);
+            cartTimeSlotRequests.add(req);
+        });
         List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
-        for (TimeSlotRequest request : orderRequest.getTimeSlots()) {
+        for (TimeSlotRequest request : cartTimeSlotRequests) {
             BookedTimeSlot slot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(request.getTurfId(), LocalDateTime.of(request.getDate(), request.getStartTime()), request.getDate());
             if (null == slot) {
                 timeSlotRequests.add(request);
@@ -265,7 +285,7 @@ public class CommonServiceImpl implements CommonService {
                 throw new GeneralException("slot with start time " + slot.getStartTime() + " on date " + slot.getDate() + " is already booked or in booking process", HttpStatus.CONFLICT);
             }
         }
-        List<BookedTimeSlot> bookedTimeSlotList = bookSlot(timeSlotRequests, orderRequest.getUserId());
+        List<BookedTimeSlot> bookedTimeSlotList = bookSlot(timeSlotRequests, orderRequest.getUserId(), orderRequest.getTransactionId());
         List<String> bookingIdList = bookedTimeSlotList.stream()
                 .map(x -> x.getBookingId())
                 .collect(Collectors.toList());
@@ -304,14 +324,29 @@ public class CommonServiceImpl implements CommonService {
     }
 
     @Transactional
-    private List<BookedTimeSlot> bookSlot(List<TimeSlotRequest> timeSlotRequestList, String userId) throws GeneralException {
+    protected List<BookedTimeSlot> bookSlot(List<TimeSlotRequest> timeSlotRequestList, String userId, String transactionId) throws GeneralException {
+        //validate amount payed should be equal
+
+
         List<BookedTimeSlot> bookedTimeSlotList = new ArrayList<>();
         for (TimeSlotRequest timeSlotRequest : timeSlotRequestList) {
+            List<Double> priceList = configService.minPayPrice(timeSlotRequest.getDate().toString());
+            Double payablePrice = 0D;
+            if (timeSlotRequest.getTurfId().equalsIgnoreCase(Turfs.TURF01.name())) {
+                payablePrice = priceList.get(0);
+            } else if (timeSlotRequest.getTurfId().equalsIgnoreCase(Turfs.TURF02.name())) {
+                payablePrice = priceList.get(1);
+            } else if (timeSlotRequest.getTurfId().equalsIgnoreCase(Turfs.TURF03.name())) {
+                payablePrice = priceList.get(2);
+            } else {
+                throw new GeneralException("Turf is is not valid :" + timeSlotRequest.getTurfId(), HttpStatus.BAD_REQUEST);
+            }
             BookedTimeSlot addNewBookedTimeSlot = BookedTimeSlot.builder()
                     .userId(userId)
                     .bookingId(CommonUtilities.getAlphaNumericString(5))
                     .date(timeSlotRequest.getDate())
-                    .price(timeSlotRequest.getPrice())
+                    .payedAmount(payablePrice)
+                    .remainingAmount(timeSlotRequest.getPrice() - payablePrice)
                     .turfId(timeSlotRequest.getTurfId())
                     .startTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()))
                     .endTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getEndTime()))
@@ -435,7 +470,7 @@ public class CommonServiceImpl implements CommonService {
     }
 
     @Async
-    private int sendSuccessfulBookingMessage(String phoneNumber, String username, Integer slotCount) throws GeneralException, JsonProcessingException {
+    protected int sendSuccessfulBookingMessage(String phoneNumber, String username, Integer slotCount) throws GeneralException, JsonProcessingException {
 //        SuccessfulBookingSMS bookingSMS = new SuccessfulBookingSMS(slotCount.toString(),username,LOGIN_URL,REBOUNCE_CONTACT);
         String successSMS = "Dear+" + username + ",+Your+booking+of+" + slotCount.toString() + "+slots+at+Rebounce+Turf+is+confirmed.+You+can+view+your+booking+on+" + LOGIN_URL + "+by+signing+in.+For+any+change+call+or+Whatapp+on+" + REBOUNCE_CONTACT + ".+Thanking+you+for+choosing+REBOUNCE!";
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(SuccessfulBookingSMS.baseURLForOTPService)

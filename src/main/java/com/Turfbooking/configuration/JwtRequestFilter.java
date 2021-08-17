@@ -23,7 +23,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String accessToken;

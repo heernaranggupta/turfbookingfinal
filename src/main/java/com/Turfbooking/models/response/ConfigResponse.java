@@ -29,4 +29,8 @@ public class ConfigResponse {
         this.startEndTimeResponseList = startEndTimeResponseList;
         this.message = message;
     }
+
+    public ConfigResponse() {
+    }
+
 }

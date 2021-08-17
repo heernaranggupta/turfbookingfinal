@@ -38,7 +38,6 @@ public class RefundResponse {
         if (!noteObject.isEmpty()) {
             for (Object object : noteObject) {
                 this.notes.add(object.toString());
-                ;
             }
         }
     }

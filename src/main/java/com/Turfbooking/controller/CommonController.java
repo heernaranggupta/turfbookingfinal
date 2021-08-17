@@ -29,8 +29,8 @@ import java.io.IOException;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class CommonController {
 
-    private CommonService commonService;
-    private PaymentService paymentService;
+    private final CommonService commonService;
+    private final PaymentService paymentService;
 
     @Autowired
     public CommonController(CommonService commonService, PaymentService paymentService) {
@@ -53,7 +53,7 @@ public class CommonController {
     @PostMapping("/order")
     public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest, Authentication authentication) {
         orderRequest.setUserId(authentication.getName());
-        CommonResponse response = new CommonResponse<>(commonService.placeOrder(orderRequest));
+        CommonResponse response = new CommonResponse<>(commonService.placeOrder(orderRequest, authentication.getName()));
         return ResponseUtilities.createSuccessResponse(response);
     }
 
@@ -74,4 +74,5 @@ public class CommonController {
         CommonResponse response = new CommonResponse(commonService.getAllBookedSlotsByOrderId(orderId));
         return ResponseUtilities.createSuccessResponse(response);
     }
+
 }
