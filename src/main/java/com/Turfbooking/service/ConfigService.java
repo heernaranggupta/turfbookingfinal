@@ -15,4 +15,6 @@ public interface ConfigService {
 
     List<Double> minPayPrice(String date);
 
+    List<ConfigResponse> getConfigBetweenDates(String strStartDate, String strEndDate, String turfId);
+
 }

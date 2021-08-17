@@ -23,5 +23,10 @@ public interface StartEndTimeRepository extends MongoRepository<StartEndTime, St
     @Query("{'day': ?0}")
     List<StartEndTime> deleteByDay(String day);
 
+    @Query("{'date':{'gt':startDate,'lt':endDate}}")
+    List<StartEndTime> findByDateBetween(LocalDate startDate, LocalDate endDate);
+
+    @Query("{'turfId':turfId,{'date':{'gt':startDate,'lt':endDate}}}")
+    List<StartEndTime> findByTurfIdEqualsAndDateBetween(String turfId, LocalDate startDate, LocalDate endDate);
 
 }

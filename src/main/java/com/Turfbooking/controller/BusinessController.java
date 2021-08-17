@@ -35,7 +35,7 @@ import java.util.List;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class BusinessController {
 
-    private BusinessService businessService;
+    private final BusinessService businessService;
 
 
     @Autowired

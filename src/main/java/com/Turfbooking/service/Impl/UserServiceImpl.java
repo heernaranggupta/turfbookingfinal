@@ -74,15 +74,15 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private JwtTokenUtil jwtTokenUtil;
-    private UserRepository userRepository;
-    private BookedTimeSlotRepository bookedTimeSlotRepository;
-    private CartRepository cartRepository;
-    private CancelledSlotRepository cancelledSlotRepository;
-    private OpenCloseTimeRepository openCloseTimeRepository;
-    private StartEndTimeRepository startEndTimeRepository;
-    private RazorPayService razorPayService;
-    private ConfigService configService;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final UserRepository userRepository;
+    private final BookedTimeSlotRepository bookedTimeSlotRepository;
+    private final CartRepository cartRepository;
+    private final CancelledSlotRepository cancelledSlotRepository;
+    private final OpenCloseTimeRepository openCloseTimeRepository;
+    private final StartEndTimeRepository startEndTimeRepository;
+    private final RazorPayService razorPayService;
+    private final ConfigService configService;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;

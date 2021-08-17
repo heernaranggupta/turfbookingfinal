@@ -1,5 +1,6 @@
 package com.Turfbooking.controller;
 
+import com.Turfbooking.models.request.ConfigRequest;
 import com.Turfbooking.models.request.ConfigRequests;
 import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.ConfigResponse;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -23,12 +25,19 @@ import java.util.List;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ConfigController {
 
-    @Autowired
     private ConfigService configService;
 
+    @Autowired
+    public ConfigController(ConfigService configService) {
+        this.configService = configService;
+    }
 
     @PostMapping("/add")
-    public CommonResponse<List<ConfigResponse>> addConfig(@RequestBody ConfigRequests configRequests) {
+    public CommonResponse<List<ConfigResponse>> addConfig(@RequestBody ConfigRequest configRequest) {
+        List<ConfigRequest> configRequestList = new ArrayList<>();
+        configRequestList.add(configRequest);
+        ConfigRequests configRequests = new ConfigRequests();
+        configRequests.setConfigRequests(configRequestList);
         CommonResponse response = new CommonResponse(configService.addOrUpdateConfig(configRequests));
         return ResponseUtilities.createSuccessResponse(response);
     }
@@ -51,6 +60,16 @@ public class ConfigController {
     public CommonResponse getMinPayPrice(@RequestParam String date,
                                          HttpServletResponse httpServletResponse) {
         CommonResponse response = new CommonResponse(configService.minPayPrice(date));
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+    @GetMapping("/get_for_month")
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public CommonResponse getBookedBetweenDates(@RequestParam(required = false) String turfIds,
+                                                @RequestParam String startDate,
+                                                @RequestParam String endDate,
+                                                HttpServletResponse httpServletResponse) {
+        CommonResponse response = new CommonResponse(configService.getConfigBetweenDates(startDate, endDate, turfIds));
         return ResponseUtilities.createSuccessResponse(response);
     }
 

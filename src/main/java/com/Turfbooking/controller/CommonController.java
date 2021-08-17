@@ -29,8 +29,8 @@ import java.io.IOException;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class CommonController {
 
-    private CommonService commonService;
-    private PaymentService paymentService;
+    private final CommonService commonService;
+    private final PaymentService paymentService;
 
     @Autowired
     public CommonController(CommonService commonService, PaymentService paymentService) {

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 class ApiUtils {
 
     private static OkHttpClient client;
-    private static Map<String, String> headers = new HashMap<String, String>();
+    private static final Map<String, String> headers = new HashMap<String, String>();
 
     private static String version = null;
 

@@ -8,9 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public interface FileStorageService {
 
-    public String storeFile(MultipartFile fileName);
+    String storeFile(MultipartFile fileName);
 
-    public Resource loadFileAsResource(String fileName);
+    Resource loadFileAsResource(String fileName);
 
     CommonResponse getFiles();
 

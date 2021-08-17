@@ -26,7 +26,7 @@ public class RazorPayServiceImpl implements RazorPayService {
     @Value("${razorpay.secret}")
     private String razorPaySecret;
 
-    private PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
 
     @Autowired
     public RazorPayServiceImpl(PaymentRepository paymentRepository) {

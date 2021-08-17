@@ -53,12 +53,12 @@ import java.util.stream.Collectors;
 @Service
 public class BusinessServiceImpl implements BusinessService {
 
-    private UserRepository userRepository;
-    private JwtTokenUtil jwtTokenUtil;
-    private BookedTimeSlotRepository bookedTimeSlotRepository;
-    private CancelledSlotRepository cancelledSlotRepository;
-    private OpenCloseTimeRepository openCloseTimeRepository;
-    private StartEndTimeRepository startEndTimeRepository;
+    private final UserRepository userRepository;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final BookedTimeSlotRepository bookedTimeSlotRepository;
+    private final CancelledSlotRepository cancelledSlotRepository;
+    private final OpenCloseTimeRepository openCloseTimeRepository;
+    private final StartEndTimeRepository startEndTimeRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;

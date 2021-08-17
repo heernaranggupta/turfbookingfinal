@@ -18,7 +18,7 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
 
-    private JwtRequestFilter jwtRequestFilter;
+    private final JwtRequestFilter jwtRequestFilter;
 
     @Autowired
     public WebSecurityConfing(JwtRequestFilter jwtRequestFilter) {
@@ -65,6 +65,8 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/business/get-all-business-users").hasRole("ADMIN")
                 .antMatchers("/business/reset-password").hasRole("ADMIN")
                 .antMatchers("/business/update").hasRole("ADMIN")
+
+                .antMatchers("/admin/config/get_for_month").hasAnyRole("ADMIN")
 
                 .antMatchers("/actuator/**").permitAll()
                 .antMatchers("/swagger-ui/**").permitAll()

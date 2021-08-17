@@ -74,18 +74,18 @@ public class CommonServiceImpl implements CommonService {
 
     public static final String OTP_SENT_SUCCESS = "Otp Generated Successfully";
 
-    private JwtTokenUtil jwtTokenUtil;
-    private OtpRepository otpRepository;
-    private RestTemplate restTemplate;
-    private UserRepository userRepository;
-    private OrderRepository orderRepository;
-    private BookedTimeSlotRepository bookedTimeSlotRepository;
-    private CartRepository cartRepository;
-    private PaymentService paymentService;
-    private SlotsInBookingTempRepository slotsInBookingTempRepository;
-    private Environment environment;
-    private JavaMailSender javaMailSender;
-    private ConfigService configService;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final OtpRepository otpRepository;
+    private final RestTemplate restTemplate;
+    private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
+    private final BookedTimeSlotRepository bookedTimeSlotRepository;
+    private final CartRepository cartRepository;
+    private final PaymentService paymentService;
+    private final SlotsInBookingTempRepository slotsInBookingTempRepository;
+    private final Environment environment;
+    private final JavaMailSender javaMailSender;
+    private final ConfigService configService;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -131,12 +131,12 @@ public class CommonServiceImpl implements CommonService {
         String emailOrPhoneNumber = null;
         emailOrPhoneNumber = CommonUtilities.findEmailIdOrPasswordValidator(username);
         Otp otpDocument = null;
-        if (!StringUtils.equals(emailOrPhoneNumber, "email"))
-            otpDocument = otpRepository.findByPhoneNumber(username);
-        else {
+        if (!StringUtils.equals(emailOrPhoneNumber, "email")) {
             String countryCode = otpRequest.getCountryCode();
             username = StringUtils.join(countryCode, username);
             otpDocument = otpRepository.findByPhoneNumber(username);
+        } else {
+            throw new GeneralException("Enter valid phone number", HttpStatus.BAD_REQUEST);
         }
         String responseMessage;
         Integer otp;
