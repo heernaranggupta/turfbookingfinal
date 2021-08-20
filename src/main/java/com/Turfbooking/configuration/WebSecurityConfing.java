@@ -65,6 +65,9 @@ public class WebSecurityConfing extends WebSecurityConfigurerAdapter {
                 .antMatchers("/business/get-all-business-users").hasRole("ADMIN")
                 .antMatchers("/business/reset-password").hasRole("ADMIN")
                 .antMatchers("/business/update").hasRole("ADMIN")
+                .antMatchers("/business/payment_accepted").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                .antMatchers("/business/future_bookings").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                .antMatchers("/business/cancel_booking").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
 
                 .antMatchers("/admin/config/get_for_month").hasAnyRole("ADMIN")
 

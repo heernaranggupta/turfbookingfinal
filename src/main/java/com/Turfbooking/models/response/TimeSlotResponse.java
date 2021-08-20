@@ -13,6 +13,7 @@ import java.time.LocalTime;
 @Data
 public class TimeSlotResponse {
 
+    private String id;
     private String bookingId;
     private String userId;
     private String turfId;
@@ -21,6 +22,8 @@ public class TimeSlotResponse {
     private Double payedPrice;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Double remainingPrice;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Boolean remainingPricePayed;
     private String status;
     private LocalDate date;
     private LocalTime startTime;
@@ -30,10 +33,14 @@ public class TimeSlotResponse {
     private LocalDateTime timestamp;
 
     public TimeSlotResponse(BookedTimeSlot bookedTimeSlot) {
+        this.id = bookedTimeSlot.get_id();
         this.bookingId = bookedTimeSlot.getBookingId();
         this.userId = bookedTimeSlot.getUserId();
         this.turfId = bookedTimeSlot.getTurfId();
         this.price = bookedTimeSlot.getPayedAmount() + bookedTimeSlot.getRemainingAmount();
+        this.payedPrice = bookedTimeSlot.getPayedAmount();
+        this.remainingPrice = bookedTimeSlot.getRemainingAmount();
+        this.remainingPricePayed = bookedTimeSlot.getRemainingAmountPayed();
         this.status = bookedTimeSlot.getStatus();
         this.date = bookedTimeSlot.getDate();
         this.startTime = bookedTimeSlot.getStartTime().toLocalTime();
@@ -43,6 +50,7 @@ public class TimeSlotResponse {
     }
 
     public TimeSlotResponse(CancelledSlot cancelledSlot) {
+        this.id = cancelledSlot.get_id();
         this.bookingId = cancelledSlot.getBookingId();
         this.userId = cancelledSlot.getUserId();
         this.turfId = cancelledSlot.getTurfId();
@@ -82,4 +90,5 @@ public class TimeSlotResponse {
         this.startTime = startTime;
         this.endTime = endTime;
     }
+
 }

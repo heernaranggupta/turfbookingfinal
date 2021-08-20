@@ -347,6 +347,7 @@ public class CommonServiceImpl implements CommonService {
                     .date(timeSlotRequest.getDate())
                     .payedAmount(payablePrice)
                     .remainingAmount(timeSlotRequest.getPrice() - payablePrice)
+                    .remainingAmountPayed(false)
                     .turfId(timeSlotRequest.getTurfId())
                     .startTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()))
                     .endTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getEndTime()))

@@ -22,6 +22,7 @@ public class BookedTimeSlot {
     private String turfId;
     private Double payedAmount;
     private Double remainingAmount;
+    private Boolean remainingAmountPayed;
     private String status;
     private LocalDate date;
     private LocalDateTime startTime;

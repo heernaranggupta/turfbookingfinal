@@ -8,6 +8,7 @@ import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
@@ -40,4 +41,11 @@ public interface BusinessService {
     List<TimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest);
 
     List<UserResponse> getAllBusinessUsers();
+
+    CommonResponse paymentAccepted(String bookingId);
+
+    CommonResponse getAllFutureBookings();
+
+    CommonResponse cancelBookingByAdmin(String bookingId);
+
 }

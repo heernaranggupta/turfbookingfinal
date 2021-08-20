@@ -73,4 +73,13 @@ public class ConfigController {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
+    @DeleteMapping("/delete_by_date_turf_id")
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public CommonResponse deleteConfigByTurfIdAndDate(@RequestParam String turfId,
+                                                      @RequestParam(required = false) String date,
+                                                      HttpServletResponse httpServletResponse) {
+        return configService.deleteConfigByTurfIdAndDate(turfId, date);
+    }
+
+
 }

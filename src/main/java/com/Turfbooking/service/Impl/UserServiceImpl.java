@@ -202,6 +202,7 @@ public class UserServiceImpl implements UserService {
                 }
             }
             UserResponse userResponse = new UserResponse(isExist);
+            userResponse.setRole(isExist.getRole());
             CreateUserLoginResponse loginResponse = new CreateUserLoginResponse(userResponse, token, refreshToken);
             return loginResponse;
         } else {

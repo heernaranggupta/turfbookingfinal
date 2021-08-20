@@ -7,11 +7,13 @@ import com.Turfbooking.models.common.StartEndTimeRequest;
 import com.Turfbooking.models.enums.Turfs;
 import com.Turfbooking.models.request.ConfigRequest;
 import com.Turfbooking.models.request.ConfigRequests;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.ConfigResponse;
 import com.Turfbooking.models.response.StartEndTimeResponse;
 import com.Turfbooking.repository.OpenCloseTimeRepository;
 import com.Turfbooking.repository.StartEndTimeRepository;
 import com.Turfbooking.service.ConfigService;
+import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -202,23 +204,21 @@ public class ConfigServiceImpl implements ConfigService {
             List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDateBetween(startDate, endDate);
             this.addConfig(openCloseTimeList, startEndTimeList, configResponseList);
         } else {
+            List<OpenCloseTime> openCloseTimeList = openCloseTimeRepository.findByDateBetween(startDate, endDate);
             if (turfId.contains(Turfs.TURF01.name())) {
                 List<StartEndTime> turf01 = startEndTimeRepository.findByTurfIdEqualsAndDateBetween(Turfs.TURF01.name(), startDate, endDate);
-                List<OpenCloseTime> openCloseTimeList = openCloseTimeRepository.findByTurfIdEqualsAndDateBetween(Turfs.TURF01.name(), startDate, endDate);
 //                add config to config list
                 this.addConfig(openCloseTimeList, turf01, configResponseList);
                 turfIds.add(Turfs.TURF01.name());
             }
             if (turfId.contains(Turfs.TURF02.name())) {
                 List<StartEndTime> turf02 = startEndTimeRepository.findByTurfIdEqualsAndDateBetween(Turfs.TURF02.name(), startDate, endDate);
-                List<OpenCloseTime> openCloseTimeList = openCloseTimeRepository.findByTurfIdEqualsAndDateBetween(Turfs.TURF02.name(), startDate, endDate);
 //                add config to config list
                 this.addConfig(openCloseTimeList, turf02, configResponseList);
                 turfIds.add(Turfs.TURF02.name());
             }
             if (turfId.contains(Turfs.TURF03.name())) {
                 List<StartEndTime> turf03 = startEndTimeRepository.findByTurfIdEqualsAndDateBetween(Turfs.TURF03.name(), startDate, endDate);
-                List<OpenCloseTime> openCloseTimeList = openCloseTimeRepository.findByTurfIdEqualsAndDateBetween(Turfs.TURF03.name(), startDate, endDate);
 //                add config to config list
                 this.addConfig(openCloseTimeList, turf03, configResponseList);
                 turfIds.add(Turfs.TURF03.name());
@@ -299,6 +299,29 @@ public class ConfigServiceImpl implements ConfigService {
         configResponseList.addAll(responseList);
     }
 
+    @Override
+    public CommonResponse deleteConfigByTurfIdAndDate(String turfId, String strDate) {
+        LocalDate date = LocalDate.parse(strDate);
+        OpenCloseTime openCloseTimeOfDate = openCloseTimeRepository.findByDate(date);
+        if (openCloseTimeOfDate == null) {
+            throw new GeneralException("No config found of date " + date, HttpStatus.BAD_REQUEST);
+        }
+        List<StartEndTime> startEndTimeListOfDate = startEndTimeRepository.findByTurfIdAndDate(turfId, date);
+        if (startEndTimeListOfDate.size() == 0) {
+            throw new GeneralException("No config found of date " + date + " and " + turfId, HttpStatus.BAD_REQUEST);
+        }
+        try {
+            startEndTimeRepository.deleteAll(startEndTimeListOfDate);
+        } catch (Exception e) {
+            throw new GeneralException(e.getCause().getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        List<StartEndTime> startEndTimeList = startEndTimeRepository.findByDate(date);
+        if (startEndTimeList.size() == 0) {
+            openCloseTimeRepository.delete(openCloseTimeOfDate);
+        }
+        CommonResponse response = new CommonResponse("Config deleted successfully");
+        return ResponseUtilities.createSucessResponseWithMessage(response, "Config deleted successfully");
+    }
 
 }
 

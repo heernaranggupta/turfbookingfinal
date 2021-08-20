@@ -17,8 +17,10 @@ import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
+import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
+import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateBusinessUpdateResponse;
 import com.Turfbooking.models.response.CreatePasswordResponse;
 import com.Turfbooking.models.response.CreateUserResponse;
@@ -26,14 +28,17 @@ import com.Turfbooking.models.response.GetAllSlotsResponse;
 import com.Turfbooking.models.response.RescheduleBookingResponse;
 import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.UserResponse;
+import com.Turfbooking.razorpay.response.RefundResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.CancelledSlotRepository;
 import com.Turfbooking.repository.OpenCloseTimeRepository;
 import com.Turfbooking.repository.StartEndTimeRepository;
 import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.BusinessService;
+import com.Turfbooking.service.RazorPayService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
+import com.Turfbooking.utils.ResponseUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -55,6 +60,7 @@ public class BusinessServiceImpl implements BusinessService {
 
     private final UserRepository userRepository;
     private final JwtTokenUtil jwtTokenUtil;
+    private RazorPayService razorPayService;
     private final BookedTimeSlotRepository bookedTimeSlotRepository;
     private final CancelledSlotRepository cancelledSlotRepository;
     private final OpenCloseTimeRepository openCloseTimeRepository;
@@ -70,9 +76,10 @@ public class BusinessServiceImpl implements BusinessService {
     private long refreshTokenValidity;
 
     @Autowired
-    public BusinessServiceImpl(UserRepository userRepository, JwtTokenUtil jwtTokenUtil, BookedTimeSlotRepository bookedTimeSlotRepository, CancelledSlotRepository cancelledSlotRepository, OpenCloseTimeRepository openCloseTimeRepository, StartEndTimeRepository startEndTimeRepository) {
+    public BusinessServiceImpl(UserRepository userRepository, JwtTokenUtil jwtTokenUtil, RazorPayService razorPayService, BookedTimeSlotRepository bookedTimeSlotRepository, CancelledSlotRepository cancelledSlotRepository, OpenCloseTimeRepository openCloseTimeRepository, StartEndTimeRepository startEndTimeRepository) {
         this.userRepository = userRepository;
         this.jwtTokenUtil = jwtTokenUtil;
+        this.razorPayService = razorPayService;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.cancelledSlotRepository = cancelledSlotRepository;
         this.openCloseTimeRepository = openCloseTimeRepository;
@@ -240,6 +247,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
     }
 
+    //edit karvanu chhe
     @Override
     public List<TimeSlotResponse> viewAllBooking(BusinessViewAllBookingRequest businessViewAllBookingRequest) {
         LocalDate fromDate = (null != businessViewAllBookingRequest.getFromDate()) ? businessViewAllBookingRequest.getFromDate() : LocalDate.now(ZoneId.of("Asia/Kolkata"));
@@ -381,5 +389,71 @@ public class BusinessServiceImpl implements BusinessService {
             }
         }
         return businessResponses;
+    }
+
+    @Override
+    public CommonResponse paymentAccepted(String bookingId) {
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByIdEquals(bookingId);
+        if (bookedTimeSlot == null) {
+            throw new GeneralException("No booking found with id " + bookingId, HttpStatus.BAD_REQUEST);
+        }
+        bookedTimeSlot.setRemainingAmountPayed(true);
+        bookedTimeSlot.setPayedAmount(bookedTimeSlot.getPayedAmount() + bookedTimeSlot.getRemainingAmount());
+        bookedTimeSlot.setRemainingAmount(0D);
+        try {
+            BookedTimeSlot savedTimeSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
+        } catch (Exception e) {
+            throw new GeneralException(e.getCause().getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        CommonResponse response = new CommonResponse("Payment accepted");
+        return ResponseUtilities.createSucessResponseWithMessage(response, "Payment accepted");
+    }
+
+    @Override
+    public CommonResponse getAllFutureBookings() {
+        LocalDate date = LocalDate.now();
+        List<BookedTimeSlot> bookedTimeSlotList = bookedTimeSlotRepository.findByDateIsAfter(date);
+        List<TimeSlotResponse> timeSlotResponseList = new ArrayList<>();
+        if (bookedTimeSlotList.size() != 0) {
+            for (BookedTimeSlot slot : bookedTimeSlotList) {
+                TimeSlotResponse timeSlotResponse = new TimeSlotResponse(slot);
+                timeSlotResponseList.add(timeSlotResponse);
+            }
+        }
+        CommonResponse response = new CommonResponse(timeSlotResponseList);
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+
+    @Override
+    public CommonResponse cancelBookingByAdmin(String bookingId) {
+        CommonResponse response = null;
+        BookedTimeSlot slot = bookedTimeSlotRepository.findByIdEquals(bookingId);
+        if (null == slot) {
+            throw new GeneralException("No booking found with id " + bookingId, HttpStatus.BAD_REQUEST);
+        }
+        try {
+            CancelledSlot cancelledSlot = new CancelledSlot(slot);
+            cancelledSlot.setStatus(BookingStatus.CANCELLED_BY_BUSINESS.name());
+            //refund
+            RefundResponse refundResponse = razorPayService.initRefund(slot.getOrderId(), slot.getPayedAmount().toString());
+            if (null == refundResponse.getId()) {
+                throw new GeneralException("error while initiating refund", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            cancelledSlot.setRefundId(refundResponse.getId());
+            bookedTimeSlotRepository.delete(slot);
+            CancelledSlot savedInDB = cancelledSlotRepository.insert(cancelledSlot);
+            response = new CommonResponse(savedInDB);
+        } catch (Exception e) {
+            throw new GeneralException(e.getCause().getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return ResponseUtilities.createSuccessResponse(response);
+    }
+
+
+    //    /book by admin
+    public CommonResponse orderByAdmin(OrderRequest orderRequest) {
+
+        return null;
     }
 }
