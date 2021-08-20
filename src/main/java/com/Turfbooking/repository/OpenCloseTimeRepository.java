@@ -22,11 +22,7 @@ public interface OpenCloseTimeRepository extends MongoRepository<OpenCloseTime, 
     @Query("{'date':{$eq: ?0}}")
     void deleteByDate(LocalDate date);
 
-    @Query("{'date':{'gt':startDate,'lt':endDate}}")
+    @Query("{'date':{'$gt':?0,'$lt':?1}}")
     List<OpenCloseTime> findByDateBetween(LocalDate startDate, LocalDate endDate);
-
-    @Query("{'turfId':turfId,{'date':{'gt':startDate,'lt':endDate}}}")
-    List<OpenCloseTime> findByTurfIdEqualsAndDateBetween(String turfId, LocalDate startDate, LocalDate endDate);
-
 
 }

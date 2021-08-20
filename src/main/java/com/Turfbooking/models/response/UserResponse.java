@@ -26,7 +26,7 @@ public class UserResponse {
     private String addressLine;
     private String zipCode;
     private String displayImageUrl;
-
+    private String role;
     private Boolean cartCreated;
 
     public UserResponse(User userDocument) {

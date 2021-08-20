@@ -19,13 +19,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -44,7 +47,6 @@ public class BusinessController {
     }
 
 
-    
     @PostMapping("/signup")
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public CommonResponse createNewBusinessUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
@@ -110,4 +112,25 @@ public class BusinessController {
         CommonResponse response = new CommonResponse(businessService.getAllBusinessUsers());
         return ResponseUtilities.createSuccessResponse(response);
     }
+
+    @GetMapping("/payment_accepted")
+    public CommonResponse paymentAccepted(@RequestParam String bookingId,
+                                          Authentication authentication,
+                                          HttpServletResponse httpServletResponse) {
+        return businessService.paymentAccepted(bookingId);
+    }
+
+    @GetMapping("/future_bookings")
+    public CommonResponse getAllFutureBookings(Authentication authentication,
+                                               HttpServletResponse httpServletResponse) {
+        return businessService.getAllFutureBookings();
+    }
+
+    @DeleteMapping("/cancel_booking")
+    public CommonResponse cancelBooking(@RequestParam String bookingId,
+                                        Authentication authentication,
+                                        HttpServletResponse httpServletResponse) {
+        return businessService.cancelBookingByAdmin(bookingId);
+    }
+
 }
