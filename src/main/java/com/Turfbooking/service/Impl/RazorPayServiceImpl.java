@@ -13,6 +13,7 @@ import com.Turfbooking.service.RazorPayService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -39,8 +40,11 @@ public class RazorPayServiceImpl implements RazorPayService {
     }
 
     @Override
-    public PaymentResponse getTransactionDetails(String orderID) throws RazorpayException {
-        PaymentDetails paymentDetails = paymentRepository.findByOrderId(orderID);
+    public PaymentResponse getTransactionDetailsByOrderId(String orderId) throws RazorpayException {
+        PaymentDetails paymentDetails = paymentRepository.findByOrderId(orderId);
+        if (paymentDetails == null) {
+            throw new GeneralException("No details found with order id " + orderId, HttpStatus.BAD_REQUEST);
+        }
         RazorpayClient razorpayClient = this.initRazorPayClient();
         Payment payment = razorpayClient.Payments.fetch(paymentDetails.getTransactionId());
         PaymentResponse response = new PaymentResponse(payment);
@@ -97,5 +101,11 @@ public class RazorPayServiceImpl implements RazorPayService {
         return refundResponses;
     }
 
+    public PaymentResponse getTransactionDetailsByTransactionId(String transactionId) throws RazorpayException {
+        RazorpayClient razorpayClient = this.initRazorPayClient();
+        Payment payment = razorpayClient.Payments.fetch(transactionId);
+        PaymentResponse response = new PaymentResponse(payment);
+        return response;
+    }
 
 }

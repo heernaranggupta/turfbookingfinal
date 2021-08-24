@@ -280,7 +280,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelRequest, String userID) throws GeneralException, RazorpayException {
-        if (cancelRequest.getDate().isBefore(LocalDate.now(ZoneId.of("Asia/Kolkata"))) /*|| cancelRequest.getDate().equals(LocalDate.now(ZoneId.of("Asia/Kolkata")))*/) {
+        if (cancelRequest.getDate().isBefore(LocalDate.now(ZoneId.of("Asia/Kolkata")))) {
             throw new GeneralException("slot cannot be cancelled with date : " + cancelRequest.getDate().toString(), HttpStatus.BAD_REQUEST);
         }
         BookedTimeSlot timeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTimeAndDate(cancelRequest.getTurfId(), LocalDateTime.of(cancelRequest.getDate(), cancelRequest.getStartTime()), cancelRequest.getDate());

@@ -6,6 +6,7 @@ import com.Turfbooking.documents.OpenCloseTime;
 import com.Turfbooking.documents.StartEndTime;
 import com.Turfbooking.documents.User;
 import com.Turfbooking.exception.GeneralException;
+import com.Turfbooking.exception.UserNotFoundException;
 import com.Turfbooking.models.common.Location;
 import com.Turfbooking.models.enums.BookingStatus;
 import com.Turfbooking.models.enums.Roles;
@@ -17,7 +18,6 @@ import com.Turfbooking.models.request.CreateRescheduleBookingRequest;
 import com.Turfbooking.models.request.CreateUpdatePasswordRequest;
 import com.Turfbooking.models.request.CreateUserRequest;
 import com.Turfbooking.models.request.GetAllSlotsBusinessRequest;
-import com.Turfbooking.models.request.OrderRequest;
 import com.Turfbooking.models.request.UpdateBusinessRequest;
 import com.Turfbooking.models.request.UserLoginRequest;
 import com.Turfbooking.models.response.CommonResponse;
@@ -284,8 +284,12 @@ public class BusinessServiceImpl implements BusinessService {
                 TimeSlotResponse response = new TimeSlotResponse(slot);
                 responseList.add(response);
             }
-            responseList.sort(Comparator.comparing(TimeSlotResponse::getTimestamp));
-            Collections.reverse(responseList);
+            responseList.sort(Comparator.comparing(TimeSlotResponse::getStartTime));
+            responseList.sort(Comparator.comparing(TimeSlotResponse::getDate));
+            if (businessViewAllBookingRequest.getUserId() != null && businessViewAllBookingRequest.getUserId() != "") {
+                responseList = responseList.stream().filter(x -> x.getUserId().equals(businessViewAllBookingRequest.getUserId())).collect(Collectors.toList());
+            }
+//            Collections.reverse(responseList);
             return responseList;
         } else {
             throw new GeneralException("Error", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -450,10 +454,24 @@ public class BusinessServiceImpl implements BusinessService {
         return ResponseUtilities.createSuccessResponse(response);
     }
 
-
-    //    /book by admin
-    public CommonResponse orderByAdmin(OrderRequest orderRequest) {
-
-        return null;
+    @Override
+    public CommonResponse getUserDetailsByContactNumber(String mobileNo) {
+        User user = userRepository.findByPhoneNumber(mobileNo);
+        if (user == null) {
+            throw new UserNotFoundException("User with mobile number " + mobileNo + " not found");
+        }
+        UserResponse userResponse = new UserResponse(user.getNameOfUser(),
+                user.getGender(),
+                user.getDateOfBirth(),
+                user.getCountryCode(),
+                user.getPhoneNumber(),
+                user.getLatestLocation(),
+                user.getEmailId(),
+                user.getAddress().getAddressLine(),
+                user.getAddress().getZipCode(),
+                user.getDisplayImageUrl());
+        CommonResponse response = new CommonResponse(userResponse);
+        return ResponseUtilities.createSuccessResponse(response);
     }
+
 }

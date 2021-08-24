@@ -8,6 +8,7 @@ import com.Turfbooking.models.response.CommonResponse;
 import com.Turfbooking.models.response.CreateResponse;
 import com.Turfbooking.models.response.OrderResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.razorpay.RazorpayException;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.service.PaymentService;
 import com.Turfbooking.utils.ResponseUtilities;
@@ -51,7 +52,7 @@ public class CommonController {
     }
 
     @PostMapping("/order")
-    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest, Authentication authentication) {
+    public CommonResponse<OrderResponse> placeOrder(@RequestBody OrderRequest orderRequest, Authentication authentication) throws RazorpayException {
         orderRequest.setUserId(authentication.getName());
         CommonResponse response = new CommonResponse<>(commonService.placeOrder(orderRequest, authentication.getName()));
         return ResponseUtilities.createSuccessResponse(response);

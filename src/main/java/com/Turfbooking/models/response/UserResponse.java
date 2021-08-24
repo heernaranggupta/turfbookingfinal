@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 public class UserResponse {
+
     private String name;
     private String gender;
     private LocalDate dateOfBirth;
@@ -52,4 +53,18 @@ public class UserResponse {
             this.displayImageUrl = userDocument.getDisplayImageUrl();
         }
     }
+
+    public UserResponse(String name, String gender, LocalDate dateOfBirth, String countryCode, String phoneNumber, Location latestLocation, String emailId, String addressLine, String zipCode, String displayImageUrl) {
+        this.name = name;
+        this.gender = gender;
+        this.dateOfBirth = dateOfBirth;
+        this.countryCode = countryCode;
+        this.phoneNumber = phoneNumber;
+        this.latestLocation = latestLocation;
+        this.emailId = emailId;
+        this.addressLine = addressLine;
+        this.zipCode = zipCode;
+        this.displayImageUrl = displayImageUrl;
+    }
+
 }
