@@ -21,7 +21,7 @@ public class RazorPayController {
 
     @GetMapping("/details")
     CommonResponse getPaymentDetails(@RequestParam String orderId) throws RazorpayException {
-        CommonResponse response = new CommonResponse(razorPayService.getTransactionDetails(orderId));
+        CommonResponse response = new CommonResponse(razorPayService.getTransactionDetailsByOrderId(orderId));
         return ResponseUtilities.createSuccessResponse(response);
     }
 

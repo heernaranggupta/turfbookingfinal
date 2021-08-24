@@ -133,4 +133,12 @@ public class BusinessController {
         return businessService.cancelBookingByAdmin(bookingId);
     }
 
+
+    @GetMapping("/search")
+    public CommonResponse getUserDetailsByContactNumber(@RequestParam String mobileNo,
+                                                        Authentication authentication,
+                                                        HttpServletResponse httpServletResponse) {
+        return null;
+    }
+
 }

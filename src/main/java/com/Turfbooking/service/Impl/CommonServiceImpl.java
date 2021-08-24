@@ -29,6 +29,8 @@ import com.Turfbooking.models.response.SlotValidationResponse;
 import com.Turfbooking.models.response.TimeSlotResponse;
 import com.Turfbooking.models.response.UserResponse;
 import com.Turfbooking.models.response.ValidateOtpResponse;
+import com.Turfbooking.razorpay.RazorpayException;
+import com.Turfbooking.razorpay.response.PaymentResponse;
 import com.Turfbooking.repository.BookedTimeSlotRepository;
 import com.Turfbooking.repository.CartRepository;
 import com.Turfbooking.repository.OrderRepository;
@@ -38,6 +40,7 @@ import com.Turfbooking.repository.UserRepository;
 import com.Turfbooking.service.CommonService;
 import com.Turfbooking.service.ConfigService;
 import com.Turfbooking.service.PaymentService;
+import com.Turfbooking.service.RazorPayService;
 import com.Turfbooking.utils.CommonUtilities;
 import com.Turfbooking.utils.JwtTokenUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -86,6 +89,7 @@ public class CommonServiceImpl implements CommonService {
     private final Environment environment;
     private final JavaMailSender javaMailSender;
     private final ConfigService configService;
+    private final RazorPayService razorPayService;
 
     @Value("${jwt.secret.accessToken}")
     private String accessSecret;
@@ -109,7 +113,7 @@ public class CommonServiceImpl implements CommonService {
     private String LOGIN_URL;
 
     @Autowired
-    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, PaymentService paymentService, SlotsInBookingTempRepository slotsInBookingTempRepository, Environment environment, JavaMailSender javaMailSender, ConfigService configService) {
+    public CommonServiceImpl(JwtTokenUtil jwtTokenUtil, OtpRepository otpRepository, RestTemplate restTemplate, UserRepository userRepository, OrderRepository orderRepository, BookedTimeSlotRepository bookedTimeSlotRepository, CartRepository cartRepository, PaymentService paymentService, SlotsInBookingTempRepository slotsInBookingTempRepository, Environment environment, JavaMailSender javaMailSender, ConfigService configService, RazorPayService razorPayService) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.otpRepository = otpRepository;
         this.restTemplate = restTemplate;
@@ -122,6 +126,7 @@ public class CommonServiceImpl implements CommonService {
         this.environment = environment;
         this.javaMailSender = javaMailSender;
         this.configService = configService;
+        this.razorPayService = razorPayService;
     }
 
     @Override
@@ -252,14 +257,16 @@ public class CommonServiceImpl implements CommonService {
 
     @Override
     @Transactional
-    public OrderResponse placeOrder(OrderRequest orderRequest, String username) throws GeneralException {
+    public OrderResponse placeOrder(OrderRequest orderRequest, String username) throws GeneralException, RazorpayException {
         User isUserExist = userRepository.findByPhoneNumber(username);
+        Boolean isAdmin = false;
         if (null == isUserExist) {
             isUserExist = userRepository.findByEmailId(username);
             if (null == isUserExist) {
                 throw new GeneralException("User does not exist.", HttpStatus.NOT_FOUND);
             }
         }
+
         if (orderRequest.getUserId() != null && orderRequest.getUserId() != "" && isUserExist.getRole().equalsIgnoreCase(Roles.ADMIN.name())) {
             isUserExist = userRepository.findByPhoneNumber(orderRequest.getUserId());
             if (null == isUserExist) {
@@ -270,11 +277,19 @@ public class CommonServiceImpl implements CommonService {
             }
         }
         List<TimeSlotRequest> cartTimeSlotRequests = new ArrayList<>();
-        Cart cart = cartRepository.findByUserPhoneNumber(isUserExist.getPhoneNumber());
-        cart.getSelectedSlots().forEach(x -> {
-            TimeSlotRequest req = new TimeSlotRequest(x);
-            cartTimeSlotRequests.add(req);
-        });
+        if (isUserExist.getRole().equals(Roles.ADMIN.name())) {
+            isAdmin = true;
+            for (TimeSlotRequest tsl : orderRequest.getTimeSlots()) {
+                cartTimeSlotRequests.add(tsl);
+            }
+        } else {
+            Cart cart = cartRepository.findByUserPhoneNumber(isUserExist.getPhoneNumber());
+            for (Slot slot : cart.getSelectedSlots()) {
+                TimeSlotRequest req = new TimeSlotRequest(slot);
+                cartTimeSlotRequests.add(req);
+            }
+        }
+
         List<TimeSlotRequest> timeSlotRequests = new ArrayList<>();
         List<TimeSlotResponse> timeSlotResponses = new ArrayList<>();
         for (TimeSlotRequest request : cartTimeSlotRequests) {
@@ -285,7 +300,7 @@ public class CommonServiceImpl implements CommonService {
                 throw new GeneralException("slot with start time " + slot.getStartTime() + " on date " + slot.getDate() + " is already booked or in booking process", HttpStatus.CONFLICT);
             }
         }
-        List<BookedTimeSlot> bookedTimeSlotList = bookSlot(timeSlotRequests, orderRequest.getUserId(), orderRequest.getTransactionId());
+        List<BookedTimeSlot> bookedTimeSlotList = bookSlot(timeSlotRequests, orderRequest.getUserId(), orderRequest.getTransactionId(), isAdmin);
         List<String> bookingIdList = bookedTimeSlotList.stream()
                 .map(x -> x.getBookingId())
                 .collect(Collectors.toList());
@@ -324,9 +339,23 @@ public class CommonServiceImpl implements CommonService {
     }
 
     @Transactional
-    protected List<BookedTimeSlot> bookSlot(List<TimeSlotRequest> timeSlotRequestList, String userId, String transactionId) throws GeneralException {
-        //validate amount payed should be equal
-
+    protected List<BookedTimeSlot> bookSlot(List<TimeSlotRequest> timeSlotRequestList, String userId, String transactionId, Boolean isAdmin) throws GeneralException, RazorpayException {
+        //validate amount paid should be equal
+        //if admin do not check for transaction amount
+        // else check for it
+        PaymentResponse transactionDetails = null;
+        Float totalPayableAmountOfSlots = 0F;
+        if (!isAdmin) {
+            //check transactionId is null or not
+            if (transactionId == null) {
+                throw new GeneralException("Transaction id should be not null", HttpStatus.BAD_REQUEST);
+            } else {
+                transactionDetails = razorPayService.getTransactionDetailsByTransactionId(transactionId);
+                if (transactionDetails == null) {
+                    throw new GeneralException("No transaction found with given transaction id.", HttpStatus.BAD_REQUEST);
+                }
+            }
+        }
 
         List<BookedTimeSlot> bookedTimeSlotList = new ArrayList<>();
         for (TimeSlotRequest timeSlotRequest : timeSlotRequestList) {
@@ -345,14 +374,22 @@ public class CommonServiceImpl implements CommonService {
                     .userId(userId)
                     .bookingId(CommonUtilities.getAlphaNumericString(5))
                     .date(timeSlotRequest.getDate())
-                    .payedAmount(payablePrice)
-                    .remainingAmount(timeSlotRequest.getPrice() - payablePrice)
-                    .remainingAmountPayed(false)
                     .turfId(timeSlotRequest.getTurfId())
                     .startTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getStartTime()))
                     .endTime(LocalDateTime.of(timeSlotRequest.getDate(), timeSlotRequest.getEndTime()))
                     .timeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))
                     .build();
+
+            if (isAdmin) {
+                addNewBookedTimeSlot.setPayedAmount(timeSlotRequest.getPrice());
+                addNewBookedTimeSlot.setRemainingAmount(0D);
+                addNewBookedTimeSlot.setRemainingAmountPayed(true);
+            } else {
+                addNewBookedTimeSlot.setPayedAmount(payablePrice);
+                addNewBookedTimeSlot.setRemainingAmount(timeSlotRequest.getPrice() - payablePrice);
+                addNewBookedTimeSlot.setRemainingAmountPayed(false);
+            }
+
             User user = userRepository.findByPhoneNumber(userId);
             if (null != user && user.getRole().equalsIgnoreCase(Roles.USER.name())) {
                 addNewBookedTimeSlot.setStatus(BookingStatus.BOOKED_BY_USER.name());
@@ -361,6 +398,11 @@ public class CommonServiceImpl implements CommonService {
             }
             BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.insert(addNewBookedTimeSlot);
             bookedTimeSlotList.add(bookedTimeSlot);
+            //add paid amount
+            totalPayableAmountOfSlots = totalPayableAmountOfSlots + bookedTimeSlot.getPayedAmount().floatValue();
+        }
+        if (!isAdmin && !transactionDetails.getAmount().equals(totalPayableAmountOfSlots)) {
+            throw new GeneralException("Paid amount does not match with amount tobe paid for slots", HttpStatus.BAD_REQUEST);
         }
         return bookedTimeSlotList;
     }

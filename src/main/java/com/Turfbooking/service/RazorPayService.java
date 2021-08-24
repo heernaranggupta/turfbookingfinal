@@ -8,9 +8,11 @@ import java.util.List;
 
 public interface RazorPayService {
 
-    PaymentResponse getTransactionDetails(String transactionId) throws RazorpayException;
+    PaymentResponse getTransactionDetailsByOrderId(String orderId) throws RazorpayException;
 
     RefundResponse initRefund(String orderId, String amount) throws RazorpayException;
 
     List<RefundResponse> getRefundDetails(String orderId, String refundId) throws RazorpayException;
+
+    PaymentResponse getTransactionDetailsByTransactionId(String transactionId) throws RazorpayException;
 }

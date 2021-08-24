@@ -48,4 +48,5 @@ public interface BusinessService {
 
     CommonResponse cancelBookingByAdmin(String bookingId);
 
+    CommonResponse getUserDetailsByContactNumber(String mobileNo);
 }
