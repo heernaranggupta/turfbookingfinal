@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 @Valid
@@ -13,7 +12,6 @@ import java.util.List;
 public class OrderRequest {
 
     private String userId;
-    @NotEmpty
     private String transactionId;
     private List<TimeSlotRequest> timeSlots;
 

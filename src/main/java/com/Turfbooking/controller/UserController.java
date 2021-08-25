@@ -109,7 +109,6 @@ public class UserController {
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping("/cart/guest")
     public CommonResponse addToGuestCart(@Valid @RequestBody CartRequest cartRequest) {
-//        System.out.println("################ CartID :" + cartRequest.getCartId());
         CommonResponse response = new CommonResponse(userService.addToCart(cartRequest, true));
         return ResponseUtilities.createSuccessResponse(response);
     }
