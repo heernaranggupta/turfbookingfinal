@@ -39,7 +39,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authorizationHeader = request.getHeader("Authorization");
 
-        UserDetails username = null; //String username = null;
+        UserDetails username = null;
         String jwt = null;
 
         // JWT Token is in the form "Bearer token".
