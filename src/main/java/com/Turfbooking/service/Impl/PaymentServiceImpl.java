@@ -29,7 +29,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentDetails savedPaymentDetails = paymentRepository.save(savePaymentDetails);
         if (null != savedPaymentDetails) {
-            return savedPaymentDetails.getId(); //paymentId
+            return savedPaymentDetails.getId();
         } else {
             throw new GeneralException("Error in saving payment details", HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -312,7 +312,7 @@ public class CommonServiceImpl implements CommonService {
         Order savedOrder = orderRepository.save(saveOrder);
         Cart isDeleted = cartRepository.deleteByUserPhoneNumber(orderRequest.getUserId());
         String paymentId = null;
-        if (null != savedOrder) {
+        if (null != savedOrder && !isAdmin) {
             paymentId = paymentService.addPaymentDetails(orderRequest.getTransactionId(), savedOrder.get_id(), orderRequest.getUserId());
         }
         if (null == isDeleted) {
@@ -326,7 +326,9 @@ public class CommonServiceImpl implements CommonService {
             timeSlotResponses.add(timeSlotResponse);
             //delete from temp table
             SlotsInBookingTemp slot = slotsInBookingTempRepository.findByTurfIdAndStartTimeAndDate(bookedTimeSlot.getTurfId(), bookedTimeSlot.getStartTime(), bookedTimeSlot.getDate());
-            slotsInBookingTempRepository.delete(slot);
+            if (slot != null) {
+                slotsInBookingTempRepository.delete(slot);
+            }
         }
         response.setTimeSlots(timeSlotResponses);
         response.setOrderId(savedOrder.get_id());
