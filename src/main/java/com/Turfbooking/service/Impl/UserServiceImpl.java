@@ -161,8 +161,8 @@ public class UserServiceImpl implements UserService {
             CustomUserDetails customUserDetails = new CustomUserDetails(isExist);
             String token = jwtTokenUtil.generateToken(username, customUserDetails, accessSecret, accessTokenValidity);
             String refreshToken = jwtTokenUtil.generateToken(username, customUserDetails, refreshSecret, refreshTokenValidity);
-            Cart getCart = cartRepository.findBy_cartId(userLoginRequest.getCartId());
             Cart usersCart = cartRepository.findByUserPhoneNumber(username);
+            Cart getCart = cartRepository.findBy_cartId(userLoginRequest.getCartId());
             if (null != getCart && 0 != getCart.getSelectedSlots().size()) {
                 Cart mergeCart = null;
                 if (null != usersCart) {
