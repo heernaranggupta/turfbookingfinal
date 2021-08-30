@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy JAR app to Azure Web App - rebounce
+name: Build and deploy WAR app to Azure Web App - rebounce
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: java-app
-        path: '${{ github.workspace }}/target/*.jar'
+        path: '${{ github.workspace }}/target/*.war'
 
   deploy:
     runs-on: windows-latest
@@ -49,5 +49,5 @@ jobs:
       with:
         app-name: 'rebounce'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_33d1a98c7db143418dec07a3618895cc }}
-        package: '*.jar'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_c4080306ea0940c08c092ab141b8c625 }}
+        package: '*.war'
