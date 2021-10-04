@@ -397,23 +397,22 @@ public class UserServiceImpl implements UserService {
         List<TimeSlotResponse> timeSlotsList = new ArrayList<>();
         LocalDateTime slotStartTime = openTime;
         LocalDateTime slotEndTime = null;
-        Double price = null;
-        for (StartEndTime startEndTime : startEndTimeList) {
-            LocalDateTime startTime = LocalDateTime.of(date, startEndTime.getStartTime());
-            LocalDateTime endTime = LocalDateTime.of(date, startEndTime.getEndTime());
-            if (startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
-                //slot end time should be before close time.
-                while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
-                    slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
-                    if ((startTime.equals(slotStartTime) || startTime.isAfter(slotStartTime)) && slotStartTime.isBefore(endTime) && startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
-                        if (null != startEndTime.getPrice()) {
-                            price = startEndTime.getPrice();
-                        }
+        startEndTimeList = startEndTimeList.stream().filter(x -> turfId.equalsIgnoreCase(x.getTurfId())).collect(Collectors.toList());
+        while (slotStartTime.plusMinutes(durationInMinutes).isBefore(closeTime.plusNanos(1))) {
+            slotEndTime = slotStartTime.plusMinutes(durationInMinutes);
+            for (StartEndTime startEndTime : startEndTimeList) {
+                LocalDateTime startTime = LocalDateTime.of(date, startEndTime.getStartTime());
+                LocalDateTime endTime = LocalDateTime.of(date, startEndTime.getEndTime());
+                if ((slotStartTime.equals(startTime) || slotStartTime.isAfter(startTime))
+                        && slotStartTime.isBefore(endTime)
+                        && startEndTime.getTurfId().equalsIgnoreCase(turfId)) {
+                    if (null != startEndTime.getPrice()) {
+                        timeSlotsList.add(new TimeSlotResponse(turfId, startEndTime.getPrice(), BookingStatus.AVAILABLE.name(), date, slotStartTime.toLocalTime(), slotEndTime.toLocalTime()));
+                        break;
                     }
-                    timeSlotsList.add(new TimeSlotResponse(turfId, price, BookingStatus.AVAILABLE.name(), date, slotStartTime.toLocalTime(), slotEndTime.toLocalTime()));
-                    slotStartTime = slotEndTime;
                 }
             }
+            slotStartTime = slotEndTime;
         }
         return timeSlotsList;
     }
@@ -698,4 +697,7 @@ public class UserServiceImpl implements UserService {
         List<Cart> listDeletedCarts = cartRepository.deleteNonUsedCarts(time);
         log.info("Deleted carts", listDeletedCarts.toString());
     }
+
+
 }
+
